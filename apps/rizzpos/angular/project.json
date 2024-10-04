@@ -3,26 +3,26 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "prefix": "app",
-  "sourceRoot": "apps/rizzpos/src",
-  "tags": [],
+  "sourceRoot": "apps/rizzpos/angular/src",
+  "tags": ["rizzpos"],
   "targets": {
     "build": {
       "executor": "@angular-devkit/build-angular:application",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/apps/rizzpos",
-        "index": "apps/rizzpos/src/index.html",
-        "browser": "apps/rizzpos/src/main.ts",
+        "outputPath": "dist/apps/rizzpos/angular",
+        "index": "apps/rizzpos/angular/src/index.html",
+        "browser": "apps/rizzpos/angular/src/main.ts",
         "polyfills": ["zone.js"],
-        "tsConfig": "apps/rizzpos/tsconfig.app.json",
+        "tsConfig": "apps/rizzpos/angular/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
         "assets": [
           {
             "glob": "**/*",
-            "input": "apps/rizzpos/public"
+            "input": "apps/rizzpos/angular/public"
           }
         ],
-        "styles": ["apps/rizzpos/src/styles.scss"],
+        "styles": ["apps/rizzpos/angular/src/styles.scss"],
         "scripts": []
       },
       "configurations": {
@@ -74,7 +74,7 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
-        "jestConfig": "apps/rizzpos/jest.config.ts"
+        "jestConfig": "apps/rizzpos/angular/jest.config.ts"
       }
     },
     "serve-static": {
@@ -82,7 +82,7 @@
       "options": {
         "buildTarget": "rizzpos:build",
         "port": 4200,
-        "staticFilePath": "dist/apps/rizzpos/browser",
+        "staticFilePath": "dist/apps/rizzpos/angular/browser",
         "spa": true
       }
     }
