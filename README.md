@@ -79,3 +79,20 @@ And join the Nx community:
 - [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
 - [Our Youtube channel](https://www.youtube.com/@nxdevtools)
 - [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+
+<!-- nx-firebase -->
+<!-- create an angular project in apps/{app-name}/angular -->
+
+nx g @nx/angular:app {app-name} --directory=apps/{app-name}
+
+<!-- create a firebase project in firebase console and get the config -->
+
+choose a name for the firebase project
+create a prod project with your name because you want to secure the domain name
+set the Environment type to production in the project settings
+now create a new dev project,
+add -dev to the name
+
+<!-- add a firebase project to the app -->
+
+nx g @simondotm/nx-firebase:app firebase --directory=apps/{app-name} --project={app-name}

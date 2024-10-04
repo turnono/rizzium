@@ -1,0 +1,20 @@
+{
+  "projects": {
+    "rizzpos-default": "rizzpos-dev"
+  },
+  "targets": {
+    "rizzpos-dev": {
+      "hosting": {
+        "rizzpos": [
+          "rizzpos-dev"
+        ],
+        "pp": [
+          "pp-rizzpos"
+        ],
+        "tos": [
+          "tos-rizzpos"
+        ]
+      }
+    }
+  }
+}
