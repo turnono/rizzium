@@ -1,6 +1,6 @@
 import { getGreeting } from '../support/app.po';
 
-describe('rizzium-e2e', () => {
+describe('rizzpos-e2e', () => {
   beforeEach(() => cy.visit('/'));
 
   it('should display welcome message', () => {

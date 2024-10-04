@@ -7,10 +7,10 @@ export default defineConfig({
     ...nxE2EPreset(__filename, {
       cypressDir: 'src',
       webServerCommands: {
-        default: 'npx nx run rizzium:serve',
-        production: 'npx nx run rizzium:serve-static',
+        default: 'npx nx run rizzpos:serve',
+        production: 'npx nx run rizzpos:serve-static',
       },
-      ciWebServerCommand: 'npx nx run rizzium:serve-static',
+      ciWebServerCommand: 'npx nx run rizzpos:serve-static',
       ciBaseUrl: 'http://localhost:4200',
     }),
     baseUrl: 'http://localhost:4200',

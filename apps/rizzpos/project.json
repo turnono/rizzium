@@ -1,28 +1,28 @@
 {
-  "name": "rizzium",
+  "name": "rizzpos",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "prefix": "app",
-  "sourceRoot": "apps/rizzium/src",
+  "sourceRoot": "apps/rizzpos/src",
   "tags": [],
   "targets": {
     "build": {
       "executor": "@angular-devkit/build-angular:application",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/apps/rizzium",
-        "index": "apps/rizzium/src/index.html",
-        "browser": "apps/rizzium/src/main.ts",
+        "outputPath": "dist/apps/rizzpos",
+        "index": "apps/rizzpos/src/index.html",
+        "browser": "apps/rizzpos/src/main.ts",
         "polyfills": ["zone.js"],
-        "tsConfig": "apps/rizzium/tsconfig.app.json",
+        "tsConfig": "apps/rizzpos/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
         "assets": [
           {
             "glob": "**/*",
-            "input": "apps/rizzium/public"
+            "input": "apps/rizzpos/public"
           }
         ],
-        "styles": ["apps/rizzium/src/styles.scss"],
+        "styles": ["apps/rizzpos/src/styles.scss"],
         "scripts": []
       },
       "configurations": {
@@ -53,10 +53,10 @@
       "executor": "@angular-devkit/build-angular:dev-server",
       "configurations": {
         "production": {
-          "buildTarget": "rizzium:build:production"
+          "buildTarget": "rizzpos:build:production"
         },
         "development": {
-          "buildTarget": "rizzium:build:development"
+          "buildTarget": "rizzpos:build:development"
         }
       },
       "defaultConfiguration": "development"
@@ -64,7 +64,7 @@
     "extract-i18n": {
       "executor": "@angular-devkit/build-angular:extract-i18n",
       "options": {
-        "buildTarget": "rizzium:build"
+        "buildTarget": "rizzpos:build"
       }
     },
     "lint": {
@@ -74,15 +74,15 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
-        "jestConfig": "apps/rizzium/jest.config.ts"
+        "jestConfig": "apps/rizzpos/jest.config.ts"
       }
     },
     "serve-static": {
       "executor": "@nx/web:file-server",
       "options": {
-        "buildTarget": "rizzium:build",
+        "buildTarget": "rizzpos:build",
         "port": 4200,
-        "staticFilePath": "dist/apps/rizzium/browser",
+        "staticFilePath": "dist/apps/rizzpos/browser",
         "spa": true
       }
     }

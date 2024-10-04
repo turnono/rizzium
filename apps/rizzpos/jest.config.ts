@@ -1,8 +1,8 @@
 export default {
-  displayName: 'rizzium',
+  displayName: 'rizzpos',
   preset: '../../jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
-  coverageDirectory: '../../coverage/apps/rizzium',
+  coverageDirectory: '../../coverage/apps/rizzpos',
   transform: {
     '^.+\\.(ts|mjs|js|html)$': [
       'jest-preset-angular',
