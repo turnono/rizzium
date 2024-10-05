@@ -92,7 +92,30 @@ create a prod project with your name because you want to secure the domain name
 set the Environment type to production in the project settings
 now create a new dev project,
 add -dev to the name
+add firebase config to the project in the dev environment file
+make sure projects is on the blaze plan
 
 <!-- add a firebase project to the app -->
 
 nx g @simondotm/nx-firebase:app firebase --directory=apps/{app-name} --project={app-name}
+
+<!-- add a function to the project -->
+
+nx g @simondotm/nx-firebase:function {function-name} --app={app-name}-firebase --directory=apps/{app-name}/functions
+
+<!-- build all -->
+
+nx build {app-name}
+nx build {app-name} --prod
+
+nx build {app-name}-functions-{function-name}
+
+<!-- run the firebase project -->
+
+nx serve {app-name}-firebase
+
+<!-- deploy -->
+<!-- npx kill-port 9099 5003 8278 9323 5004 8178 9199 9299 9324 8279 -->
+<!-- firebase use {app-name} -->
+
+nx deploy {app-name}-firebase

@@ -1,0 +1,46 @@
+{
+  "name": "rizzpos-functions-delete-anon-user",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/rizzpos/functions/delete-anon-user/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/rizzpos/functions/delete-anon-user",
+        "main": "apps/rizzpos/functions/delete-anon-user/src/index.ts",
+        "tsConfig": "apps/rizzpos/functions/delete-anon-user/tsconfig.json",
+        "assets": ["apps/rizzpos/functions/delete-anon-user/*.json"]
+      }
+    },
+    "serve": {
+      "executor": "@nrwl/js:node",
+      "options": {
+        "buildTarget": "rizzpos-functions-delete-anon-user:build"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/rizzpos/functions/delete-anon-user/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/rizzpos/functions/delete-anon-user/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "configurations": {
+        "ci": {
+          "ci": true,
+          "codeCoverage": true
+        }
+      }
+    }
+  },
+  "tags": []
+}

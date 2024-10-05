@@ -16,13 +16,13 @@ export const environment = {
   },
   storageConfig: {
     customMetadata: {
-      app: 'EffectHunt',
+      app: 'RizzPos',
     },
-    bucketName: 'effectHunt',
+    bucketName: 'rizzpos',
   },
-  url: 'https://effect-hunt.web.app/',
+  url: 'https://rizzpos.web.app/',
   fn_url: '',
-  clientName: 'EffectHunt',
+  clientName: 'RizzPos',
   clientAddress: '24 Ashley Road, Homestead Park, Johannesburg, 2092',
   clientSpUids: ['NyURjhRKxDOOvL3tTjudoPUcsur1'],
 };

@@ -1,12 +1,12 @@
 {
   "projects": {
-    "rizzpos-default": "rizzpos-dev"
+    "rizzpos": "rizzpos"
   },
   "targets": {
-    "rizzpos-dev": {
+    "rizzpos": {
       "hosting": {
         "rizzpos": [
-          "rizzpos-dev"
+          "rizzpos"
         ],
         "pp": [
           "pp-rizzpos"
@@ -16,5 +16,6 @@
         ]
       }
     }
-  }
+  },
+  "etags": {}
 }
