@@ -116,6 +116,8 @@ nx serve {app-name}-firebase
 
 <!-- deploy -->
 <!-- npx kill-port 9099 5003 8278 9323 5004 8178 9199 9299 9324 8279 -->
+<!-- firebase login -->
 <!-- firebase use {app-name} -->
 
 nx deploy {app-name}-firebase
+nx deploy {app-name}-functions-{function-name}
