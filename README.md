@@ -122,4 +122,137 @@ nx serve {app-name}-firebase
 nx deploy {app-name}-firebase
 nx deploy {app-name}-functions-{function-name}
 
-<!--  running a test here -->
+<!--
+**Script Breakdown:**
+
+1. **Prompt for Inputs:**
+   - **Application Name (`APP_NAME`):** The name of your Angular application.
+   - **Firebase Project ID (`FIREBASE_PROJECT`):** Your Firebase project identifier.
+   - **Function Name (`FUNCTION_NAME`):** The name of the Firebase function you wish to create.
+
+2. **Generate Angular Application:**
+   - Uses the Nx Angular generator to create a new Angular application within the specified directory.
+
+3. **Integrate Firebase:**
+   - Adds Firebase configuration to the Angular application using the `nx-firebase` plugin.
+
+4. **Add Firebase Function:**
+   - Creates a new Firebase function within the application's functions directory.
+
+5. **Install Dependencies:**
+   - Navigates to the function's directory and installs `firebase-admin` and `firebase-functions`.
+
+6. **Build Projects:**
+   - Builds both the Angular application and the Firebase function for production.
+
+7. **Deploy to Firebase:**
+   - Deploys the Angular application and Firebase function to the specified Firebase project.
+
+### Notes
+
+- **Manual Firebase Project Creation:**
+  - Currently, creating a Firebase project via the Firebase console is a manual step and is not automated in this script. Once the Firebase project is set up, link it using:
+
+    ```bash
+    firebase use {FIREBASE_PROJECT}
+    ```
+
+- **Firebase Configuration:**
+  - After creating the Firebase project, retrieve the Firebase configuration and add it to your Angular application's environment files (`environment.prod.ts` and `environment.ts`).
+
+- **Future Automation:**
+  - Automating Firebase project creation can be achieved using Firebase's REST APIs or Google Cloud SDKs in future enhancements.
+
+### Step 4: Add Firebase Configuration to Environment Files
+
+After running the setup script, you need to add your Firebase configuration to the Angular application's environment files.
+
+1. **Retrieve Firebase Config:**
+   - Obtain your Firebase project's configuration details from the Firebase console.
+
+2. **Update `environment.prod.ts`:**
+
+   ```typescript:apps/{app-name}/angular/src/environments/environment.prod.ts
+   export const environment = {
+     production: true,
+     clientId: 'YOUR_CLIENT_ID',
+     firebaseConfig: {
+       apiKey: 'YOUR_API_KEY',
+       authDomain: 'YOUR_AUTH_DOMAIN',
+       projectId: 'YOUR_PROJECT_ID',
+       storageBucket: 'YOUR_STORAGE_BUCKET',
+       messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
+       appId: 'YOUR_APP_ID',
+       measurementId: 'YOUR_MEASUREMENT_ID',
+     },
+     storageConfig: {
+       customMetadata: {
+         app: 'YourAppName',
+       },
+       bucketName: 'your-app-bucket',
+     },
+     url: 'https://your-app.web.app/',
+     fn_url: '',
+     clientName: 'YourAppName',
+     clientAddress: 'Your Address',
+     clientSpUids: ['Your_SPUIDs'],
+   };
+   ```
+
+3. **Update `environment.ts`:**
+
+   ```typescript:apps/{app-name}/angular/src/environments/environment.ts
+   export const environment = {
+     production: false,
+     clientId: 'YOUR_CLIENT_ID_DEV',
+     firebaseConfig: {
+       apiKey: 'YOUR_API_KEY_DEV',
+       authDomain: 'YOUR_AUTH_DOMAIN_DEV',
+       projectId: 'YOUR_PROJECT_ID_DEV',
+       storageBucket: 'YOUR_STORAGE_BUCKET_DEV',
+       messagingSenderId: 'YOUR_MESSAGING_SENDER_ID_DEV',
+       appId: 'YOUR_APP_ID_DEV',
+       measurementId: 'YOUR_MEASUREMENT_ID_DEV',
+     },
+     storageConfig: {
+       customMetadata: {
+         app: 'YourAppName',
+       },
+       bucketName: 'your-app-bucket',
+     },
+     url: 'https://your-app-dev.web.app',
+     fn_url: 'https://us-central1-your-app-dev.cloudfunctions.net/',
+     clientName: 'YourAppName',
+     clientAddress: 'Your Address',
+     clientSpUids: ['Your_SPUIDs'],
+   };
+   /*
+    * For easier debugging in development mode, you can import the following file
+    * to ignore zone related error stack frames such as `zone.run`, `zoneDelegate.invokeTask`.
+    *
+    * This import should be commented out in production mode because it will have a negative impact
+    * on performance if an error is thrown.
+    */
+   ```
+
+   > **Note:** Replace placeholders like `YOUR_CLIENT_ID`, `YOUR_API_KEY`, etc., with your actual Firebase project credentials.
+
+### Additional Recommendations
+
+- **Port Management:**
+  - To avoid port conflicts when running Firebase emulators, you can use the `kill-port` utility, which is already included in your `package.json`. Incorporate it into your workflows as needed.
+
+- **CI/CD Integration:**
+  - Utilize the provided `.github/workflows/ci.yml` for continuous integration, ensuring that tasks are cached and executed efficiently using Nx Cloud.
+
+- **Environment Variables Security:**
+  - Ensure that sensitive information like Firebase configuration details is secured and not exposed in your code repositories. Consider using environment variables or secure storage solutions.
+
+- **Further Automation:**
+  - Automate Firebase project configuration retrieval and injection into environment files in future iterations to fully minimize manual steps.
+
+### Conclusion
+
+By following this automated setup guide, you can efficiently create and deploy a full-stack Angular application integrated with Firebase using Nx and `nx-firebase`. This streamlined process reduces the complexity for users with basic computer skills, ensuring a smoother development and deployment experience. Future enhancements can focus on further automating Firebase console interactions to achieve a completely hands-off setup.
+
+For more detailed information, refer to the [Nx Documentation](https://nx.dev/) and the [`nx-firebase` GitHub Repository](https://github.com/simondotm/nx-firebase). -->

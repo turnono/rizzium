@@ -1,0 +1,54 @@
+{
+  "name": "happy-functions-happy",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/happy/functions/happy/src",
+  "projectType": "application",
+  "tags": [
+    "firebase:function",
+    "firebase:name:happy-functions-happy",
+    "firebase:dep:happy-firebase"
+  ],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/happy/functions/happy",
+        "main": "apps/happy/functions/happy/src/main.ts",
+        "tsConfig": "apps/happy/functions/happy/tsconfig.app.json",
+        "assets": [
+          "apps/happy/functions/happy/src/assets",
+          {
+            "glob": "**/*",
+            "input": "apps/happy/firebase/environment",
+            "output": "."
+          }
+        ],
+        "generatePackageJson": true,
+        "platform": "node",
+        "bundle": true,
+        "thirdParty": false,
+        "dependenciesFieldType": "dependencies",
+        "target": "node16",
+        "format": ["esm"],
+        "esbuildOptions": {
+          "logLevel": "info"
+        }
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/happy/functions/happy/jest.config.ts"
+      }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nx run happy-firebase:deploy --only functions:happy-functions-happy"
+      },
+      "dependsOn": ["build"]
+    }
+  }
+}
