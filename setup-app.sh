@@ -217,6 +217,18 @@ fi
 
 echo "Added initial function code, updated index.ts, and package.json for the Firebase function."
 
+# Ask user if they want to install Angular Material
+read -p "Do you want to install Angular Material? (y/n): " install_material
+if [ "$install_material" = "y" ]; then
+  nx add @angular/material --project="$APP_NAME"
+fi
+
+# Ask user if they want to install Ionic
+read -p "Do you want to install Ionic? (y/n): " install_ionic
+if [ "$install_ionic" = "y" ]; then
+  nx add @ionic/angular --project="$APP_NAME"
+fi
+
 echo "Setup and deployment completed successfully."
 
 
