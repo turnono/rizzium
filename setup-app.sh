@@ -11,7 +11,6 @@ prompt() {
 
 # Collect necessary inputs
 APP_NAME=$(prompt "Enter your application name")
-FIREBASE_PROJECT=$(prompt "Enter your Firebase project ID")
 
 # Generate Angular application inside apps/{app-name}/angular
 nx generate @nx/angular:app "$APP_NAME" --directory=apps/"$APP_NAME" --projectNameAndRootFormat=as-provided
@@ -22,6 +21,7 @@ nx generate @nx/angular:app "$APP_NAME" --directory=apps/"$APP_NAME" --projectNa
 nx generate @simondotm/nx-firebase:app firebase --directory=apps/"$APP_NAME" --project="$APP_NAME"
 
 # Add Firebase function
+#    Property 'runTime' does not match the schema. '18' should be a 'string'.
 nx generate @simondotm/nx-firebase:function user --app="${APP_NAME}-firebase" --directory=apps/"$APP_NAME"/functions
 
 # Create the angular directory if it doesn't exist
@@ -219,16 +219,19 @@ echo "Added initial function code, updated index.ts, and package.json for the Fi
 
 echo "Setup and deployment completed successfully."
 
-# # Install Firebase dependencies for functions
-# cd apps/"$APP_NAME"/functions/user"
-# npm install firebase-admin firebase-functions
-# cd ../../../../..
 
-# # Build the Angular application and functions
-# nx build "$APP_NAME" --prod
-# nx build "${APP_NAME}-functions-user"
+# Build the Angular application and functions
+nx build "$APP_NAME" --prod
+nx build "${APP_NAME}-functions-user"
+
+echo "Build completed successfully."
+
+firebase login
+firebase use --add
 
 # # Deploy Firebase application and functions
 # # Ensure that the Firebase project is linked via 'firebase use' before deploying
-# nx deploy "${APP_NAME}-firebase"
-# nx deploy "${APP_NAME}-functions-user"
+nx deploy "${APP_NAME}-firebase"
+nx deploy "${APP_NAME}-functions-user"
+
+echo "Deploy completed successfully."
