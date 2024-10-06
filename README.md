@@ -105,19 +105,18 @@ nx g @simondotm/nx-firebase:function {function-name} --app={app-name}-firebase -
 
 <!-- build all -->
 
-nx build {app-name}
 nx build {app-name} --prod
 
 nx build {app-name}-functions-{function-name}
 
 <!-- run the firebase project -->
+<!-- npx kill-port 9099 5003 8278 9323 5004 8178 9199 9299 9324 8279 -->
+<!-- firebase login -->
+<!-- firebase use {app-name} -->
 
 nx serve {app-name}-firebase
 
 <!-- deploy -->
-<!-- npx kill-port 9099 5003 8278 9323 5004 8178 9199 9299 9324 8279 -->
-<!-- firebase login -->
-<!-- firebase use {app-name} -->
 
 nx deploy {app-name}-firebase
 nx deploy {app-name}-functions-{function-name}
