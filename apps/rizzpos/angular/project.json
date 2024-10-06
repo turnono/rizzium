@@ -4,16 +4,22 @@
   "projectType": "application",
   "prefix": "app",
   "sourceRoot": "apps/rizzpos/angular/src",
-  "tags": ["rizzpos"],
+  "tags": [
+    "rizzpos"
+  ],
   "targets": {
     "build": {
       "executor": "@angular-devkit/build-angular:application",
-      "outputs": ["{options.outputPath}"],
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "options": {
         "outputPath": "dist/apps/rizzpos/angular",
         "index": "apps/rizzpos/angular/src/index.html",
         "browser": "apps/rizzpos/angular/src/main.ts",
-        "polyfills": ["zone.js"],
+        "polyfills": [
+          "zone.js"
+        ],
         "tsConfig": "apps/rizzpos/angular/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
         "assets": [
@@ -22,7 +28,10 @@
             "input": "apps/rizzpos/angular/public"
           }
         ],
-        "styles": ["apps/rizzpos/angular/src/styles.scss"],
+        "styles": [
+          "@angular/material/prebuilt-themes/azure-blue.css",
+          "apps/rizzpos/angular/src/styles.scss"
+        ],
         "scripts": []
       },
       "configurations": {
@@ -72,7 +81,9 @@
     },
     "test": {
       "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
       "options": {
         "jestConfig": "apps/rizzpos/angular/jest.config.ts"
       }
