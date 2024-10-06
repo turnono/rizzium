@@ -66,6 +66,70 @@ else
   echo "Warning: eslint.config.js not found in the Angular project."
 fi
 
+# Update tsconfig.json to extend from the correct base tsconfig
+TSCONFIG_JSON="apps/$APP_NAME/angular/tsconfig.json"
+if [ -f "$TSCONFIG_JSON" ]; then
+  sed -i '' 's|"extends": "../../tsconfig.base.json"|"extends": "../../../tsconfig.base.json"|g' "$TSCONFIG_JSON"
+  echo "Updated tsconfig.json to extend from the correct base tsconfig."
+else
+  echo "Warning: tsconfig.json not found in the Angular project."
+fi
+
+# Update jest.config.ts to use the correct preset path
+JEST_CONFIG="apps/$APP_NAME/angular/jest.config.ts"
+if [ -f "$JEST_CONFIG" ]; then
+  sed -i '' "s|preset: '../../jest.preset.js'|preset: '../../../jest.preset.js'|g" "$JEST_CONFIG"
+  echo "Updated jest.config.ts to use the correct preset path."
+else
+  echo "Warning: jest.config.ts not found in the Angular project."
+fi
+
+
+
+# Update project.json paths to include "angular" folder
+PROJECT_JSON="apps/$APP_NAME/angular/project.json"
+if [ -f "$PROJECT_JSON" ]; then
+  # Update outputPath
+  sed -i '' 's|"outputPath": "dist/apps/'"$APP_NAME"'"|"outputPath": "dist/apps/'"$APP_NAME"'/angular"|g' "$PROJECT_JSON"
+
+  # Update sourceRoot
+  sed -i '' 's|"sourceRoot": "apps/'"$APP_NAME"'/src"|"sourceRoot": "apps/'"$APP_NAME"'/angular/src"|g' "$PROJECT_JSON"
+
+  # Update index path
+  sed -i '' 's|"index": "apps/'"$APP_NAME"'/src/index.html"|"index": "apps/'"$APP_NAME"'/angular/src/index.html"|g' "$PROJECT_JSON"
+
+  # Update browser path
+  sed -i '' 's|"browser": "apps/'"$APP_NAME"'/src/main.ts"|"browser": "apps/'"$APP_NAME"'/angular/src/main.ts"|g' "$PROJECT_JSON"
+
+  # Update tsConfig path
+  sed -i '' 's|"tsConfig": "apps/'"$APP_NAME"'/tsconfig.app.json"|"tsConfig": "apps/'"$APP_NAME"'/angular/tsconfig.app.json"|g' "$PROJECT_JSON"
+
+  # Update assets input path
+  sed -i '' 's|"input": "apps/'"$APP_NAME"'/public"|"input": "apps/'"$APP_NAME"'/angular/public"|g' "$PROJECT_JSON"
+
+  # Update styles path
+  sed -i '' 's|"styles": \["apps/'"$APP_NAME"'/src/styles.scss"\]|"styles": ["apps/'"$APP_NAME"'/angular/src/styles.scss"]|g' "$PROJECT_JSON"
+
+  # Update test jestConfig path
+  sed -i '' 's|"jestConfig": "apps/'"$APP_NAME"'/jest.config.ts"|"jestConfig": "apps/'"$APP_NAME"'/angular/jest.config.ts"|g' "$PROJECT_JSON"
+
+  # Update serve-static staticFilePath
+  sed -i '' 's|"staticFilePath": "dist/apps/'"$APP_NAME"'/browser"|"staticFilePath": "dist/apps/'"$APP_NAME"'/angular"|g' "$PROJECT_JSON"
+
+  echo "Updated project.json paths to include 'angular' folder and corrected paths."
+else
+  echo "Warning: project.json not found in the Angular project."
+fi
+
+# Remove eslint.config.js from the functions folder
+ESLINT_CONFIG="apps/$APP_NAME/functions/$FUNCTION_NAME/eslint.config.js"
+if [ -f "$ESLINT_CONFIG" ]; then
+  rm "$ESLINT_CONFIG"
+  echo "Removed eslint.config.js from the functions folder."
+else
+  echo "Warning: eslint.config.js not found in the functions folder."
+fi
+
 
 
 echo "Setup and deployment completed successfully."
