@@ -8,6 +8,6 @@
     "esModuleInterop": true,
     "target": "es2017"
   },
-  "exclude": ["../user/jest.config.ts", "../user/src/**/*.spec.ts", "../user/src/**/*.test.ts"],
-  "include": ["../user/src/**/*.ts"]
+  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"],
+  "include": ["src/**/*.ts"]
 }

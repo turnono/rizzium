@@ -78,5 +78,5 @@
       }
     }
   },
-  "implicitDependencies": ["rizzpos-functions-delete-anon-user"]
+  "implicitDependencies": ["rizzpos-functions-user"]
 }

@@ -1,5 +1,5 @@
 export default {
-  displayName: 'rizzpos-functions-delete-anon-user',
+  displayName: 'rizzpos-functions-user',
   preset: '../../../../jest.preset.js',
   testEnvironment: 'node',
   transform: {
@@ -7,5 +7,5 @@ export default {
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory:
-    '../../../../coverage/apps/rizzpos/functions/delete-anon-user',
+    '../../../../coverage/apps/rizzpos/functions/user',
 };
