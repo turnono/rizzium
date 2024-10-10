@@ -1,1 +1,13 @@
-// Add your styles here
+ion-content {
+  --background: var(--ion-color-light);
+}
+
+ion-card {
+  margin-bottom: 16px;
+}
+
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}

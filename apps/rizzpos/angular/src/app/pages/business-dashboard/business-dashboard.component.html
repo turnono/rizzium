@@ -1,29 +1,98 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-title>{{ businessData?.businessName || 'Business Dashboard' }}</ion-title>
-  </ion-toolbar>
-</ion-header>
+<rizzpos-header [title]="businessData?.businessName || 'Business Dashboard'"></rizzpos-header>
+
 
 <ion-content class="ion-padding">
-  <ion-card *ngIf="businessData">
-    <ion-card-header>
-      <ion-card-title>{{ businessData.businessName }}</ion-card-title>
-      <ion-card-subtitle>{{ businessData.businessType }}</ion-card-subtitle>
-    </ion-card-header>
-    <ion-card-content>
-      <p>{{ businessData.address }}</p>
-      <p>{{ businessData.phoneNumber }}</p>
-    </ion-card-content>
-  </ion-card>
-
   <ion-grid>
     <ion-row>
-      <ion-col size="6" size-md="3" *ngFor="let action of quickActions">
-        <ion-button expand="block" (click)="navigateTo(action.route)">
-          <ion-icon slot="start" [name]="action.icon"></ion-icon>
-          {{ action.label }}
-        </ion-button>
+      <ion-col size="12" size-md="6">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>Business Overview</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <p><strong>Name:</strong> {{ businessData?.businessName }}</p>
+            <p><strong>Type:</strong> {{ businessData?.businessType }}</p>
+            <p><strong>Address:</strong> {{ businessData?.address }}</p>
+            <p><strong>Phone:</strong> {{ businessData?.phoneNumber }}</p>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+      <ion-col size="12" size-md="6">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>Sales Summary</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <p><strong>Today's Sales:</strong> {{ todaySales | currency }}</p>
+            <p><strong>This Month's Sales:</strong> {{ monthSales | currency }}</p>
+            <p><strong>Total Products:</strong> {{ totalProducts }}</p>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+
+    <ion-row>
+      <ion-col size="12">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>Quick Actions</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-button *ngFor="let action of quickActions" (click)="navigateTo(action.route)" expand="block"
+              fill="outline" class="ion-margin-bottom">
+              <ion-icon slot="start" [name]="action.icon"></ion-icon>
+              {{ action.label }}
+            </ion-button>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+
+    <ion-row>
+      <ion-col size="12" size-md="6">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>Recent Transactions</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-list>
+              <ion-item *ngFor="let transaction of recentTransactions">
+                <ion-label>
+                  <h2>{{ transaction.id }}</h2>
+                  <p>{{ transaction.date | date:'short' }}</p>
+                </ion-label>
+                <ion-note slot="end" color="primary">{{ transaction.total | currency }}</ion-note>
+              </ion-item>
+            </ion-list>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+      <ion-col size="12" size-md="6">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>Low Stock Alerts</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-list>
+              <ion-item *ngFor="let product of lowStockProducts$ | async">
+                <ion-label>
+                  <h2>{{ product.name }}</h2>
+                  <p>Current Stock: {{ product.stockQuantity }}</p>
+                </ion-label>
+                <ion-badge slot="end" color="danger">Low Stock</ion-badge>
+              </ion-item>
+            </ion-list>
+          </ion-card-content>
+        </ion-card>
       </ion-col>
     </ion-row>
   </ion-grid>
 </ion-content>
+
+<ion-footer>
+  <ion-toolbar>
+    <ion-title size="small">© {{ currentYear }} {{ businessData?.businessName }}</ion-title>
+  </ion-toolbar>
+</ion-footer>
+
+<rizzpos-footer></rizzpos-footer>
