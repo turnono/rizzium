@@ -1,0 +1,80 @@
+<rizzpos-header [title]="authMode === 'login' ? 'Login' : 'Register'"></rizzpos-header>
+
+<ion-content class="ion-padding">
+  <div class="login-container">
+    <h1>{{ authMode === 'login' ? 'Welcome Back' : 'Create Account' }}</h1>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
+      <ion-item>
+        <ion-label position="floating">Email</ion-label>
+        <ion-input type="email" formControlName="email" required></ion-input>
+      </ion-item>
+      <ion-text color="danger" *ngIf="loginForm.get('email')?.hasError('required') && loginForm.get('email')?.touched">
+        Email is required
+      </ion-text>
+      <ion-text color="danger" *ngIf="loginForm.get('email')?.hasError('email') && loginForm.get('email')?.touched">
+        Please enter a valid email
+      </ion-text>
+
+      <ion-item>
+        <ion-label position="floating">Password</ion-label>
+        <ion-input [type]="hidePassword ? 'password' : 'text'" formControlName="password" required></ion-input>
+        <ion-button fill="clear" slot="end" (click)="hidePassword = !hidePassword">
+          <ion-icon [name]="hidePassword ? 'eye-off' : 'eye'"></ion-icon>
+        </ion-button>
+      </ion-item>
+      <ion-text color="danger"
+        *ngIf="loginForm.get('password')?.hasError('required') && loginForm.get('password')?.touched">
+        Password is required
+      </ion-text>
+      <ion-text color="danger"
+        *ngIf="loginForm.get('password')?.hasError('minlength') && loginForm.get('password')?.touched">
+        Password must be at least 6 characters long
+      </ion-text>
+
+      <ion-item *ngIf="authMode === 'register'">
+        <ion-label position="floating">Confirm Password</ion-label>
+        <ion-input [type]="hidePassword ? 'password' : 'text'" formControlName="confirmPassword" required></ion-input>
+      </ion-item>
+      <ion-text color="danger"
+        *ngIf="loginForm.get('confirmPassword')?.hasError('required') && loginForm.get('confirmPassword')?.touched">
+        Confirm Password is required
+      </ion-text>
+      <ion-text color="danger"
+        *ngIf="loginForm.get('confirmPassword')?.hasError('passwordMismatch') && loginForm.get('confirmPassword')?.touched">
+        Passwords do not match
+      </ion-text>
+
+      <ion-button expand="block" type="submit" [disabled]="loginForm.invalid" class="submit-button">
+        {{ authMode === 'login' ? 'Login' : 'Register' }}
+      </ion-button>
+
+      <!-- Add this section to display the error message -->
+      <ion-text color="danger" *ngIf="errorMessage" class="error-message">
+        {{ errorMessage }}
+      </ion-text>
+    </form>
+
+    <div class="auth-toggle">
+      <ion-segment (ionChange)="segmentChanged($event)" [value]="authMode">
+        <ion-segment-button value="login">
+          <ion-label>Login</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="register">
+          <ion-label>Register</ion-label>
+        </ion-segment-button>
+      </ion-segment>
+    </div>
+
+    <div class="divider">
+      <span>OR</span>
+    </div>
+
+    <ion-button expand="block" (click)="signInWithGoogle()" class="google-button">
+      <img src="assets/google-logo.svg" alt="Google logo" class="google-logo">
+      Sign in with Google
+    </ion-button>
+  </div>
+</ion-content>
+
+<rizzpos-footer></rizzpos-footer>

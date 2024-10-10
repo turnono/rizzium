@@ -1,0 +1,14 @@
+:host {
+  display: block;
+}
+
+ion-header {
+  ion-toolbar {
+    --background: var(--ion-color-primary);
+    --color: var(--ion-color-primary-contrast);
+  }
+
+  ion-title {
+    font-weight: bold;
+  }
+}

@@ -12,7 +12,7 @@ export const deleteAnonUser = functions.https.onCall(async (data) => {
     const firestore = getFirestore();
 
     const anonUser = await auth.getUser(uid);
-    if (anonUser) {
+    if (anonUser && anonUser.providerData.length === 0) {
       await auth.deleteUser(uid);
     }
 

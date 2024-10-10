@@ -2,6 +2,16 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Allow read/write access to authenticated users (including anonymous)
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /carts/{cartId} {
+      allow read, write: if request.auth != null && request.auth.uid == cartId;
+    }
+
+    // Default rule: deny all other access
     match /{document=**} {
       allow read, write: if false;
     }
