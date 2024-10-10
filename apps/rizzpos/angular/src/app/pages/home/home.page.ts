@@ -1,79 +1,51 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
-import { FirebaseAuthService } from '@rizzpos/shared/services';
+import { FirebaseAuthService, BusinessService, BusinessData } from '@rizzpos/shared/services';
 import { RouterModule, Router } from '@angular/router';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
-import { ReactiveFormsModule } from '@angular/forms';
-
-interface QuickAction {
-  label: string;
-  icon: string;
-  action: () => void;
-}
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.page.html',
   styleUrls: ['./home.page.scss'],
   standalone: true,
-  imports: [CommonModule, IonicModule, HeaderComponent, FooterComponent, RouterModule, ReactiveFormsModule],
+  imports: [CommonModule, IonicModule, HeaderComponent, FooterComponent, RouterModule],
 })
 export class HomePageComponent implements OnInit {
-  userName = 'Guest';
-  isAnonymous = true;
-  quickActions: QuickAction[] = [
-    {
-      label: 'New Sale',
-      icon: 'cart',
-      action: () => this.newSale()
-    },
-    {
-      label: 'Inventory',
-      icon: 'cube',
-      action: () => this.openInventory()
-    },
-    {
-      label: 'Reports',
-      icon: 'bar-chart',
-      action: () => this.openReports()
-    }
-  ];
+  businesses: BusinessData[] = [];
+  loading = true;
+  error: string | null = null;
 
   constructor(
     private authService: FirebaseAuthService,
+    private businessService: BusinessService,
     private router: Router
   ) {}
 
   ngOnInit() {
-    this.authService.user$.subscribe(user => {
+    this.loadBusinesses();
+  }
+
+  async loadBusinesses() {
+    try {
+      const user = await this.authService.getCurrentUser();
       if (user) {
-        this.userName = user.displayName || 'User';
-        this.isAnonymous = user.isAnonymous;
-      } else {
-        this.router.navigate(['/login']);
+        this.businesses = await this.businessService.getUserBusinesses(user.uid);
       }
-    });
+    } catch (err) {
+      console.error('Error loading businesses:', err);
+      this.error = 'Failed to load businesses. Please try again.';
+    } finally {
+      this.loading = false;
+    }
   }
 
-  newSale() {
-    // Implement new sale functionality
-    console.log('New sale initiated');
+  goToBusiness(businessId: string) {
+    this.router.navigate(['/business', businessId]);
   }
 
-  openInventory() {
-    // Implement inventory opening functionality
-    console.log('Opening inventory');
-  }
-
-  openReports() {
-    // Implement reports opening functionality
-    console.log('Opening reports');
-  }
-
-  onLogout() {
-    this.authService.signOut().subscribe(() => {
-      this.router.navigate(['/login']);
-    });
+  createNewBusiness() {
+    this.router.navigate(['/business-setup']);
   }
 }

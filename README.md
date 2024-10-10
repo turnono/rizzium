@@ -116,4 +116,5 @@ nx serve {app-name}-firebase
 <!-- deploy -->
 
 nx deploy {app-name}-firebase
-nx deploy {app-name}-functions-{function-name}
+
+<!-- nx deploy {app-name}-functions-{function-name} -->

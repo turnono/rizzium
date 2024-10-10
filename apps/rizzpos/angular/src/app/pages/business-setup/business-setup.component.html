@@ -1,0 +1,36 @@
+<ion-header>
+    <ion-toolbar>
+        <ion-title>Set Up Your Business</ion-title>
+    </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+    <form [formGroup]="businessForm" (ngSubmit)="onSubmit()">
+        <ion-item>
+            <ion-label position="floating">Business Name</ion-label>
+            <ion-input formControlName="businessName" required></ion-input>
+        </ion-item>
+
+        <ion-item>
+            <ion-label position="floating">Business Type</ion-label>
+            <ion-select formControlName="businessType" required>
+                <ion-select-option value="retail">Retail</ion-select-option>
+                <ion-select-option value="restaurant">Restaurant</ion-select-option>
+                <ion-select-option value="service">Service</ion-select-option>
+                <!-- Add more options as needed -->
+            </ion-select>
+        </ion-item>
+
+        <ion-item>
+            <ion-label position="floating">Address</ion-label>
+            <ion-input formControlName="address" required></ion-input>
+        </ion-item>
+
+        <ion-item>
+            <ion-label position="floating">Phone Number</ion-label>
+            <ion-input type="tel" formControlName="phoneNumber" required></ion-input>
+        </ion-item>
+
+        <ion-button expand="block" type="submit" [disabled]="!businessForm.valid">Set Up Business</ion-button>
+    </form>
+</ion-content>
