@@ -227,10 +227,88 @@ fi
 read -p "Do you want to install Ionic? (y/n): " install_ionic
 if [ "$install_ionic" = "y" ]; then
   nx add @ionic/angular --project="$APP_NAME"
+
+  # Update app.component.ts
+  sed -i '' 's/import { Component } from '"'"'@angular\/core'"'"';/import { Component } from '"'"'@angular\/core'"'"';\nimport { CommonModule } from '"'"'@angular\/common'"'"';\nimport { IonicModule } from '"'"'@ionic\/angular'"'"';/' "apps/$APP_NAME/angular/src/app/app.component.ts"
+  sed -i '' 's/imports: \[/imports: [CommonModule, IonicModule, /' "apps/$APP_NAME/angular/src/app/app.component.ts"
+
+  # Update app.component.html
+  echo "<ion-app>" > "apps/$APP_NAME/angular/src/app/app.component.html"
+  echo "  <app-nx-welcome></app-nx-welcome>" >> "apps/$APP_NAME/angular/src/app/app.component.html"
+  echo "  <ion-router-outlet></ion-router-outlet>" >> "apps/$APP_NAME/angular/src/app/app.component.html"
+  echo "</ion-app>" >> "apps/$APP_NAME/angular/src/app/app.component.html"
+
+  # Update styles.scss
+  cat << EOF >> "apps/$APP_NAME/angular/src/styles.scss"
+
+@import '@ionic/angular/css/core.css';
+@import '@ionic/angular/css/normalize.css';
+@import '@ionic/angular/css/structure.css';
+@import '@ionic/angular/css/typography.css';
+@import '@ionic/angular/css/display.css';
+@import '@ionic/angular/css/padding.css';
+@import '@ionic/angular/css/float-elements.css';
+@import '@ionic/angular/css/text-alignment.css';
+@import '@ionic/angular/css/text-transformation.css';
+@import '@ionic/angular/css/flex-utils.css';
+EOF
+
+  # Update project.json to include Ionic styles
+  sed -i '' '/"styles": \[/,/\]/c\
+    "styles": [\
+      "apps/'"$APP_NAME"'/angular/src/styles.scss",\
+      {\
+        "input": "node_modules/@ionic/angular/css/core.css"\
+      },\
+      {\
+        "input": "node_modules/@ionic/angular/css/normalize.css"\
+      },\
+      {\
+        "input": "node_modules/@ionic/angular/css/structure.css"\
+      },\
+      {\
+        "input": "node_modules/@ionic/angular/css/typography.css"\
+      },\
+      {\
+        "input": "node_modules/@ionic/angular/css/display.css"\
+      },\
+      {\
+        "input": "node_modules/@ionic/angular/css/padding.css"\
+      },\
+      {\
+        "input": "node_modules/@ionic/angular/css/float-elements.css"\
+      },\
+      {\
+        "input": "node_modules/@ionic/angular/css/text-alignment.css"\
+      },\
+      {\
+        "input": "node_modules/@ionic/angular/css/text-transformation.css"\
+      },\
+      {\
+        "input": "node_modules/@ionic/angular/css/flex-utils.css"\
+      },\
+      {\
+        "input": "apps/'"$APP_NAME"'/angular/src/theme/variables.css"\
+      }\
+    ],' "apps/$APP_NAME/angular/project.json"
+
+  # Create theme/variables.css file
+  mkdir -p "apps/$APP_NAME/angular/src/theme"
+  cat << EOF > "apps/$APP_NAME/angular/src/theme/variables.css"
+/**
+ * Ionic Dark Theme
+ * -----------------------------------------------------
+ * For more info, please see:
+ * https://ionicframework.com/docs/theming/dark-mode
+ */
+
+/* @import "@ionic/angular/css/palettes/dark.always.css"; */
+/* @import "@ionic/angular/css/palettes/dark.class.css"; */
+@import "@ionic/angular/css/palettes/dark.system.css";
+EOF
+
+  echo "Ionic has been installed and configured for the project."
 fi
-
-echo "Setup and deployment completed successfully."
-
 
 # Build the Angular application and functions
 nx build "$APP_NAME" --prod
