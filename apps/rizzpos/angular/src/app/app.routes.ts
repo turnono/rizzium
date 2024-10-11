@@ -4,6 +4,7 @@ import { LoginPageComponent } from './pages/login/login.page';
 import { BusinessSetupComponent } from './pages/business-setup/business-setup.component';
 import { BusinessDashboardComponent } from './pages/business-dashboard/business-dashboard.component';
 import { ProductManagementComponent } from './pages/product-management/product-management.component';
+import { JoinComponent } from './pages/join/join.component';
 import { AuthGuard } from '@rizzpos/shared/guards';
 
 export const routes: Route[] = [
@@ -11,6 +12,7 @@ export const routes: Route[] = [
   { path: 'login', component: LoginPageComponent },
   { path: 'home', component: HomePageComponent, canActivate: [AuthGuard] },
   { path: 'business-setup', component: BusinessSetupComponent, canActivate: [AuthGuard] },
+  { path: 'join', component: JoinComponent },
   {
     path: 'business/:businessId',
     canActivate: [AuthGuard],

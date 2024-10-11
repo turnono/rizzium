@@ -27,5 +27,20 @@ service cloud.firestore {
     match /carts/{cartId} {
       allow read, write: if request.auth != null && request.auth.uid == cartId;
     }
+
+    match /users/{userId} {
+      allow read, update: if request.auth.uid == userId;
+    }
+
+    match /businesses/{businessId} {
+      allow read: if request.auth.uid != null;
+
+      match /businessUsers/{userId} {
+        // Allow user creation only if role is 'cashier' or 'manager'
+        allow create: if request.auth.uid == userId && request.resource.data.role in ['cashier', 'manager'];
+        // Allow role updates by business owner only
+        allow update: if get(/databases/$(database)/documents/businesses/$(businessId)).data.ownerId == request.auth.uid;
+      }
+    }
   }
 }

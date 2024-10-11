@@ -10,6 +10,7 @@ import {
 } from '@rizzpos/shared/services';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
 import { Observable } from 'rxjs';
+import { Clipboard } from '@angular/cdk/clipboard';
 
 interface QuickAction {
   label: string;
@@ -45,7 +46,8 @@ export class BusinessDashboardComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private businessService: BusinessService,
-    private productService: ProductService
+    private productService: ProductService,
+    private clipboard: Clipboard
   ) {
     this.businessId = this.route.snapshot.paramMap.get('businessId') || '';
     this.lowStockProducts$ = this.productService.getLowStockProducts(
@@ -93,5 +95,27 @@ export class BusinessDashboardComponent implements OnInit {
 
   navigateTo(route: string) {
     this.router.navigate(['/business', this.businessId, route]);
+  }
+
+  generateRoleURL(role: 'cashier' | 'manager'): string {
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/join?businessId=${this.businessId}&role=${role}`;
+  }
+
+  copyURL(role: 'cashier' | 'manager'): void {
+    const url = this.generateRoleURL(role);
+    this.clipboard.copy(url);
+    // You might want to show a toast or some other notification that the URL has been copied
+  }
+
+  generateCustomerURL(): string {
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/join?businessId=${this.businessId}`;
+  }
+
+  copyCustomerURL(): void {
+    const url = this.generateCustomerURL();
+    this.clipboard.copy(url);
+    // You might want to show a toast or some other notification that the URL has been copied
   }
 }

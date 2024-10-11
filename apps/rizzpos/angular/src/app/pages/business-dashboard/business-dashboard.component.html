@@ -86,6 +86,25 @@
         </ion-card>
       </ion-col>
     </ion-row>
+
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Add Staff</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-button (click)="copyURL('cashier')">Add Cashier</ion-button>
+        <ion-button (click)="copyURL('manager')">Add Manager</ion-button>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Customer URL</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-button (click)="copyCustomerURL()">Copy Customer URL</ion-button>
+      </ion-card-content>
+    </ion-card>
   </ion-grid>
 </ion-content>
 

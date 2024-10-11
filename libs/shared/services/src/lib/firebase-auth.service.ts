@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
 import { Auth, User, signInAnonymously, signOut, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, UserCredential } from '@angular/fire/auth';
-import { Firestore, doc, setDoc, getDoc, Timestamp } from '@angular/fire/firestore';
+import { Firestore, doc, setDoc, getDoc, Timestamp, updateDoc, arrayUnion } from '@angular/fire/firestore';
 import { Observable, BehaviorSubject, from, of } from 'rxjs';
 import { switchMap, first, tap } from 'rxjs/operators';
 
-export type UserRole = 'owner' | 'admin' | 'staff' | 'client' | 'anon';
+export type UserRole = 'owner' | 'manager' | 'cashier' | 'client' | 'anon';
 
 export interface AppUser extends User {
   role: UserRole;
@@ -102,6 +102,40 @@ export class FirebaseAuthService {
   async getCurrentUser(): Promise<AppUser | null> {
     const user = await this.user$.pipe(first()).toPromise();
     return user || null;
+  }
+
+  async handleRoleBasedURL(businessId: string, role?: string): Promise<void> {
+    const user = await this.getCurrentUser();
+    if (!user) throw new Error('No authenticated user found');
+
+    const userRef = doc(this.firestore, `users/${user.uid}`);
+    await updateDoc(userRef, {
+      businesses: arrayUnion(businessId)
+    });
+
+    if (role) {
+      const businessUserRef = doc(this.firestore, `businesses/${businessId}/businessUsers/${user.uid}`);
+      await setDoc(businessUserRef, {
+        role: role,
+        userId: user.uid,
+        createdAt: Timestamp.now(),
+        displayName: user.displayName || 'New User'
+      }, { merge: true });
+    }
+  }
+
+  async getUserRoleForBusiness(businessId: string): Promise<UserRole> {
+    const user = await this.getCurrentUser();
+    if (!user) throw new Error('No authenticated user found');
+
+    const businessUserRef = doc(this.firestore, `businesses/${businessId}/businessUsers/${user.uid}`);
+    const businessUserSnap = await getDoc(businessUserRef);
+
+    if (businessUserSnap.exists()) {
+      return businessUserSnap.data()['role'] as UserRole;
+    }
+
+    return 'client';
   }
 
   // Add more authentication methods as needed
