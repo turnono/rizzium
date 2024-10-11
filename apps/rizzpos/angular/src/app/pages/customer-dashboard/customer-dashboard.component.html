@@ -1,4 +1,4 @@
-<rizzpos-header [title]="businessName + ' Customer Dashboard'"></rizzpos-header>
+<rizzpos-header [title]="(businessData$ | async)?.businessName || 'Customer Dashboard'"></rizzpos-header>
 
 <ion-content class="ion-padding">
   <ion-grid>
@@ -9,7 +9,7 @@
             <ion-card-title>Loyalty Points</ion-card-title>
           </ion-card-header>
           <ion-card-content>
-            <h2>{{ loyaltyPoints }} points</h2>
+            <h2>{{ loyaltyPoints$ | async }} points</h2>
           </ion-card-content>
         </ion-card>
       </ion-col>
@@ -23,13 +23,12 @@
           </ion-card-header>
           <ion-card-content>
             <ion-list>
-              <ion-item *ngFor="let transaction of recentTransactions">
+              <ion-item *ngFor="let transaction of recentTransactions$ | async">
                 <ion-label>
                   <h2>{{ transaction.id }}</h2>
                   <p>{{ transaction.date | date:'short' }}</p>
-                  <p>Items: {{ transaction.items.length }}</p>
+                  <p>Total: {{ transaction.total | currency }}</p>
                 </ion-label>
-                <ion-note slot="end" color="primary">{{ transaction.total | currency }}</ion-note>
               </ion-item>
             </ion-list>
           </ion-card-content>
@@ -45,7 +44,7 @@
           </ion-card-header>
           <ion-card-content>
             <ion-list>
-              <ion-item *ngFor="let promotion of activePromotions">
+              <ion-item *ngFor="let promotion of activePromotions$ | async">
                 <ion-label>
                   <h2>{{ promotion.title }}</h2>
                   <p>{{ promotion.description }}</p>

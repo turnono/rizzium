@@ -1,4 +1,4 @@
-<rizzpos-header [title]="businessData?.businessName || 'Business Dashboard'"></rizzpos-header>
+<rizzpos-header [title]="(businessData$ | async)?.businessName || 'Business Dashboard'"></rizzpos-header>
 
 
 <ion-content class="ion-padding">
@@ -10,10 +10,12 @@
             <ion-card-title>Business Overview</ion-card-title>
           </ion-card-header>
           <ion-card-content>
-            <p><strong>Name:</strong> {{ businessData?.businessName }}</p>
-            <p><strong>Type:</strong> {{ businessData?.businessType }}</p>
-            <p><strong>Address:</strong> {{ businessData?.address }}</p>
-            <p><strong>Phone:</strong> {{ businessData?.phoneNumber }}</p>
+            <ng-container *ngIf="businessData$ | async as businessData">
+              <p><strong>Name:</strong> {{ businessData.businessName }}</p>
+              <p><strong>Type:</strong> {{ businessData.businessType }}</p>
+              <p><strong>Address:</strong> {{ businessData.address }}</p>
+              <p><strong>Phone:</strong> {{ businessData.phoneNumber }}</p>
+            </ng-container>
           </ion-card-content>
         </ion-card>
       </ion-col>
@@ -56,7 +58,7 @@
           </ion-card-header>
           <ion-card-content>
             <ion-list>
-              <ion-item *ngFor="let transaction of recentTransactions">
+              <ion-item *ngFor="let transaction of recentTransactions$ | async">
                 <ion-label>
                   <h2>{{ transaction.id }}</h2>
                   <p>{{ transaction.date | date:'short' }}</p>
@@ -110,7 +112,7 @@
 
 <ion-footer>
   <ion-toolbar>
-    <ion-title size="small">© {{ currentYear }} {{ businessData?.businessName }}</ion-title>
+    <ion-title size="small">© {{ currentYear }} {{ (businessData$ | async)?.businessName }}</ion-title>
   </ion-toolbar>
 </ion-footer>
 

@@ -8,20 +8,12 @@ import {
   ErrorHandlerService,
 } from '@rizzpos/shared/services';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
-
-interface Transaction {
-  id: string;
-  date: Date;
-  total: number;
-  items: { name: string; quantity: number; price: number }[];
-}
-
-interface Promotion {
-  id: string;
-  title: string;
-  description: string;
-  expiryDate: Date;
-}
+import { Observable, catchError, map, of, from } from 'rxjs';
+import {
+  BusinessData,
+  Promotion,
+  Transaction,
+} from '@rizzpos/shared/interfaces';
 
 @Component({
   selector: 'app-customer-dashboard',
@@ -33,10 +25,10 @@ interface Promotion {
 export class CustomerDashboardComponent implements OnInit {
   businessId: string;
   customerId: string;
-  businessName: string = '';
-  loyaltyPoints: number = 0;
-  recentTransactions: Transaction[] = [];
-  activePromotions: Promotion[] = [];
+  businessData$?: Observable<BusinessData>;
+  loyaltyPoints$?: Observable<number>;
+  recentTransactions$?: Observable<Transaction[]>;
+  activePromotions$?: Observable<Promotion[]>;
 
   constructor(
     private route: ActivatedRoute,
@@ -48,45 +40,68 @@ export class CustomerDashboardComponent implements OnInit {
     this.customerId = this.route.snapshot.paramMap.get('customerId') || '';
   }
 
-  async ngOnInit() {
-    try {
-      await this.loadBusinessData();
-      await this.loadCustomerData();
-      await this.loadRecentTransactions();
-      await this.loadActivePromotions();
-    } catch (error) {
-      this.errorHandler.handleError(
-        error,
-        'Error initializing customer dashboard'
-      );
-    }
+  ngOnInit() {
+    this.loadData();
   }
 
-  async loadBusinessData() {
-    const businessData = await this.businessService.getBusinessData(
-      this.businessId
+  loadData() {
+    this.businessData$ = from(
+      this.businessService.getBusinessData(this.businessId)
+    ).pipe(
+      catchError((error) => {
+        this.errorHandler.handleError(error, 'Error loading business data');
+        return of(null);
+      }),
+      map((data: BusinessData | null) => {
+        if (data === null) {
+          return {} as BusinessData;
+        }
+        return data;
+      })
+    ) as Observable<BusinessData>;
+
+    this.loyaltyPoints$ = from(
+      this.businessService.getLoyaltyPoints(this.businessId, this.customerId)
+    ).pipe(
+      catchError((error) => {
+        this.errorHandler.handleError(error, 'Error loading loyalty points');
+        return of(0);
+      })
     );
-    this.businessName = businessData.businessName;
-  }
 
-  async loadCustomerData() {
-    const customerData = await this.customerService.getCustomerData(
-      this.businessId,
-      this.customerId
-    );
-    this.loyaltyPoints = customerData.loyaltyPoints;
-  }
+    this.recentTransactions$ = of(
+      this.customerService.getRecentTransactions(
+        this.businessId,
+        this.customerId
+      )
+    ).pipe(
+      catchError((error) => {
+        this.errorHandler.handleError(
+          error,
+          'Error loading recent transactions'
+        );
+        return of([]);
+      })
+    ) as Observable<Transaction[]>;
 
-  async loadRecentTransactions() {
-    this.recentTransactions = await this.customerService.getRecentTransactions(
-      this.businessId,
-      this.customerId
-    );
-  }
-
-  async loadActivePromotions() {
-    this.activePromotions = await this.businessService.getActivePromotions(
-      this.businessId
+    this.activePromotions$ = from(
+      this.businessService.getActivePromotions(this.businessId)
+    ).pipe(
+      map((promotions: { id: string }[]) =>
+        promotions.map(
+          (promo) =>
+            ({
+              ...promo,
+              title: '',
+              description: '',
+              expiryDate: new Date(),
+            } as Promotion)
+        )
+      ),
+      catchError((error) => {
+        this.errorHandler.handleError(error, 'Error loading active promotions');
+        return of([]);
+      })
     );
   }
 }

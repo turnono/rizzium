@@ -1,22 +1,28 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule, ToastController } from '@ionic/angular';
+import { IonicModule } from '@ionic/angular';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   BusinessService,
-  BusinessData,
   ProductService,
   Product,
   ErrorHandlerService,
 } from '@rizzpos/shared/services';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
-import { Observable } from 'rxjs';
+import { from, map, Observable } from 'rxjs';
 import { Clipboard } from '@angular/cdk/clipboard';
+import { BusinessData } from '@rizzpos/shared/interfaces';
 
 interface QuickAction {
   label: string;
   icon: string;
   route: string;
+}
+
+interface Transaction {
+  id: string;
+  date: Date;
+  total: number;
 }
 
 @Component({
@@ -28,20 +34,19 @@ interface QuickAction {
 })
 export class BusinessDashboardComponent implements OnInit {
   businessId: string;
-  businessData: BusinessData | null = null;
+  businessData$: Observable<BusinessData>;
   lowStockProducts$: Observable<Product[]>;
+  recentTransactions$: Observable<Transaction[]>;
   todaySales = 0;
   monthSales = 0;
   totalProducts = 0;
-  recentTransactions: any[] = []; // Replace 'any' with a proper Transaction interface
-  quickActions: QuickAction[] = [
-    { label: 'New Sale', icon: 'cart', route: 'sale' },
-    { label: 'Products', icon: 'cube', route: 'products' },
-    { label: 'Inventory', icon: 'list', route: 'inventory' },
-    { label: 'Reports', icon: 'bar-chart', route: 'reports' },
-    { label: 'Settings', icon: 'settings', route: 'settings' },
-  ];
   currentYear: number = new Date().getFullYear();
+  quickActions: QuickAction[] = [
+    { label: 'Inventory', icon: 'cube', route: 'inventory' },
+    { label: 'Sales', icon: 'cash', route: 'sales' },
+    { label: 'Reports', icon: 'bar-chart', route: 'reports' },
+    { label: 'User Management', icon: 'people', route: 'user-management' },
+  ];
 
   constructor(
     private route: ActivatedRoute,
@@ -49,31 +54,38 @@ export class BusinessDashboardComponent implements OnInit {
     private businessService: BusinessService,
     private productService: ProductService,
     private clipboard: Clipboard,
-    private toastController: ToastController,
     private errorHandler: ErrorHandlerService
   ) {
     this.businessId = this.route.snapshot.paramMap.get('businessId') || '';
-    this.lowStockProducts$ = this.productService.getLowStockProducts(
-      this.businessId
-    );
+    this.businessData$ = new Observable<BusinessData>();
+    this.lowStockProducts$ = new Observable<Product[]>();
+    this.recentTransactions$ = new Observable<Transaction[]>();
   }
 
   ngOnInit() {
     this.loadBusinessData();
+    this.loadLowStockProducts();
+    this.loadRecentTransactions();
     this.loadSalesData();
     this.loadProductCount();
-    this.loadRecentTransactions();
   }
 
-  async loadBusinessData() {
-    try {
-      this.businessData = await this.businessService.getBusinessData(
-        this.businessId
-      );
-      this.errorHandler.showInfo('Business data loaded successfully');
-    } catch (error) {
-      this.errorHandler.handleError(error, 'Error loading business data');
-    }
+  loadBusinessData() {
+    this.businessData$ = from(
+      this.businessService.getBusinessData(this.businessId)
+    ).pipe(map((data) => data as BusinessData));
+  }
+
+  loadLowStockProducts() {
+    this.lowStockProducts$ = from(
+      this.businessService.getLowStockProducts(this.businessId)
+    ).pipe(map((data) => data as Product[]));
+  }
+
+  loadRecentTransactions() {
+    this.recentTransactions$ = this.businessService.getRecentTransactions(
+      this.businessId
+    );
   }
 
   async loadSalesData() {
@@ -85,15 +97,6 @@ export class BusinessDashboardComponent implements OnInit {
   async loadProductCount() {
     // TODO: Implement actual product count loading from the product service
     this.totalProducts = 100;
-  }
-
-  async loadRecentTransactions() {
-    // TODO: Implement actual recent transactions loading from a transaction service
-    this.recentTransactions = [
-      { id: 'T001', date: new Date(), total: 123.45 },
-      { id: 'T002', date: new Date(), total: 67.89 },
-      { id: 'T003', date: new Date(), total: 234.56 },
-    ];
   }
 
   navigateTo(route: string) {

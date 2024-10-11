@@ -7,13 +7,13 @@ import { FirebaseAuthService, BusinessService } from '@rizzpos/shared/services';
 @Component({
   selector: 'app-reports',
   templateUrl: './reports.component.html',
-  styleUrls: ['./reports.component.scss'],
+  styleUrl: './reports.component.scss',
   standalone: true,
   imports: [CommonModule, IonicModule, HeaderComponent, FooterComponent],
 })
 export class ReportsComponent implements OnInit {
-  businessId: string = '';
-  userRole: string = '';
+  businessId = '';
+  userRole = '';
 
   constructor(
     private authService: FirebaseAuthService,
@@ -23,7 +23,8 @@ export class ReportsComponent implements OnInit {
   async ngOnInit() {
     const user = await this.authService.getCurrentUser();
     if (user) {
-      this.businessId = await this.businessService.getUserBusiness(user.uid);
+      this.businessId =
+        (await this.businessService.getUserBusiness(user.uid)) || '';
       this.userRole = await this.businessService.getUserRole(
         this.businessId,
         user.uid

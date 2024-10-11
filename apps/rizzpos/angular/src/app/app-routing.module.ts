@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
-import { AuthGuard } from './guards/auth.guard';
+import { AuthGuard } from '@rizzpos/shared/guards';
 import { CustomerDashboardComponent } from './pages/customer-dashboard/customer-dashboard.component';
 
 const routes: Routes = [
@@ -12,7 +12,7 @@ const routes: Routes = [
   {
     path: 'login',
     loadComponent: () =>
-      import('./pages/login/login.component').then((m) => m.LoginComponent),
+      import('./pages/login/login.page').then((m) => m.LoginPageComponent),
   },
   {
     path: 'join',

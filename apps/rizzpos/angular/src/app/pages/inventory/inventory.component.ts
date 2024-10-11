@@ -9,11 +9,13 @@ import {
   ProductService,
   ErrorHandlerService,
 } from '@rizzpos/shared/services';
+import { Product } from '@rizzpos/shared/interfaces';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-inventory',
   templateUrl: './inventory.component.html',
-  styleUrls: ['./inventory.component.scss'],
+  styleUrl: './inventory.component.scss',
   standalone: true,
   imports: [
     CommonModule,
@@ -24,10 +26,16 @@ import {
   ],
 })
 export class InventoryComponent implements OnInit {
-  businessId: string = '';
-  userRole: string = '';
-  products: any[] = []; // Replace 'any' with a proper Product interface
-  newProduct: any = { name: '', price: 0, stockQuantity: 0 };
+  businessId = '';
+  userRole = '';
+  products: Product[] = [];
+  newProduct: Product = {
+    id: '',
+    name: '',
+    description: '',
+    price: 0,
+    stockQuantity: 0,
+  };
 
   constructor(
     private authService: FirebaseAuthService,
@@ -40,7 +48,8 @@ export class InventoryComponent implements OnInit {
     try {
       const user = await this.authService.getCurrentUser();
       if (user) {
-        this.businessId = await this.businessService.getUserBusiness(user.uid);
+        this.businessId =
+          (await this.businessService.getUserBusiness(user.uid)) ?? '';
         this.userRole = await this.businessService.getUserRole(
           this.businessId,
           user.uid
@@ -54,7 +63,9 @@ export class InventoryComponent implements OnInit {
 
   async loadProducts() {
     try {
-      this.products = await this.productService.getProducts(this.businessId);
+      this.products = (await firstValueFrom(
+        this.productService.getProducts(this.businessId)
+      )) as Product[];
     } catch (error) {
       this.errorHandler.handleError(error, 'Error loading products');
     }
@@ -62,8 +73,14 @@ export class InventoryComponent implements OnInit {
 
   async addProduct() {
     try {
-      await this.productService.addProduct(this.businessId, this.newProduct);
-      this.newProduct = { name: '', price: 0, stockQuantity: 0 };
+      await this.productService.addProduct(this.newProduct as any);
+      this.newProduct = {
+        id: '',
+        name: '',
+        description: '',
+        price: 0,
+        stockQuantity: 0,
+      };
       await this.loadProducts();
     } catch (error) {
       this.errorHandler.handleError(error, 'Error adding product');
@@ -81,7 +98,7 @@ export class InventoryComponent implements OnInit {
 
   async deleteProduct(productId: string) {
     try {
-      await this.productService.deleteProduct(this.businessId, productId);
+      await this.productService.deleteProduct(productId);
       await this.loadProducts();
     } catch (error) {
       this.errorHandler.handleError(error, 'Error deleting product');

@@ -1,15 +1,12 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
-import {
-  FirebaseAuthService,
-  BusinessService,
-  BusinessData,
-} from '@rizzpos/shared/services';
+import { FirebaseAuthService, BusinessService } from '@rizzpos/shared/services';
 import { RouterModule, Router } from '@angular/router';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
 import { Observable, Subscription } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
+import { BusinessData } from '@rizzpos/shared/interfaces';
 
 @Component({
   selector: 'app-home',

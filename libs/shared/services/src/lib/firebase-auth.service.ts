@@ -20,8 +20,8 @@ import {
   arrayUnion,
   Timestamp,
 } from '@angular/fire/firestore';
-import { Observable, BehaviorSubject, from, of } from 'rxjs';
-import { switchMap, first, tap } from 'rxjs/operators';
+import { Observable, BehaviorSubject, from } from 'rxjs';
+import { first, tap } from 'rxjs/operators';
 
 export type UserRole = 'owner' | 'manager' | 'cashier' | 'client' | 'anon';
 
