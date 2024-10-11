@@ -1,7 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
-import { FirebaseAuthService, BusinessService, BusinessData } from '@rizzpos/shared/services';
+import {
+  FirebaseAuthService,
+  BusinessService,
+  BusinessData,
+} from '@rizzpos/shared/services';
 import { RouterModule, Router } from '@angular/router';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
 
@@ -10,7 +14,13 @@ import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
   templateUrl: './home.page.html',
   styleUrls: ['./home.page.scss'],
   standalone: true,
-  imports: [CommonModule, IonicModule, HeaderComponent, FooterComponent, RouterModule],
+  imports: [
+    CommonModule,
+    IonicModule,
+    HeaderComponent,
+    FooterComponent,
+    RouterModule,
+  ],
 })
 export class HomePageComponent implements OnInit {
   businesses: BusinessData[] = [];
@@ -31,7 +41,9 @@ export class HomePageComponent implements OnInit {
     try {
       const user = await this.authService.getCurrentUser();
       if (user) {
-        this.businesses = await this.businessService.getUserBusinesses(user.uid);
+        this.businesses = await this.businessService.getUserBusinesses(
+          user.uid
+        );
       }
     } catch (err) {
       console.error('Error loading businesses:', err);

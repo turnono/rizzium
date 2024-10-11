@@ -8,7 +8,7 @@ import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
 @Component({
   selector: 'app-business-user-management',
   templateUrl: './business-user-management.component.html',
-  styleUrls: ['./business-user-management.component.scss'],
+  styleUrl: './business-user-management.component.scss',
   standalone: true,
   imports: [CommonModule, IonicModule, HeaderComponent, FooterComponent],
 })

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import {
-  Auth,
+  Auth as FirebaseAuth,
   User,
   signInAnonymously,
   signOut,
@@ -38,7 +38,7 @@ export class FirebaseAuthService {
     new BehaviorSubject<AppUser | null>(null);
   user$: Observable<AppUser | null> = this.userSubject.asObservable();
 
-  constructor(private auth: Auth, private firestore: Firestore) {
+  constructor(private auth: FirebaseAuth, private firestore: Firestore) {
     onAuthStateChanged(this.auth, (user) => {
       console.log('Auth state changed:', user);
       if (user) {

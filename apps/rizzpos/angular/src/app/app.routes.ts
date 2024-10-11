@@ -11,7 +11,11 @@ export const routes: Route[] = [
   { path: '', redirectTo: '/home', pathMatch: 'full' },
   { path: 'login', component: LoginPageComponent },
   { path: 'home', component: HomePageComponent, canActivate: [AuthGuard] },
-  { path: 'business-setup', component: BusinessSetupComponent, canActivate: [AuthGuard] },
+  {
+    path: 'business-setup',
+    component: BusinessSetupComponent,
+    canActivate: [AuthGuard],
+  },
   { path: 'join', component: JoinComponent },
   {
     path: 'business/:businessId',
@@ -20,7 +24,7 @@ export const routes: Route[] = [
       { path: '', component: BusinessDashboardComponent },
       { path: 'products', component: ProductManagementComponent },
       // Add more routes for inventory, sales, reports, etc.
-    ]
+    ],
   },
-  { path: '**', redirectTo: '/home' }
+  { path: '**', redirectTo: '/home' },
 ];
