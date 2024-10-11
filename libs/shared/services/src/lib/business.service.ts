@@ -18,29 +18,14 @@ import {
   deleteDoc,
 } from '@angular/fire/firestore';
 import { FirebaseAuthService } from './firebase-auth.service';
-import { Observable, BehaviorSubject } from 'rxjs';
-
-export interface BusinessData {
-  id: string;
-  businessName: string;
-  businessType: string;
-  address: string;
-  phoneNumber: string;
-  ownerId: string;
-  createdAt: Timestamp;
-}
-
-export interface Purchase {
-  id: string;
-  date: Date;
-  total: number;
-}
-
-export interface Promotion {
-  id: string;
-  description: string;
-  validUntil: Date;
-}
+import { Observable, from, map, BehaviorSubject } from 'rxjs';
+import {
+  BusinessData,
+  Product,
+  Transaction,
+  Promotion,
+  Purchase,
+} from '@rizzpos/shared/interfaces';
 
 export interface BusinessUser {
   id: string;
@@ -345,6 +330,38 @@ export class BusinessService {
       id: doc.id,
       ...doc.data(),
     }));
+  }
+
+  getLowStockProducts(businessId: string): Observable<Product[]> {
+    const productsCollection = collection(
+      this.firestore,
+      `businesses/${businessId}/products`
+    );
+    const lowStockQuery = query(
+      productsCollection,
+      where('stockQuantity', '<', 10),
+      limit(10)
+    );
+    return from(getDocs(lowStockQuery)).pipe(
+      map((snapshot) =>
+        snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Product))
+      )
+    );
+  }
+
+  getRecentTransactions(businessId: string): Observable<Transaction[]> {
+    const transactionsCollection = collection(
+      this.firestore,
+      `businesses/${businessId}/transactions`
+    );
+    const recentTransactionsQuery = query(transactionsCollection, limit(5));
+    return from(getDocs(recentTransactionsQuery)).pipe(
+      map((snapshot) =>
+        snapshot.docs.map(
+          (doc) => ({ id: doc.id, ...doc.data() } as Transaction)
+        )
+      )
+    );
   }
 
   // Add more methods for business management
