@@ -1,0 +1,59 @@
+<rizzpos-header [title]="'Inventory'"></rizzpos-header>
+
+<ion-content class="ion-padding">
+    <ng-container [ngSwitch]="userRole">
+        <ng-container *ngSwitchCase="'cashier'">
+            <h2>View Inventory</h2>
+            <ion-list>
+                <ion-item *ngFor="let product of products">
+                    <ion-label>
+                        <h2>{{ product.name }}</h2>
+                        <p>Stock: {{ product.stockQuantity }}</p>
+                    </ion-label>
+                    <ion-note slot="end" color="primary">{{ product.price | currency }}</ion-note>
+                </ion-item>
+            </ion-list>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'manager'">
+            <h2>Manage Inventory</h2>
+            <ion-list>
+                <ion-item *ngFor="let product of products">
+                    <ion-label>
+                        <ion-input [(ngModel)]="product.name" placeholder="Product Name"></ion-input>
+                        <ion-input type="number" [(ngModel)]="product.price" placeholder="Price"></ion-input>
+                        <ion-input type="number" [(ngModel)]="product.stockQuantity"
+                            placeholder="Stock Quantity"></ion-input>
+                    </ion-label>
+                    <ion-button slot="end" (click)="updateProduct(product)">Update</ion-button>
+                    <ion-button slot="end" color="danger" (click)="deleteProduct(product.id)">Delete</ion-button>
+                </ion-item>
+            </ion-list>
+            <h3>Add New Product</h3>
+            <ion-item>
+                <ion-label position="stacked">Product Name</ion-label>
+                <ion-input [(ngModel)]="newProduct.name"></ion-input>
+            </ion-item>
+            <ion-item>
+                <ion-label position="stacked">Price</ion-label>
+                <ion-input type="number" [(ngModel)]="newProduct.price"></ion-input>
+            </ion-item>
+            <ion-item>
+                <ion-label position="stacked">Stock Quantity</ion-label>
+                <ion-input type="number" [(ngModel)]="newProduct.stockQuantity"></ion-input>
+            </ion-item>
+            <ion-button expand="block" (click)="addProduct()">Add Product</ion-button>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'owner'">
+            <h2>Inventory Dashboard</h2>
+            <!-- Add comprehensive inventory management tools -->
+        </ng-container>
+
+        <ng-container *ngSwitchDefault>
+            <p>You don't have permission to access this page.</p>
+        </ng-container>
+    </ng-container>
+</ion-content>
+
+<rizzpos-footer></rizzpos-footer>

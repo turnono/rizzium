@@ -1,25 +1,45 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { BusinessService, FirebaseAuthService } from '@rizzpos/shared/services';
+import {
+  BusinessService,
+  FirebaseAuthService,
+  ErrorHandlerService,
+} from '@rizzpos/shared/services';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
+
+interface BusinessUser {
+  id: string;
+  name: string;
+  role: string;
+  email: string;
+}
 
 @Component({
   selector: 'app-business-user-management',
   templateUrl: './business-user-management.component.html',
-  styleUrl: './business-user-management.component.scss',
+  styleUrls: ['./business-user-management.component.scss'],
   standalone: true,
-  imports: [CommonModule, IonicModule, HeaderComponent, FooterComponent],
+  imports: [
+    CommonModule,
+    IonicModule,
+    HeaderComponent,
+    FooterComponent,
+    FormsModule,
+  ],
 })
 export class BusinessUserManagementComponent implements OnInit {
   businessId: string;
-  businessUsers: any[] = []; // Replace 'any' with a proper BusinessUser interface
+  businessUsers: BusinessUser[] = [];
+  loading: boolean = true;
 
   constructor(
     private route: ActivatedRoute,
     private businessService: BusinessService,
-    private authService: FirebaseAuthService
+    private authService: FirebaseAuthService,
+    private errorHandler: ErrorHandlerService
   ) {
     this.businessId = this.route.snapshot.paramMap.get('businessId') || '';
   }
@@ -29,20 +49,40 @@ export class BusinessUserManagementComponent implements OnInit {
   }
 
   async loadBusinessUsers() {
-    // TODO: Implement loading business users from a service
-    this.businessUsers = [
-      { id: 'U001', name: 'John Doe', role: 'cashier' },
-      { id: 'U002', name: 'Jane Smith', role: 'manager' },
-    ];
+    try {
+      this.loading = true;
+      this.businessUsers = await this.businessService.getBusinessUsers(
+        this.businessId
+      );
+    } catch (error) {
+      this.errorHandler.handleError(error, 'Error loading business users');
+    } finally {
+      this.loading = false;
+    }
   }
 
   async updateUserRole(userId: string, newRole: string) {
-    // TODO: Implement updating user role in the service
-    console.log(`Updating user ${userId} to role ${newRole}`);
+    try {
+      await this.businessService.updateUserRole(
+        this.businessId,
+        userId,
+        newRole
+      );
+      await this.loadBusinessUsers();
+    } catch (error) {
+      this.errorHandler.handleError(error, 'Error updating user role');
+    }
   }
 
   async removeUser(userId: string) {
-    // TODO: Implement removing user from the business in the service
-    console.log(`Removing user ${userId} from the business`);
+    try {
+      await this.businessService.removeUserFromBusiness(
+        this.businessId,
+        userId
+      );
+      await this.loadBusinessUsers();
+    } catch (error) {
+      this.errorHandler.handleError(error, 'Error removing user from business');
+    }
   }
 }

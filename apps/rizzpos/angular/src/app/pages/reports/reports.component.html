@@ -1,0 +1,21 @@
+<rizzpos-header [title]="'Reports'"></rizzpos-header>
+
+<ion-content class="ion-padding">
+    <ng-container [ngSwitch]="userRole">
+        <ng-container *ngSwitchCase="'manager'">
+            <h2>Sales Reports</h2>
+            <!-- Add basic sales reports -->
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'owner'">
+            <h2>Business Reports</h2>
+            <!-- Add comprehensive business reports -->
+        </ng-container>
+
+        <ng-container *ngSwitchDefault>
+            <p>You don't have permission to access this page.</p>
+        </ng-container>
+    </ng-container>
+</ion-content>
+
+<rizzpos-footer></rizzpos-footer>

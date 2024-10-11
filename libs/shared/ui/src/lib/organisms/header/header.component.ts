@@ -11,4 +11,5 @@ import { IonicModule } from '@ionic/angular';
 })
 export class HeaderComponent {
   @Input() title = '';
+  @Input() isHomePage = false;
 }

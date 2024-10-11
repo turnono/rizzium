@@ -2,7 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { ActivatedRoute } from '@angular/router';
-import { BusinessService, ProductService } from '@rizzpos/shared/services';
+import {
+  BusinessService,
+  FirebaseAuthService,
+  Purchase,
+  Promotion,
+  ErrorHandlerService,
+} from '@rizzpos/shared/services';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
 
 @Component({
@@ -15,60 +21,48 @@ import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
 export class CustomerDashboardComponent implements OnInit {
   businessId: string;
   businessName: string = '';
-  pastPurchases: any[] = []; // Replace 'any' with a proper Purchase interface
+  pastPurchases: Purchase[] = [];
   loyaltyPoints: number = 0;
-  promotions: any[] = []; // Replace 'any' with a proper Promotion interface
+  promotions: Promotion[] = [];
+  loading: boolean = true;
 
   constructor(
     private route: ActivatedRoute,
     private businessService: BusinessService,
-    private productService: ProductService
+    private authService: FirebaseAuthService,
+    private errorHandler: ErrorHandlerService
   ) {
     this.businessId = this.route.snapshot.paramMap.get('businessId') || '';
   }
 
   ngOnInit() {
-    this.loadBusinessData();
-    this.loadPastPurchases();
-    this.loadLoyaltyPoints();
-    this.loadPromotions();
+    this.loadCustomerData();
   }
 
-  async loadBusinessData() {
-    const businessData = await this.businessService.getBusinessData(
-      this.businessId
-    );
-    if (businessData) {
-      this.businessName = businessData.businessName;
+  async loadCustomerData() {
+    try {
+      this.loading = true;
+      const user = await this.authService.getCurrentUser();
+      if (!user) {
+        throw new Error('No authenticated user found');
+      }
+
+      const [businessData, pastPurchases, loyaltyPoints, promotions] =
+        await Promise.all([
+          this.businessService.getBusinessData(this.businessId),
+          this.businessService.getPastPurchases(this.businessId, user.uid),
+          this.businessService.getLoyaltyPoints(this.businessId, user.uid),
+          this.businessService.getPromotions(this.businessId),
+        ]);
+
+      this.businessName = businessData?.businessName || '';
+      this.pastPurchases = pastPurchases;
+      this.loyaltyPoints = loyaltyPoints;
+      this.promotions = promotions;
+    } catch (error) {
+      this.errorHandler.handleError(error, 'Error loading customer data');
+    } finally {
+      this.loading = false;
     }
-  }
-
-  loadPastPurchases() {
-    // TODO: Implement loading past purchases from a service
-    this.pastPurchases = [
-      { id: 'P001', date: new Date(), total: 50.0 },
-      { id: 'P002', date: new Date(), total: 75.5 },
-    ];
-  }
-
-  loadLoyaltyPoints() {
-    // TODO: Implement loading loyalty points from a service
-    this.loyaltyPoints = 100;
-  }
-
-  loadPromotions() {
-    // TODO: Implement loading promotions from a service
-    this.promotions = [
-      {
-        id: 'PROMO1',
-        description: '10% off on all items',
-        validUntil: new Date(),
-      },
-      {
-        id: 'PROMO2',
-        description: 'Buy one get one free',
-        validUntil: new Date(),
-      },
-    ];
   }
 }

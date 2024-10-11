@@ -13,6 +13,8 @@ import {
   onSnapshot,
   updateDoc,
   arrayUnion,
+  orderBy,
+  limit,
 } from '@angular/fire/firestore';
 import { FirebaseAuthService } from './firebase-auth.service';
 import { Observable, BehaviorSubject } from 'rxjs';
@@ -25,6 +27,18 @@ export interface BusinessData {
   phoneNumber: string;
   ownerId: string;
   createdAt: Timestamp;
+}
+
+export interface Purchase {
+  id: string;
+  date: Date;
+  total: number;
+}
+
+export interface Promotion {
+  id: string;
+  description: string;
+  validUntil: Date;
 }
 
 @Injectable({
@@ -163,6 +177,82 @@ export class BusinessService {
 
   getUserBusinesses$(userId: string): Observable<BusinessData[]> {
     return this.userBusinesses$;
+  }
+
+  async getPastPurchases(
+    businessId: string,
+    userId: string
+  ): Promise<Purchase[]> {
+    try {
+      const purchasesRef = collection(
+        this.firestore,
+        `businesses/${businessId}/purchases`
+      );
+      const q = query(
+        purchasesRef,
+        where('userId', '==', userId),
+        orderBy('date', 'desc'),
+        limit(10)
+      );
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(
+        (doc) => ({ id: doc.id, ...doc.data() } as Purchase)
+      );
+    } catch (error) {
+      console.error('Error fetching past purchases:', error);
+      throw new Error('Failed to fetch past purchases. Please try again.');
+    }
+  }
+
+  async getLoyaltyPoints(businessId: string, userId: string): Promise<number> {
+    try {
+      const userRef = doc(
+        this.firestore,
+        `businesses/${businessId}/customers/${userId}`
+      );
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        return userSnap.data()['loyaltyPoints'] || 0;
+      }
+      return 0;
+    } catch (error) {
+      console.error('Error fetching loyalty points:', error);
+      throw new Error('Failed to fetch loyalty points. Please try again.');
+    }
+  }
+
+  async getPromotions(businessId: string): Promise<Promotion[]> {
+    try {
+      const promotionsRef = collection(
+        this.firestore,
+        `businesses/${businessId}/promotions`
+      );
+      const q = query(promotionsRef, where('validUntil', '>', Timestamp.now()));
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(
+        (doc) => ({ id: doc.id, ...doc.data() } as Promotion)
+      );
+    } catch (error) {
+      console.error('Error fetching promotions:', error);
+      throw new Error('Failed to fetch promotions. Please try again.');
+    }
+  }
+
+  async getUserRole(businessId: string, userId: string): Promise<string> {
+    try {
+      const userRef = doc(
+        this.firestore,
+        `businesses/${businessId}/businessUsers/${userId}`
+      );
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        return userSnap.data()['role'] || 'customer';
+      }
+      return 'customer';
+    } catch (error) {
+      console.error('Error fetching user role:', error);
+      throw new Error('Failed to fetch user role. Please try again.');
+    }
   }
 
   // Add more methods for business management

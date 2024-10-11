@@ -7,10 +7,16 @@ import { ToastController } from '@ionic/angular';
 export class ErrorHandlerService {
   constructor(private toastController: ToastController) {}
 
-  async handleError(error: any, message: string = 'An error occurred') {
-    console.error(error);
+  async handleError(error: any, customMessage: string) {
+    console.error('Error:', error);
+
+    let errorMessage = customMessage;
+    if (error instanceof Error) {
+      errorMessage += `: ${error.message}`;
+    }
+
     const toast = await this.toastController.create({
-      message: message,
+      message: errorMessage,
       duration: 3000,
       position: 'bottom',
       color: 'danger',

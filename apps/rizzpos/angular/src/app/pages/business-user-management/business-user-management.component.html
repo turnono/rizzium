@@ -1,15 +1,18 @@
-<rizzpos-header [title]="'Manage Business Users'"></rizzpos-header>
+<rizzpos-header [title]="'Business User Management'"></rizzpos-header>
 
 <ion-content class="ion-padding">
-    <ion-list>
+    <ion-spinner *ngIf="loading"></ion-spinner>
+
+    <ion-list *ngIf="!loading">
         <ion-item *ngFor="let user of businessUsers">
             <ion-label>
                 <h2>{{ user.name }}</h2>
-                <p>Role: {{ user.role }}</p>
+                <p>{{ user.email }}</p>
             </ion-label>
-            <ion-select [value]="user.role" (ionChange)="updateUserRole(user.id, $event.detail.value)">
-                <ion-select-option value="cashier">Cashier</ion-select-option>
+            <ion-select [(ngModel)]="user.role" (ionChange)="updateUserRole(user.id, user.role)">
+                <ion-select-option value="owner">Owner</ion-select-option>
                 <ion-select-option value="manager">Manager</ion-select-option>
+                <ion-select-option value="cashier">Cashier</ion-select-option>
             </ion-select>
             <ion-button slot="end" color="danger" (click)="removeUser(user.id)">Remove</ion-button>
         </ion-item>
