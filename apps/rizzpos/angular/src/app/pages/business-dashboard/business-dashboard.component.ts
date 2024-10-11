@@ -70,6 +70,7 @@ export class BusinessDashboardComponent implements OnInit {
       this.businessData = await this.businessService.getBusinessData(
         this.businessId
       );
+      this.errorHandler.showInfo('Business data loaded successfully');
     } catch (error) {
       this.errorHandler.handleError(error, 'Error loading business data');
     }
@@ -109,19 +110,17 @@ export class BusinessDashboardComponent implements OnInit {
     return `${baseUrl}/join?businessId=${this.businessId}`;
   }
 
-  async copyURL(role: 'cashier' | 'manager' | 'customer'): Promise<void> {
-    const url =
-      role === 'customer'
-        ? this.generateCustomerURL()
-        : this.generateRoleURL(role as 'cashier' | 'manager');
+  copyURL(role: 'cashier' | 'manager' | 'customer') {
+    let url: string;
+    if (role === 'customer') {
+      url = this.generateCustomerURL();
+    } else {
+      url = this.generateRoleURL(role);
+    }
+
     this.clipboard.copy(url);
-    const toast = await this.toastController.create({
-      message: `${
-        role.charAt(0).toUpperCase() + role.slice(1)
-      } URL copied to clipboard`,
-      duration: 2000,
-      position: 'bottom',
-    });
-    toast.present();
+    this.errorHandler.showSuccess(
+      `${role.charAt(0).toUpperCase() + role.slice(1)} URL copied to clipboard`
+    );
   }
 }
