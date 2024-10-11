@@ -1,12 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, ToastController } from '@ionic/angular';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   BusinessService,
   BusinessData,
   ProductService,
   Product,
+  ErrorHandlerService,
 } from '@rizzpos/shared/services';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
 import { Observable } from 'rxjs';
@@ -47,7 +48,9 @@ export class BusinessDashboardComponent implements OnInit {
     private router: Router,
     private businessService: BusinessService,
     private productService: ProductService,
-    private clipboard: Clipboard
+    private clipboard: Clipboard,
+    private toastController: ToastController,
+    private errorHandler: ErrorHandlerService
   ) {
     this.businessId = this.route.snapshot.paramMap.get('businessId') || '';
     this.lowStockProducts$ = this.productService.getLowStockProducts(
@@ -68,8 +71,7 @@ export class BusinessDashboardComponent implements OnInit {
         this.businessId
       );
     } catch (error) {
-      console.error('Error loading business data:', error);
-      // Handle error (show message to user)
+      this.errorHandler.handleError(error, 'Error loading business data');
     }
   }
 
@@ -102,20 +104,24 @@ export class BusinessDashboardComponent implements OnInit {
     return `${baseUrl}/join?businessId=${this.businessId}&role=${role}`;
   }
 
-  copyURL(role: 'cashier' | 'manager'): void {
-    const url = this.generateRoleURL(role);
-    this.clipboard.copy(url);
-    // You might want to show a toast or some other notification that the URL has been copied
-  }
-
   generateCustomerURL(): string {
     const baseUrl = window.location.origin;
     return `${baseUrl}/join?businessId=${this.businessId}`;
   }
 
-  copyCustomerURL(): void {
-    const url = this.generateCustomerURL();
+  async copyURL(role: 'cashier' | 'manager' | 'customer'): Promise<void> {
+    const url =
+      role === 'customer'
+        ? this.generateCustomerURL()
+        : this.generateRoleURL(role as 'cashier' | 'manager');
     this.clipboard.copy(url);
-    // You might want to show a toast or some other notification that the URL has been copied
+    const toast = await this.toastController.create({
+      message: `${
+        role.charAt(0).toUpperCase() + role.slice(1)
+      } URL copied to clipboard`,
+      duration: 2000,
+      position: 'bottom',
+    });
+    toast.present();
   }
 }
