@@ -11,7 +11,7 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { catchError, tap } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { of, from } from 'rxjs';
 
 @Component({
   selector: 'app-login',
@@ -64,7 +64,7 @@ export class LoginPageComponent implements OnInit {
     }
   }
 
-  signIn(email: string, password: string) {
+  async signIn(email: string, password: string) {
     this.authService
       .signInWithEmailAndPassword(email, password)
       .pipe(
@@ -78,9 +78,8 @@ export class LoginPageComponent implements OnInit {
       .subscribe();
   }
 
-  register(email: string, password: string) {
-    this.authService
-      .createUserWithEmailAndPassword(email, password)
+  async register(email: string, password: string) {
+    from(this.authService.createUserWithEmailAndPassword(email, password))
       .pipe(
         tap(() => this.router.navigate(['/home'])),
         catchError((error) => {

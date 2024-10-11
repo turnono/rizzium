@@ -14,7 +14,7 @@
 
   <ng-container *ngIf="!loading && !error">
     <ion-list>
-      <ion-item *ngFor="let business of businesses" (click)="goToBusiness(business.id)">
+      <ion-item *ngFor="let business of businesses$ | async" (click)="goToBusiness(business.id)">
         <ion-label>
           <h2>{{ business.businessName }}</h2>
           <p>{{ business.businessType }}</p>
@@ -29,7 +29,7 @@
     </ion-fab>
   </ng-container>
 
-  <ion-text *ngIf="!loading && !error && businesses.length === 0">
+  <ion-text *ngIf="!loading && !error && (businesses$ | async)?.length === 0">
     <p>You don't have any businesses yet. Create one to get started!</p>
   </ion-text>
 </ion-content>

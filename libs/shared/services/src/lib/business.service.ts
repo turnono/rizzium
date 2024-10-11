@@ -10,8 +10,10 @@ import {
   getDocs,
   getDoc,
   Timestamp,
+  onSnapshot,
 } from '@angular/fire/firestore';
 import { FirebaseAuthService } from './firebase-auth.service';
+import { Observable, BehaviorSubject } from 'rxjs';
 
 export interface BusinessData {
   id: string;
@@ -27,18 +29,37 @@ export interface BusinessData {
   providedIn: 'root',
 })
 export class BusinessService {
+  private userBusinessesSubject = new BehaviorSubject<BusinessData[]>([]);
+  userBusinesses$ = this.userBusinessesSubject.asObservable();
+
   constructor(
     private firestore: Firestore,
     private authService: FirebaseAuthService
-  ) {}
+  ) {
+    this.initUserBusinessesListener();
+  }
+
+  private async initUserBusinessesListener() {
+    const user = await this.authService.getCurrentUser();
+    if (user) {
+      const businessesRef = collection(this.firestore, 'businesses');
+      const q = query(businessesRef, where('ownerId', '==', user.uid));
+      onSnapshot(q, (querySnapshot) => {
+        const businesses = querySnapshot.docs.map(
+          (doc) => ({ id: doc.id, ...doc.data() } as BusinessData)
+        );
+        this.userBusinessesSubject.next(businesses);
+      });
+    }
+  }
 
   async setupBusiness(
-    businessData: Omit<BusinessData, 'ownerId' | 'createdAt'>
+    businessData: Omit<BusinessData, 'id' | 'ownerId' | 'createdAt'>
   ) {
     const user = await this.authService.getCurrentUser();
     if (!user) throw new Error('No authenticated user found');
 
-    const fullBusinessData: BusinessData = {
+    const fullBusinessData: Omit<BusinessData, 'id'> = {
       ...businessData,
       ownerId: user.uid,
       createdAt: Timestamp.now(),
@@ -88,17 +109,24 @@ export class BusinessService {
 
   async getUserBusinesses(userId: string): Promise<BusinessData[]> {
     try {
-      const businessesRef = collection(this.firestore, 'businesses');
-      const q = query(businessesRef, where('ownerId', '==', userId));
-      const querySnapshot = await getDocs(q);
+      const userRef = doc(this.firestore, `users/${userId}`);
+      const userSnap = await getDoc(userRef);
 
-      return querySnapshot.docs.map(
-        (doc) =>
-          ({
-            id: doc.id,
-            ...doc.data(),
-          } as BusinessData)
-      );
+      if (userSnap.exists() && userSnap.data()['businesses']) {
+        const businessIds = userSnap.data()['businesses'] as string[];
+        const businesses: BusinessData[] = [];
+
+        for (const businessId of businessIds) {
+          const businessData = await this.getBusinessData(businessId);
+          if (businessData) {
+            businesses.push(businessData);
+          }
+        }
+
+        return businesses;
+      }
+
+      return [];
     } catch (error) {
       console.error('Error getting user businesses:', error);
       throw new Error('Failed to get user businesses. Please try again.');
@@ -118,6 +146,10 @@ export class BusinessService {
       console.error('Error fetching business data:', error);
       throw new Error('Failed to fetch business data. Please try again.');
     }
+  }
+
+  getUserBusinesses$(userId: string): Observable<BusinessData[]> {
+    return this.userBusinesses$;
   }
 
   // Add more methods for business management

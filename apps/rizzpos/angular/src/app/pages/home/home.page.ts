@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import {
@@ -8,6 +8,8 @@ import {
 } from '@rizzpos/shared/services';
 import { RouterModule, Router } from '@angular/router';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
+import { Observable, Subscription } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-home',
@@ -22,34 +24,44 @@ import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
     RouterModule,
   ],
 })
-export class HomePageComponent implements OnInit {
-  businesses: BusinessData[] = [];
+export class HomePageComponent implements OnInit, OnDestroy {
+  businesses$: Observable<BusinessData[]>;
   loading = true;
   error: string | null = null;
+  private subscription?: Subscription;
 
   constructor(
     private authService: FirebaseAuthService,
     private businessService: BusinessService,
     private router: Router
-  ) {}
-
-  ngOnInit() {
-    this.loadBusinesses();
+  ) {
+    this.businesses$ = this.authService.user$.pipe(
+      switchMap((user) => {
+        if (user) {
+          return this.businessService.getUserBusinesses$(user.uid);
+        } else {
+          return [];
+        }
+      })
+    );
   }
 
-  async loadBusinesses() {
-    try {
-      const user = await this.authService.getCurrentUser();
-      if (user) {
-        this.businesses = await this.businessService.getUserBusinesses(
-          user.uid
-        );
-      }
-    } catch (err) {
-      console.error('Error loading businesses:', err);
-      this.error = 'Failed to load businesses. Please try again.';
-    } finally {
-      this.loading = false;
+  ngOnInit() {
+    this.subscription = this.businesses$.subscribe({
+      next: () => {
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Error loading businesses:', err);
+        this.error = 'Failed to load businesses. Please try again.';
+        this.loading = false;
+      },
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.subscription) {
+      this.subscription.unsubscribe();
     }
   }
 

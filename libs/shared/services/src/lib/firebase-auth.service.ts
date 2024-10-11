@@ -1,24 +1,24 @@
 import { Injectable } from '@angular/core';
 import {
-  Auth as FirebaseAuth,
+  Auth,
   User,
-  signInAnonymously,
-  signOut,
-  onAuthStateChanged,
+  UserCredential,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  signInAnonymously,
   GoogleAuthProvider,
   signInWithPopup,
-  UserCredential,
 } from '@angular/fire/auth';
 import {
   Firestore,
   doc,
   setDoc,
   getDoc,
-  Timestamp,
   updateDoc,
   arrayUnion,
+  Timestamp,
 } from '@angular/fire/firestore';
 import { Observable, BehaviorSubject, from, of } from 'rxjs';
 import { switchMap, first, tap } from 'rxjs/operators';
@@ -38,7 +38,7 @@ export class FirebaseAuthService {
     new BehaviorSubject<AppUser | null>(null);
   user$: Observable<AppUser | null> = this.userSubject.asObservable();
 
-  constructor(private auth: FirebaseAuth, private firestore: Firestore) {
+  constructor(private auth: Auth, private firestore: Firestore) {
     onAuthStateChanged(this.auth, (user) => {
       console.log('Auth state changed:', user);
       if (user) {
@@ -52,46 +52,47 @@ export class FirebaseAuthService {
     });
   }
 
-  ensureAuth(): Observable<AppUser | null> {
-    return this.user$.pipe(
-      switchMap((user) => {
-        if (!user) {
-          return from(signInAnonymously(this.auth)).pipe(
-            switchMap((credential) => this.initializeUser(credential.user)),
-            switchMap(() => this.user$)
-          );
-        }
-        return of(user);
-      })
+  async createUserWithEmailAndPassword(
+    email: string,
+    password: string
+  ): Promise<UserCredential> {
+    const credential = await createUserWithEmailAndPassword(
+      this.auth,
+      email,
+      password
     );
+    await this.initializeUser(credential.user);
+    return credential;
+  }
+
+  async signInAnonymously(): Promise<UserCredential> {
+    const credential = await signInAnonymously(this.auth);
+    await this.initializeUser(credential.user);
+    return credential;
   }
 
   private async initializeUser(user: User): Promise<void> {
     const userRef = doc(this.firestore, `users/${user.uid}`);
     const cartRef = doc(this.firestore, `carts/${user.uid}`);
 
-    if (user.isAnonymous) {
-      await setDoc(
-        userRef,
-        {
-          isAnonymous: true,
-          role: 'anon',
-          createdAt: Timestamp.now(),
-        },
-        { merge: true }
-      );
+    const userData = {
+      email: user.email,
+      displayName: user.displayName,
+      photoURL: user.photoURL,
+      createdAt: Timestamp.now(),
+      role: user.isAnonymous ? 'anon' : 'client',
+    };
 
-      await setDoc(
-        cartRef,
-        {
-          items: [],
-          createdAt: Timestamp.now(),
-        },
-        { merge: true }
-      );
-    } else {
-      // Handle registered user initialization if needed
-    }
+    await setDoc(userRef, userData, { merge: true });
+
+    await setDoc(
+      cartRef,
+      {
+        items: [],
+        createdAt: Timestamp.now(),
+      },
+      { merge: true }
+    );
   }
 
   private async getUserRole(user: User): Promise<UserRole> {
@@ -105,13 +106,6 @@ export class FirebaseAuthService {
 
   signOut() {
     return signOut(this.auth);
-  }
-
-  createUserWithEmailAndPassword(
-    email: string,
-    password: string
-  ): Observable<UserCredential> {
-    return from(createUserWithEmailAndPassword(this.auth, email, password));
   }
 
   signInWithEmailAndPassword(
