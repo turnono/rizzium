@@ -27,7 +27,7 @@ import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
 export class BusinessUserManagementComponent implements OnInit {
   businessId: string;
   businessUsers: BusinessUser[] = [];
-  loading: boolean = true;
+  loading = true;
   currentUserId: string | null = null;
 
   constructor(
@@ -40,9 +40,13 @@ export class BusinessUserManagementComponent implements OnInit {
   }
 
   async ngOnInit() {
-    const user = await this.authService.getCurrentUser();
-    this.currentUserId = user ? user.uid : null;
-    this.loadBusinessUsers();
+    try {
+      const user = await this.authService.getCurrentUser();
+      this.currentUserId = user ? user.uid : null;
+      await this.loadBusinessUsers();
+    } catch (error) {
+      this.errorHandler.handleError(error, 'Error initializing component');
+    }
   }
 
   async loadBusinessUsers() {
@@ -51,6 +55,7 @@ export class BusinessUserManagementComponent implements OnInit {
       this.businessUsers = await this.businessService.getBusinessUsers(
         this.businessId
       );
+      this.errorHandler.showInfo('Business users loaded successfully');
     } catch (error) {
       this.errorHandler.handleError(error, 'Error loading business users');
     } finally {
@@ -65,7 +70,9 @@ export class BusinessUserManagementComponent implements OnInit {
         userId,
         newRole
       );
-      this.errorHandler.showSuccess('User role updated successfully');
+      this.errorHandler.showSuccess(
+        `User role updated to ${newRole} successfully`
+      );
       await this.loadBusinessUsers();
     } catch (error) {
       this.errorHandler.handleError(error, 'Error updating user role');
@@ -74,9 +81,8 @@ export class BusinessUserManagementComponent implements OnInit {
 
   async removeUser(userId: string) {
     if (userId === this.currentUserId) {
-      this.errorHandler.handleError(
-        new Error('You cannot remove yourself from the business'),
-        'Error removing user'
+      this.errorHandler.showWarning(
+        'You cannot remove yourself from the business'
       );
       return;
     }
