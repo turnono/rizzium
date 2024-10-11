@@ -142,26 +142,29 @@ export class FirebaseAuthService {
       businesses: arrayUnion(businessId),
     });
 
-    if (role) {
-      if (!['cashier', 'manager'].includes(role)) {
-        throw new Error('Invalid role specified');
-      }
+    const businessUserRef = doc(
+      this.firestore,
+      `businesses/${businessId}/businessUsers/${user.uid}`
+    );
+    const businessUserSnap = await getDoc(businessUserRef);
 
-      const businessUserRef = doc(
-        this.firestore,
-        `businesses/${businessId}/businessUsers/${user.uid}`
-      );
+    if (!businessUserSnap.exists()) {
+      // If the user doesn't exist in the business, add them with the specified role or as a client
       await setDoc(
         businessUserRef,
         {
-          role: role,
+          role: role || 'client',
           userId: user.uid,
           createdAt: Timestamp.now(),
           displayName: user.displayName || 'New User',
         },
         { merge: true }
       );
+    } else if (role && role !== 'owner') {
+      // If the user exists and a new role is specified (but not 'owner'), update the role
+      await updateDoc(businessUserRef, { role: role });
     }
+    // If the user is already an 'owner', we don't change their role
   }
 
   async getUserRoleForBusiness(businessId: string): Promise<UserRole> {

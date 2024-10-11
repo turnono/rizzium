@@ -11,6 +11,8 @@ import {
   getDoc,
   Timestamp,
   onSnapshot,
+  updateDoc,
+  arrayUnion,
 } from '@angular/fire/firestore';
 import { FirebaseAuthService } from './firebase-auth.service';
 import { Observable, BehaviorSubject } from 'rxjs';
@@ -72,11 +74,22 @@ export class BusinessService {
       );
 
       await setDoc(
-        doc(this.firestore, `businesses/${businessRef.id}/users/${user.uid}`),
+        doc(
+          this.firestore,
+          `businesses/${businessRef.id}/businessUsers/${user.uid}`
+        ),
         {
           role: 'owner',
+          userId: user.uid,
+          createdAt: Timestamp.now(),
+          displayName: user.displayName || 'Business Owner',
         }
       );
+
+      const userRef = doc(this.firestore, `users/${user.uid}`);
+      await updateDoc(userRef, {
+        businesses: arrayUnion(businessRef.id),
+      });
 
       return businessRef.id;
     } catch (error) {
