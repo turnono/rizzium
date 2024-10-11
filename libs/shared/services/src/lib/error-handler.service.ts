@@ -23,4 +23,14 @@ export class ErrorHandlerService {
     });
     toast.present();
   }
+
+  async showSuccess(message: string) {
+    const toast = await this.toastController.create({
+      message: message,
+      duration: 3000,
+      position: 'bottom',
+      color: 'success',
+    });
+    toast.present();
+  }
 }

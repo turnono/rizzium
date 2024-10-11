@@ -15,6 +15,7 @@ import {
   arrayUnion,
   orderBy,
   limit,
+  deleteDoc,
 } from '@angular/fire/firestore';
 import { FirebaseAuthService } from './firebase-auth.service';
 import { Observable, BehaviorSubject } from 'rxjs';
@@ -39,6 +40,13 @@ export interface Promotion {
   id: string;
   description: string;
   validUntil: Date;
+}
+
+export interface BusinessUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
 }
 
 @Injectable({
@@ -252,6 +260,73 @@ export class BusinessService {
     } catch (error) {
       console.error('Error fetching user role:', error);
       throw new Error('Failed to fetch user role. Please try again.');
+    }
+  }
+
+  async getBusinessUsers(businessId: string): Promise<BusinessUser[]> {
+    try {
+      const businessUsersRef = collection(
+        this.firestore,
+        `businesses/${businessId}/businessUsers`
+      );
+      const querySnapshot = await getDocs(businessUsersRef);
+      return querySnapshot.docs.map(
+        (doc) =>
+          ({
+            id: doc.id,
+            ...doc.data(),
+          } as BusinessUser)
+      );
+    } catch (error) {
+      console.error('Error fetching business users:', error);
+      throw new Error('Failed to fetch business users. Please try again.');
+    }
+  }
+
+  async updateUserRole(
+    businessId: string,
+    userId: string,
+    newRole: string
+  ): Promise<void> {
+    try {
+      const userRef = doc(
+        this.firestore,
+        `businesses/${businessId}/businessUsers/${userId}`
+      );
+      await updateDoc(userRef, { role: newRole });
+    } catch (error) {
+      console.error('Error updating user role:', error);
+      throw new Error('Failed to update user role. Please try again.');
+    }
+  }
+
+  async removeUserFromBusiness(
+    businessId: string,
+    userId: string
+  ): Promise<void> {
+    try {
+      const userRef = doc(
+        this.firestore,
+        `businesses/${businessId}/businessUsers/${userId}`
+      );
+      await deleteDoc(userRef);
+
+      // Remove the business from the user's businesses array
+      const user = await this.authService.getCurrentUser();
+      if (user) {
+        const userDocRef = doc(this.firestore, `users/${user.uid}`);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          const updatedBusinesses = (userData['businesses'] || []).filter(
+            (id: string) => id !== businessId
+          );
+          await updateDoc(userDocRef, { businesses: updatedBusinesses });
+        }
+      }
+    } catch (error) {
+      console.error('Error removing user from business:', error);
+      throw new Error('Failed to remove user from business. Please try again.');
     }
   }
 

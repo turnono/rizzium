@@ -9,14 +9,20 @@
                 <h2>{{ user.name }}</h2>
                 <p>{{ user.email }}</p>
             </ion-label>
-            <ion-select [(ngModel)]="user.role" (ionChange)="updateUserRole(user.id, user.role)">
+            <ion-select [(ngModel)]="user.role" (ionChange)="updateUserRole(user.id, user.role)"
+                [disabled]="user.id === currentUserId">
                 <ion-select-option value="owner">Owner</ion-select-option>
                 <ion-select-option value="manager">Manager</ion-select-option>
                 <ion-select-option value="cashier">Cashier</ion-select-option>
             </ion-select>
-            <ion-button slot="end" color="danger" (click)="removeUser(user.id)">Remove</ion-button>
+            <ion-button slot="end" color="danger" (click)="removeUser(user.id)"
+                [disabled]="user.id === currentUserId">Remove</ion-button>
         </ion-item>
     </ion-list>
+
+    <ion-text *ngIf="!loading && businessUsers.length === 0" color="medium">
+        <p>No users found for this business.</p>
+    </ion-text>
 </ion-content>
 
 <rizzpos-footer></rizzpos-footer>

@@ -5,17 +5,11 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import {
   BusinessService,
+  BusinessUser,
   FirebaseAuthService,
   ErrorHandlerService,
 } from '@rizzpos/shared/services';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
-
-interface BusinessUser {
-  id: string;
-  name: string;
-  role: string;
-  email: string;
-}
 
 @Component({
   selector: 'app-business-user-management',
@@ -34,6 +28,7 @@ export class BusinessUserManagementComponent implements OnInit {
   businessId: string;
   businessUsers: BusinessUser[] = [];
   loading: boolean = true;
+  currentUserId: string | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -44,7 +39,9 @@ export class BusinessUserManagementComponent implements OnInit {
     this.businessId = this.route.snapshot.paramMap.get('businessId') || '';
   }
 
-  ngOnInit() {
+  async ngOnInit() {
+    const user = await this.authService.getCurrentUser();
+    this.currentUserId = user ? user.uid : null;
     this.loadBusinessUsers();
   }
 
@@ -68,6 +65,7 @@ export class BusinessUserManagementComponent implements OnInit {
         userId,
         newRole
       );
+      this.errorHandler.showSuccess('User role updated successfully');
       await this.loadBusinessUsers();
     } catch (error) {
       this.errorHandler.handleError(error, 'Error updating user role');
@@ -75,11 +73,20 @@ export class BusinessUserManagementComponent implements OnInit {
   }
 
   async removeUser(userId: string) {
+    if (userId === this.currentUserId) {
+      this.errorHandler.handleError(
+        new Error('You cannot remove yourself from the business'),
+        'Error removing user'
+      );
+      return;
+    }
+
     try {
       await this.businessService.removeUserFromBusiness(
         this.businessId,
         userId
       );
+      this.errorHandler.showSuccess('User removed from business successfully');
       await this.loadBusinessUsers();
     } catch (error) {
       this.errorHandler.handleError(error, 'Error removing user from business');
