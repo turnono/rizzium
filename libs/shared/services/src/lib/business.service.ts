@@ -330,5 +330,22 @@ export class BusinessService {
     }
   }
 
+  async getActivePromotions(businessId: string) {
+    const promotionsCollection = collection(
+      this.firestore,
+      `businesses/${businessId}/promotions`
+    );
+    const activePromotionsQuery = query(
+      promotionsCollection,
+      where('expiryDate', '>', new Date())
+    );
+
+    const querySnapshot = await getDocs(activePromotionsQuery);
+    return querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+  }
+
   // Add more methods for business management
 }

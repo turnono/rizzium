@@ -1,40 +1,80 @@
 import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
+import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
 import { AuthGuard } from './guards/auth.guard';
-import { RoleGuard } from './guards/role.guard';
+import { CustomerDashboardComponent } from './pages/customer-dashboard/customer-dashboard.component';
 
 const routes: Routes = [
-  // ... existing routes ...
   {
-    path: 'business/:businessId/sales',
-    loadComponent: () =>
-      import('./pages/sales/sales.component').then((m) => m.SalesComponent),
-    canActivate: [AuthGuard, RoleGuard],
-    data: { roles: ['cashier', 'manager', 'owner'] },
+    path: '',
+    redirectTo: 'login',
+    pathMatch: 'full',
   },
   {
-    path: 'business/:businessId/inventory',
+    path: 'login',
     loadComponent: () =>
-      import('./pages/inventory/inventory.component').then(
-        (m) => m.InventoryComponent
-      ),
-    canActivate: [AuthGuard, RoleGuard],
-    data: { roles: ['manager', 'owner'] },
+      import('./pages/login/login.component').then((m) => m.LoginComponent),
   },
   {
-    path: 'business/:businessId/reports',
+    path: 'join',
     loadComponent: () =>
-      import('./pages/reports/reports.component').then(
-        (m) => m.ReportsComponent
-      ),
-    canActivate: [AuthGuard, RoleGuard],
-    data: { roles: ['manager', 'owner'] },
+      import('./pages/join/join.component').then((m) => m.JoinComponent),
   },
-  // ... other routes ...
+  {
+    path: 'business/:businessId',
+    canActivate: [AuthGuard],
+    children: [
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import(
+            './pages/business-dashboard/business-dashboard.component'
+          ).then((m) => m.BusinessDashboardComponent),
+      },
+      {
+        path: 'user-management',
+        loadComponent: () =>
+          import(
+            './pages/business-user-management/business-user-management.component'
+          ).then((m) => m.BusinessUserManagementComponent),
+      },
+      {
+        path: 'inventory',
+        loadComponent: () =>
+          import('./pages/inventory/inventory.component').then(
+            (m) => m.InventoryComponent
+          ),
+      },
+      {
+        path: 'sales',
+        loadComponent: () =>
+          import('./pages/sales/sales.component').then((m) => m.SalesComponent),
+      },
+      {
+        path: 'reports',
+        loadComponent: () =>
+          import('./pages/reports/reports.component').then(
+            (m) => m.ReportsComponent
+          ),
+      },
+      {
+        path: 'customer-dashboard',
+        loadComponent: () =>
+          import(
+            './pages/customer-dashboard/customer-dashboard.component'
+          ).then((m) => m.CustomerDashboardComponent),
+      },
+    ],
+  },
+  {
+    path: 'business/:businessId/customer-dashboard/:customerId',
+    component: CustomerDashboardComponent,
+  },
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes)],
+  imports: [
+    RouterModule.forRoot(routes, { preloadingStrategy: PreloadAllModules }),
+  ],
   exports: [RouterModule],
 })
 export class AppRoutingModule {}

@@ -4,12 +4,24 @@ import { IonicModule } from '@ionic/angular';
 import { ActivatedRoute } from '@angular/router';
 import {
   BusinessService,
-  FirebaseAuthService,
-  Purchase,
-  Promotion,
+  CustomerService,
   ErrorHandlerService,
 } from '@rizzpos/shared/services';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
+
+interface Transaction {
+  id: string;
+  date: Date;
+  total: number;
+  items: { name: string; quantity: number; price: number }[];
+}
+
+interface Promotion {
+  id: string;
+  title: string;
+  description: string;
+  expiryDate: Date;
+}
 
 @Component({
   selector: 'app-customer-dashboard',
@@ -20,49 +32,61 @@ import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
 })
 export class CustomerDashboardComponent implements OnInit {
   businessId: string;
+  customerId: string;
   businessName: string = '';
-  pastPurchases: Purchase[] = [];
   loyaltyPoints: number = 0;
-  promotions: Promotion[] = [];
-  loading: boolean = true;
+  recentTransactions: Transaction[] = [];
+  activePromotions: Promotion[] = [];
 
   constructor(
     private route: ActivatedRoute,
     private businessService: BusinessService,
-    private authService: FirebaseAuthService,
+    private customerService: CustomerService,
     private errorHandler: ErrorHandlerService
   ) {
     this.businessId = this.route.snapshot.paramMap.get('businessId') || '';
+    this.customerId = this.route.snapshot.paramMap.get('customerId') || '';
   }
 
-  ngOnInit() {
-    this.loadCustomerData();
+  async ngOnInit() {
+    try {
+      await this.loadBusinessData();
+      await this.loadCustomerData();
+      await this.loadRecentTransactions();
+      await this.loadActivePromotions();
+    } catch (error) {
+      this.errorHandler.handleError(
+        error,
+        'Error initializing customer dashboard'
+      );
+    }
+  }
+
+  async loadBusinessData() {
+    const businessData = await this.businessService.getBusinessData(
+      this.businessId
+    );
+    this.businessName = businessData.businessName;
   }
 
   async loadCustomerData() {
-    try {
-      this.loading = true;
-      const user = await this.authService.getCurrentUser();
-      if (!user) {
-        throw new Error('No authenticated user found');
-      }
+    const customerData = await this.customerService.getCustomerData(
+      this.businessId,
+      this.customerId
+    );
+    this.loyaltyPoints = customerData.loyaltyPoints;
+  }
 
-      const [businessData, pastPurchases, loyaltyPoints, promotions] =
-        await Promise.all([
-          this.businessService.getBusinessData(this.businessId),
-          this.businessService.getPastPurchases(this.businessId, user.uid),
-          this.businessService.getLoyaltyPoints(this.businessId, user.uid),
-          this.businessService.getPromotions(this.businessId),
-        ]);
+  async loadRecentTransactions() {
+    this.recentTransactions = await this.customerService.getRecentTransactions(
+      this.businessId,
+      this.customerId
+    );
+  }
 
-      this.businessName = businessData?.businessName || '';
-      this.pastPurchases = pastPurchases;
-      this.loyaltyPoints = loyaltyPoints;
-      this.promotions = promotions;
-    } catch (error) {
-      this.errorHandler.handleError(error, 'Error loading customer data');
-    } finally {
-      this.loading = false;
-    }
+  async loadActivePromotions() {
+    this.activePromotions = await this.businessService.getActivePromotions(
+      this.businessId
+    );
   }
 }
