@@ -314,9 +314,17 @@ export class BusinessService {
       promotionsCollection,
       where('expiryDate', '>', Timestamp.now())
     );
+
     return from(getDocs(activePromotionsQuery)).pipe(
-      map((snapshot) =>
-        snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Promotion))
+      map((querySnapshot) =>
+        querySnapshot.docs.map(
+          (doc) =>
+            ({
+              id: doc.id,
+              ...doc.data(),
+              expiryDate: doc.data()['expiryDate'].toDate(),
+            } as Promotion)
+        )
       )
     );
   }

@@ -11,7 +11,7 @@ import {
   getDocs,
 } from '@angular/fire/firestore';
 import { Observable, from, map } from 'rxjs';
-import { Transaction } from '@rizzpos/shared/interfaces';
+import { Transaction, Purchase } from '@rizzpos/shared/interfaces';
 
 @Injectable({
   providedIn: 'root',
@@ -60,6 +60,53 @@ export class CustomerService {
             } as Transaction)
         )
       )
+    );
+  }
+
+  getCustomerPurchases(
+    businessId: string,
+    customerId: string
+  ): Observable<Purchase[]> {
+    const purchasesCollection = collection(
+      this.firestore,
+      `businesses/${businessId}/purchases`
+    );
+    const customerPurchasesQuery = query(
+      purchasesCollection,
+      where('customerId', '==', customerId),
+      orderBy('date', 'desc'),
+      limit(10)
+    );
+
+    return from(getDocs(customerPurchasesQuery)).pipe(
+      map((querySnapshot) =>
+        querySnapshot.docs.map(
+          (doc) =>
+            ({
+              id: doc.id,
+              ...doc.data(),
+              date: doc.data()['date'].toDate(),
+            } as Purchase)
+        )
+      )
+    );
+  }
+
+  getCustomerLoyaltyPoints(
+    businessId: string,
+    customerId: string
+  ): Observable<number> {
+    const customerDoc = doc(
+      this.firestore,
+      `businesses/${businessId}/customers/${customerId}`
+    );
+    return from(getDoc(customerDoc)).pipe(
+      map((docSnapshot) => {
+        if (docSnapshot.exists()) {
+          return docSnapshot.data()['loyaltyPoints'] || 0;
+        }
+        return 0;
+      })
     );
   }
 }
