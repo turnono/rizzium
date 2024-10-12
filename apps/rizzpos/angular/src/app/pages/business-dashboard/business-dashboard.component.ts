@@ -5,25 +5,12 @@ import { ActivatedRoute, Router } from '@angular/router';
 import {
   BusinessService,
   ProductService,
-  Product,
   ErrorHandlerService,
 } from '@rizzpos/shared/services';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
-import { from, map, Observable } from 'rxjs';
+import { Observable, of, catchError, finalize, from } from 'rxjs';
 import { Clipboard } from '@angular/cdk/clipboard';
-import { BusinessData } from '@rizzpos/shared/interfaces';
-
-interface QuickAction {
-  label: string;
-  icon: string;
-  route: string;
-}
-
-interface Transaction {
-  id: string;
-  date: Date;
-  total: number;
-}
+import { BusinessData, Product, Transaction } from '@rizzpos/shared/interfaces';
 
 @Component({
   selector: 'app-business-dashboard',
@@ -34,14 +21,16 @@ interface Transaction {
 })
 export class BusinessDashboardComponent implements OnInit {
   businessId: string;
-  businessData$: Observable<BusinessData>;
+  businessData$: Observable<BusinessData | null>;
   lowStockProducts$: Observable<Product[]>;
   recentTransactions$: Observable<Transaction[]>;
   todaySales = 0;
   monthSales = 0;
   totalProducts = 0;
   currentYear: number = new Date().getFullYear();
-  quickActions: QuickAction[] = [
+  isLoading = true;
+
+  quickActions = [
     { label: 'Inventory', icon: 'cube', route: 'inventory' },
     { label: 'Sales', icon: 'cash', route: 'sales' },
     { label: 'Reports', icon: 'bar-chart', route: 'reports' },
@@ -57,44 +46,62 @@ export class BusinessDashboardComponent implements OnInit {
     private errorHandler: ErrorHandlerService
   ) {
     this.businessId = this.route.snapshot.paramMap.get('businessId') || '';
-    this.businessData$ = new Observable<BusinessData>();
+    this.businessData$ = new Observable<BusinessData | null>();
     this.lowStockProducts$ = new Observable<Product[]>();
     this.recentTransactions$ = new Observable<Transaction[]>();
   }
 
   ngOnInit() {
-    this.loadBusinessData();
-    this.loadLowStockProducts();
-    this.loadRecentTransactions();
+    this.loadData();
+  }
+
+  loadData() {
+    this.isLoading = true;
+    this.businessData$ = from(
+      this.businessService.getBusinessData(this.businessId)
+    ).pipe(
+      catchError((error) => {
+        this.errorHandler.handleError(error, 'Error loading business data');
+        return of(null);
+      }),
+      finalize(() => (this.isLoading = false))
+    );
+
+    this.lowStockProducts$ = this.businessService
+      .getLowStockProducts(this.businessId)
+      .pipe(
+        catchError((error) => {
+          this.errorHandler.handleError(
+            error,
+            'Error loading low stock products'
+          );
+          return of([]);
+        })
+      );
+
+    this.recentTransactions$ = this.businessService
+      .getRecentTransactions(this.businessId)
+      .pipe(
+        catchError((error) => {
+          this.errorHandler.handleError(
+            error,
+            'Error loading recent transactions'
+          );
+          return of([]);
+        })
+      );
+
     this.loadSalesData();
     this.loadProductCount();
   }
 
-  loadBusinessData() {
-    this.businessData$ = from(
-      this.businessService.getBusinessData(this.businessId)
-    ).pipe(map((data) => data as BusinessData));
-  }
-
-  loadLowStockProducts() {
-    this.lowStockProducts$ = from(
-      this.businessService.getLowStockProducts(this.businessId)
-    ).pipe(map((data) => data as Product[]));
-  }
-
-  loadRecentTransactions() {
-    this.recentTransactions$ = this.businessService.getRecentTransactions(
-      this.businessId
-    );
-  }
-
-  async loadSalesData() {
+  loadSalesData() {
     // TODO: Implement actual sales data loading from a sales service
     this.todaySales = 1234.56;
     this.monthSales = 45678.9;
   }
 
-  async loadProductCount() {
+  loadProductCount() {
     // TODO: Implement actual product count loading from the product service
     this.totalProducts = 100;
   }

@@ -8,7 +8,7 @@ import {
   ErrorHandlerService,
 } from '@rizzpos/shared/services';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
-import { Observable, catchError, map, of, from } from 'rxjs';
+import { Observable, catchError, forkJoin, map, of, finalize } from 'rxjs';
 import {
   BusinessData,
   Promotion,
@@ -25,10 +25,11 @@ import {
 export class CustomerDashboardComponent implements OnInit {
   businessId: string;
   customerId: string;
-  businessData$?: Observable<BusinessData>;
-  loyaltyPoints$?: Observable<number>;
-  recentTransactions$?: Observable<Transaction[]>;
-  activePromotions$?: Observable<Promotion[]>;
+  businessData$: Observable<BusinessData | null>;
+  loyaltyPoints$: Observable<number>;
+  recentTransactions$: Observable<Transaction[]>;
+  activePromotions$: Observable<Promotion[]>;
+  isLoading = true;
 
   constructor(
     private route: ActivatedRoute,
@@ -45,63 +46,41 @@ export class CustomerDashboardComponent implements OnInit {
   }
 
   loadData() {
-    this.businessData$ = from(
-      this.businessService.getBusinessData(this.businessId)
-    ).pipe(
-      catchError((error) => {
-        this.errorHandler.handleError(error, 'Error loading business data');
-        return of(null);
-      }),
-      map((data: BusinessData | null) => {
-        if (data === null) {
-          return {} as BusinessData;
-        }
-        return data;
-      })
-    ) as Observable<BusinessData>;
-
-    this.loyaltyPoints$ = from(
-      this.businessService.getLoyaltyPoints(this.businessId, this.customerId)
-    ).pipe(
-      catchError((error) => {
-        this.errorHandler.handleError(error, 'Error loading loyalty points');
-        return of(0);
-      })
-    );
-
-    this.recentTransactions$ = of(
-      this.customerService.getRecentTransactions(
+    this.isLoading = true;
+    forkJoin({
+      businessData: this.businessService.getBusinessData(this.businessId),
+      loyaltyPoints: this.businessService.getLoyaltyPoints(
         this.businessId,
         this.customerId
-      )
-    ).pipe(
-      catchError((error) => {
-        this.errorHandler.handleError(
-          error,
-          'Error loading recent transactions'
-        );
-        return of([]);
-      })
-    ) as Observable<Transaction[]>;
-
-    this.activePromotions$ = from(
-      this.businessService.getActivePromotions(this.businessId)
-    ).pipe(
-      map((promotions: { id: string }[]) =>
-        promotions.map(
-          (promo) =>
-            ({
-              ...promo,
-              title: '',
-              description: '',
-              expiryDate: new Date(),
-            } as Promotion)
-        )
       ),
-      catchError((error) => {
-        this.errorHandler.handleError(error, 'Error loading active promotions');
-        return of([]);
-      })
-    );
+      recentTransactions: this.customerService.getRecentTransactions(
+        this.businessId,
+        this.customerId
+      ),
+      activePromotions: this.businessService.getActivePromotions(
+        this.businessId
+      ),
+    })
+      .pipe(
+        catchError((error) => {
+          this.errorHandler.handleError(
+            error,
+            'Error loading customer dashboard data'
+          );
+          return of({
+            businessData: null,
+            loyaltyPoints: 0,
+            recentTransactions: [],
+            activePromotions: [],
+          });
+        }),
+        finalize(() => (this.isLoading = false))
+      )
+      .subscribe((result) => {
+        this.businessData$ = of(result.businessData);
+        this.loyaltyPoints$ = of(result.loyaltyPoints);
+        this.recentTransactions$ = of(result.recentTransactions);
+        this.activePromotions$ = of(result.activePromotions);
+      });
   }
 }

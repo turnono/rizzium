@@ -10,6 +10,8 @@ import {
   limit,
   getDocs,
 } from '@angular/fire/firestore';
+import { Observable, from, map } from 'rxjs';
+import { Transaction } from '@rizzpos/shared/interfaces';
 
 @Injectable({
   providedIn: 'root',
@@ -17,21 +19,26 @@ import {
 export class CustomerService {
   constructor(private firestore: Firestore) {}
 
-  async getCustomerData(businessId: string, customerId: string) {
+  getCustomerData(businessId: string, customerId: string): Observable<any> {
     const customerDoc = doc(
       this.firestore,
       `businesses/${businessId}/customers/${customerId}`
     );
-    const customerSnapshot = await getDoc(customerDoc);
-
-    if (customerSnapshot.exists()) {
-      return customerSnapshot.data();
-    } else {
-      throw new Error('Customer not found');
-    }
+    return from(getDoc(customerDoc)).pipe(
+      map((customerSnapshot) => {
+        if (customerSnapshot.exists()) {
+          return customerSnapshot.data();
+        } else {
+          throw new Error('Customer not found');
+        }
+      })
+    );
   }
 
-  async getRecentTransactions(businessId: string, customerId: string) {
+  getRecentTransactions(
+    businessId: string,
+    customerId: string
+  ): Observable<Transaction[]> {
     const transactionsCollection = collection(
       this.firestore,
       `businesses/${businessId}/transactions`
@@ -43,10 +50,16 @@ export class CustomerService {
       limit(5)
     );
 
-    const querySnapshot = await getDocs(recentTransactionsQuery);
-    return querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    return from(getDocs(recentTransactionsQuery)).pipe(
+      map((querySnapshot) =>
+        querySnapshot.docs.map(
+          (doc) =>
+            ({
+              id: doc.id,
+              ...doc.data(),
+            } as Transaction)
+        )
+      )
+    );
   }
 }

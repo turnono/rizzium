@@ -4,8 +4,8 @@ import { IonicModule } from '@ionic/angular';
 import { FirebaseAuthService, BusinessService } from '@rizzpos/shared/services';
 import { RouterModule, Router } from '@angular/router';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
-import { Observable, Subscription } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { Observable, Subscription, of } from 'rxjs';
+import { switchMap, catchError } from 'rxjs/operators';
 import { BusinessData } from '@rizzpos/shared/interfaces';
 
 @Component({
@@ -35,9 +35,15 @@ export class HomePageComponent implements OnInit, OnDestroy {
     this.businesses$ = this.authService.user$.pipe(
       switchMap((user) => {
         if (user) {
-          return this.businessService.getUserBusinesses$(user.uid);
+          return this.businessService.getUserBusinesses$(user.uid).pipe(
+            catchError((error) => {
+              console.error('Error loading businesses:', error);
+              this.error = 'Failed to load businesses. Please try again.';
+              return of([]);
+            })
+          );
         } else {
-          return [];
+          return of([]);
         }
       })
     );

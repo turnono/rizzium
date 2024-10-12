@@ -18,7 +18,15 @@ import {
   deleteDoc,
 } from '@angular/fire/firestore';
 import { FirebaseAuthService } from './firebase-auth.service';
-import { Observable, from, map, BehaviorSubject } from 'rxjs';
+import {
+  Observable,
+  from,
+  map,
+  BehaviorSubject,
+  forkJoin,
+  of,
+  firstValueFrom,
+} from 'rxjs';
 import {
   BusinessData,
   Product,
@@ -134,16 +142,14 @@ export class BusinessService {
 
       if (userSnap.exists() && userSnap.data()['businesses']) {
         const businessIds = userSnap.data()['businesses'] as string[];
-        const businesses: BusinessData[] = [];
+        const businessObservables = businessIds.map((id) =>
+          this.getBusinessData(id)
+        );
 
-        for (const businessId of businessIds) {
-          const businessData = await this.getBusinessData(businessId);
-          if (businessData) {
-            businesses.push(businessData);
-          }
-        }
-
-        return businesses;
+        const results = await firstValueFrom(forkJoin(businessObservables));
+        return results.filter(
+          (business): business is BusinessData => business !== null
+        );
       }
 
       return [];
@@ -153,19 +159,19 @@ export class BusinessService {
     }
   }
 
-  async getBusinessData(businessId: string): Promise<BusinessData | null> {
-    try {
-      const businessRef = doc(this.firestore, `businesses/${businessId}`);
-      const businessSnap = await getDoc(businessRef);
-
-      if (businessSnap.exists()) {
-        return businessSnap.data() as BusinessData;
-      }
-      return null;
-    } catch (error) {
-      console.error('Error fetching business data:', error);
-      throw new Error('Failed to fetch business data. Please try again.');
-    }
+  getBusinessData(businessId: string): Observable<BusinessData | null> {
+    const businessRef = doc(this.firestore, `businesses/${businessId}`);
+    return from(getDoc(businessRef)).pipe(
+      map((businessSnap) => {
+        if (businessSnap.exists()) {
+          return {
+            id: businessSnap.id,
+            ...businessSnap.data(),
+          } as BusinessData;
+        }
+        return null;
+      })
+    );
   }
 
   getUserBusinesses$(userId: string): Observable<BusinessData[]> {
@@ -197,21 +203,14 @@ export class BusinessService {
     }
   }
 
-  async getLoyaltyPoints(businessId: string, userId: string): Promise<number> {
-    try {
-      const userRef = doc(
-        this.firestore,
-        `businesses/${businessId}/customers/${userId}`
-      );
-      const userSnap = await getDoc(userRef);
-      if (userSnap.exists()) {
-        return userSnap.data()['loyaltyPoints'] || 0;
-      }
-      return 0;
-    } catch (error) {
-      console.error('Error fetching loyalty points:', error);
-      throw new Error('Failed to fetch loyalty points. Please try again.');
-    }
+  getLoyaltyPoints(businessId: string, userId: string): Observable<number> {
+    const customerDoc = doc(
+      this.firestore,
+      `businesses/${businessId}/customers/${userId}`
+    );
+    return from(getDoc(customerDoc)).pipe(
+      map((doc) => (doc.exists() ? doc.data()['loyaltyPoints'] || 0 : 0))
+    );
   }
 
   async getPromotions(businessId: string): Promise<Promotion[]> {
@@ -315,21 +314,20 @@ export class BusinessService {
     }
   }
 
-  async getActivePromotions(businessId: string) {
+  getActivePromotions(businessId: string): Observable<Promotion[]> {
     const promotionsCollection = collection(
       this.firestore,
       `businesses/${businessId}/promotions`
     );
     const activePromotionsQuery = query(
       promotionsCollection,
-      where('expiryDate', '>', new Date())
+      where('expiryDate', '>', Timestamp.now())
     );
-
-    const querySnapshot = await getDocs(activePromotionsQuery);
-    return querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    return from(getDocs(activePromotionsQuery)).pipe(
+      map((snapshot) =>
+        snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Promotion))
+      )
+    );
   }
 
   getLowStockProducts(businessId: string): Observable<Product[]> {
@@ -354,7 +352,11 @@ export class BusinessService {
       this.firestore,
       `businesses/${businessId}/transactions`
     );
-    const recentTransactionsQuery = query(transactionsCollection, limit(5));
+    const recentTransactionsQuery = query(
+      transactionsCollection,
+      orderBy('date', 'desc'),
+      limit(5)
+    );
     return from(getDocs(recentTransactionsQuery)).pipe(
       map((snapshot) =>
         snapshot.docs.map(

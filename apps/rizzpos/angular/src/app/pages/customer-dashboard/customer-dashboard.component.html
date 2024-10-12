@@ -1,62 +1,67 @@
 <rizzpos-header [title]="(businessData$ | async)?.businessName || 'Customer Dashboard'"></rizzpos-header>
 
 <ion-content class="ion-padding">
-  <ion-grid>
-    <ion-row>
-      <ion-col size="12">
-        <ion-card>
-          <ion-card-header>
-            <ion-card-title>Loyalty Points</ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            <h2>{{ loyaltyPoints$ | async }} points</h2>
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-    </ion-row>
+  <ng-container *ngIf="isLoading; else dashboardContent">
+    <ion-skeleton-text animated style="width: 60%"></ion-skeleton-text>
+    <ion-skeleton-text animated style="width: 80%"></ion-skeleton-text>
+    <ion-skeleton-text animated style="width: 70%"></ion-skeleton-text>
+  </ng-container>
 
-    <ion-row>
-      <ion-col size="12">
-        <ion-card>
-          <ion-card-header>
-            <ion-card-title>Recent Transactions</ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            <ion-list>
-              <ion-item *ngFor="let transaction of recentTransactions$ | async">
-                <ion-label>
-                  <h2>{{ transaction.id }}</h2>
-                  <p>{{ transaction.date | date:'short' }}</p>
-                  <p>Total: {{ transaction.total | currency }}</p>
-                </ion-label>
-              </ion-item>
-            </ion-list>
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-    </ion-row>
+  <ng-template #dashboardContent>
+    <ion-grid>
+      <ion-row>
+        <ion-col size="12" size-md="6">
+          <ion-card>
+            <ion-card-header>
+              <ion-card-title>Loyalty Points</ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+              <h2>{{ loyaltyPoints$ | async }} points</h2>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+        <ion-col size="12" size-md="6">
+          <ion-card>
+            <ion-card-header>
+              <ion-card-title>Active Promotions</ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+              <ion-list>
+                <ion-item *ngFor="let promotion of activePromotions$ | async">
+                  <ion-label>
+                    <h2>{{ promotion.title }}</h2>
+                    <p>{{ promotion.description }}</p>
+                    <p>Expires: {{ promotion.expiryDate | date:'mediumDate' }}</p>
+                  </ion-label>
+                </ion-item>
+              </ion-list>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+      </ion-row>
 
-    <ion-row>
-      <ion-col size="12">
-        <ion-card>
-          <ion-card-header>
-            <ion-card-title>Active Promotions</ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            <ion-list>
-              <ion-item *ngFor="let promotion of activePromotions$ | async">
-                <ion-label>
-                  <h2>{{ promotion.title }}</h2>
-                  <p>{{ promotion.description }}</p>
-                  <p>Expires: {{ promotion.expiryDate | date:'mediumDate' }}</p>
-                </ion-label>
-              </ion-item>
-            </ion-list>
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-    </ion-row>
-  </ion-grid>
+      <ion-row>
+        <ion-col size="12">
+          <ion-card>
+            <ion-card-header>
+              <ion-card-title>Recent Transactions</ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+              <ion-list>
+                <ion-item *ngFor="let transaction of recentTransactions$ | async">
+                  <ion-label>
+                    <h2>{{ transaction.id }}</h2>
+                    <p>{{ transaction.date | date:'short' }}</p>
+                    <p>Total: {{ transaction.total | currency }}</p>
+                  </ion-label>
+                </ion-item>
+              </ion-list>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </ng-template>
 </ion-content>
 
 <rizzpos-footer></rizzpos-footer>
