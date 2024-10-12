@@ -1,100 +1,50 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
-import { FormsModule } from '@angular/forms';
-import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
+import { ActivatedRoute } from '@angular/router';
 import {
-  FirebaseAuthService,
-  BusinessService,
-  ProductService,
+  TransactionService,
   ErrorHandlerService,
 } from '@rizzpos/shared/services';
+import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
+import { Observable } from 'rxjs';
+import { Transaction } from '@rizzpos/shared/interfaces';
 
 @Component({
   selector: 'app-sales',
   templateUrl: './sales.component.html',
   styleUrls: ['./sales.component.scss'],
   standalone: true,
-  imports: [
-    CommonModule,
-    IonicModule,
-    HeaderComponent,
-    FooterComponent,
-    FormsModule,
-  ],
+  imports: [CommonModule, IonicModule, HeaderComponent, FooterComponent],
 })
 export class SalesComponent implements OnInit {
-  businessId: string = '';
-  userRole: string = '';
-  products: any[] = [];
-  cart: any[] = [];
-  total: number = 0;
+  businessId: string;
+  transactions$: Observable<Transaction[]>;
+  totalSales: number = 0;
 
   constructor(
-    private authService: FirebaseAuthService,
-    private businessService: BusinessService,
-    private productService: ProductService,
+    private route: ActivatedRoute,
+    private transactionService: TransactionService,
     private errorHandler: ErrorHandlerService
-  ) {}
-
-  async ngOnInit() {
-    try {
-      const user = await this.authService.getCurrentUser();
-      if (user) {
-        this.businessId = await this.businessService.getUserBusiness(user.uid);
-        this.userRole = await this.businessService.getUserRole(
-          this.businessId,
-          user.uid
-        );
-        await this.loadProducts();
-      }
-    } catch (error) {
-      this.errorHandler.handleError(error, 'Error initializing sales page');
-    }
+  ) {
+    this.businessId = this.route.snapshot.paramMap.get('businessId') || '';
   }
 
-  async loadProducts() {
-    try {
-      this.products = await this.productService.getProducts(this.businessId);
-    } catch (error) {
-      this.errorHandler.handleError(error, 'Error loading products');
-    }
+  ngOnInit() {
+    this.loadTransactions();
   }
 
-  addToCart(product: any) {
-    const existingItem = this.cart.find((item) => item.id === product.id);
-    if (existingItem) {
-      existingItem.quantity += 1;
-    } else {
-      this.cart.push({ ...product, quantity: 1 });
-    }
-    this.updateTotal();
-  }
-
-  removeFromCart(product: any) {
-    const index = this.cart.findIndex((item) => item.id === product.id);
-    if (index !== -1) {
-      if (this.cart[index].quantity > 1) {
-        this.cart[index].quantity -= 1;
-      } else {
-        this.cart.splice(index, 1);
-      }
-      this.updateTotal();
-    }
-  }
-
-  updateTotal() {
-    this.total = this.cart.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
+  loadTransactions() {
+    this.transactions$ = this.transactionService.getTransactions(
+      this.businessId
     );
-  }
-
-  async processSale() {
-    // TODO: Implement actual sale processing
-    console.log('Processing sale:', this.cart, 'Total:', this.total);
-    // Clear cart after successful sale
-    this.cart = [];
-    this.total = 0;
+    this.transactions$.subscribe(
+      (transactions) => {
+        this.totalSales = transactions.reduce((total, t) => total + t.total, 0);
+      },
+      (error) => {
+        this.errorHandler.handleError(error, 'Error loading transactions');
+      }
+    );
   }
 }

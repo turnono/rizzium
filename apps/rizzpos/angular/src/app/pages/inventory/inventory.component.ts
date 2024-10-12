@@ -1,109 +1,50 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
-import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
+import { ProductService, ErrorHandlerService } from '@rizzpos/shared/services';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
-import {
-  FirebaseAuthService,
-  BusinessService,
-  ProductService,
-  ErrorHandlerService,
-} from '@rizzpos/shared/services';
+import { Observable } from 'rxjs';
 import { Product } from '@rizzpos/shared/interfaces';
-import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-inventory',
   templateUrl: './inventory.component.html',
-  styleUrl: './inventory.component.scss',
+  styleUrls: ['./inventory.component.scss'],
   standalone: true,
-  imports: [
-    CommonModule,
-    IonicModule,
-    HeaderComponent,
-    FooterComponent,
-    FormsModule,
-  ],
+  imports: [CommonModule, IonicModule, HeaderComponent, FooterComponent],
 })
 export class InventoryComponent implements OnInit {
-  businessId = '';
-  userRole = '';
-  products: Product[] = [];
-  newProduct: Product = {
-    id: '',
-    name: '',
-    description: '',
-    price: 0,
-    stockQuantity: 0,
-  };
+  businessId: string;
+  products$: Observable<Product[]>;
 
   constructor(
-    private authService: FirebaseAuthService,
-    private businessService: BusinessService,
+    private route: ActivatedRoute,
     private productService: ProductService,
     private errorHandler: ErrorHandlerService
-  ) {}
-
-  async ngOnInit() {
-    try {
-      const user = await this.authService.getCurrentUser();
-      if (user) {
-        this.businessId =
-          (await this.businessService.getUserBusiness(user.uid)) ?? '';
-        this.userRole = await this.businessService.getUserRole(
-          this.businessId,
-          user.uid
-        );
-        await this.loadProducts();
-      }
-    } catch (error) {
-      this.errorHandler.handleError(error, 'Error initializing inventory page');
-    }
+  ) {
+    this.businessId = this.route.snapshot.paramMap.get('businessId') || '';
   }
 
-  async loadProducts() {
-    try {
-      this.products = (await firstValueFrom(
-        this.productService.getProducts(this.businessId)
-      )) as Product[];
-    } catch (error) {
-      this.errorHandler.handleError(error, 'Error loading products');
-    }
+  ngOnInit() {
+    this.loadProducts();
   }
 
-  async addProduct() {
-    try {
-      await this.productService.addProduct(this.newProduct as any);
-      this.newProduct = {
-        id: '',
-        name: '',
-        description: '',
-        price: 0,
-        stockQuantity: 0,
-      };
-      await this.loadProducts();
-    } catch (error) {
-      this.errorHandler.handleError(error, 'Error adding product');
-    }
+  loadProducts() {
+    this.products$ = this.productService.getProducts(this.businessId);
   }
 
-  async updateProduct(product: any) {
-    try {
-      await this.productService.updateProduct(this.businessId, product);
-      await this.loadProducts();
-    } catch (error) {
-      this.errorHandler.handleError(error, 'Error updating product');
-    }
+  updateStock(product: Product, newStock: number) {
+    this.productService
+      .updateProductStock(this.businessId, product.id, newStock)
+      .subscribe(
+        () => {
+          this.errorHandler.showSuccess('Stock updated successfully');
+          this.loadProducts(); // Reload products to reflect the change
+        },
+        (error) => {
+          this.errorHandler.handleError(error, 'Error updating stock');
+        }
+      );
   }
-
-  async deleteProduct(productId: string) {
-    try {
-      await this.productService.deleteProduct(productId);
-      await this.loadProducts();
-    } catch (error) {
-      this.errorHandler.handleError(error, 'Error deleting product');
-    }
-  }
-
-  // Implement inventory-related methods here
 }

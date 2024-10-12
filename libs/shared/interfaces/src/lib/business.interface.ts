@@ -38,3 +38,10 @@ export interface Promotion {
   description: string;
   expiryDate: Date;
 }
+
+export interface BusinessUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}

@@ -3,17 +3,13 @@ import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { ActivatedRoute } from '@angular/router';
 import {
-  BusinessService,
   CustomerService,
   ErrorHandlerService,
+  PromotionService,
 } from '@rizzpos/shared/services';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
-import { Observable, catchError, forkJoin, map, of, finalize } from 'rxjs';
-import {
-  BusinessData,
-  Promotion,
-  Transaction,
-} from '@rizzpos/shared/interfaces';
+import { Observable } from 'rxjs';
+import { Transaction, Promotion } from '@rizzpos/shared/interfaces';
 
 @Component({
   selector: 'app-customer-dashboard',
@@ -25,16 +21,15 @@ import {
 export class CustomerDashboardComponent implements OnInit {
   businessId: string;
   customerId: string;
-  businessData$: Observable<BusinessData | null>;
-  loyaltyPoints$: Observable<number>;
+  customerData$: Observable<any>;
   recentTransactions$: Observable<Transaction[]>;
-  activePromotions$: Observable<Promotion[]>;
-  isLoading = true;
+  promotions$: Observable<Promotion[]>;
+  loyaltyPoints: number = 0;
 
   constructor(
     private route: ActivatedRoute,
-    private businessService: BusinessService,
     private customerService: CustomerService,
+    private promotionService: PromotionService,
     private errorHandler: ErrorHandlerService
   ) {
     this.businessId = this.route.snapshot.paramMap.get('businessId') || '';
@@ -42,45 +37,36 @@ export class CustomerDashboardComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.loadData();
+    this.loadCustomerData();
+    this.loadRecentTransactions();
+    this.loadPromotions();
   }
 
-  loadData() {
-    this.isLoading = true;
-    forkJoin({
-      businessData: this.businessService.getBusinessData(this.businessId),
-      loyaltyPoints: this.businessService.getLoyaltyPoints(
-        this.businessId,
-        this.customerId
-      ),
-      recentTransactions: this.customerService.getRecentTransactions(
-        this.businessId,
-        this.customerId
-      ),
-      activePromotions: this.businessService.getActivePromotions(
-        this.businessId
-      ),
-    })
-      .pipe(
-        catchError((error) => {
-          this.errorHandler.handleError(
-            error,
-            'Error loading customer dashboard data'
-          );
-          return of({
-            businessData: null,
-            loyaltyPoints: 0,
-            recentTransactions: [],
-            activePromotions: [],
-          });
-        }),
-        finalize(() => (this.isLoading = false))
-      )
-      .subscribe((result) => {
-        this.businessData$ = of(result.businessData);
-        this.loyaltyPoints$ = of(result.loyaltyPoints);
-        this.recentTransactions$ = of(result.recentTransactions);
-        this.activePromotions$ = of(result.activePromotions);
-      });
+  loadCustomerData() {
+    this.customerData$ = this.customerService.getCustomerData(
+      this.businessId,
+      this.customerId
+    );
+    this.customerData$.subscribe(
+      (data) => {
+        this.loyaltyPoints = data.loyaltyPoints || 0;
+      },
+      (error) => {
+        this.errorHandler.handleError(error, 'Error loading customer data');
+      }
+    );
+  }
+
+  loadRecentTransactions() {
+    this.recentTransactions$ = this.customerService.getRecentTransactions(
+      this.businessId,
+      this.customerId
+    );
+  }
+
+  loadPromotions() {
+    this.promotions$ = this.promotionService.getActivePromotions(
+      this.businessId
+    );
   }
 }

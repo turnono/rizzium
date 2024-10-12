@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
-import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import {
   BusinessService,
@@ -10,23 +9,18 @@ import {
   ErrorHandlerService,
 } from '@rizzpos/shared/services';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-business-user-management',
   templateUrl: './business-user-management.component.html',
   styleUrls: ['./business-user-management.component.scss'],
   standalone: true,
-  imports: [
-    CommonModule,
-    IonicModule,
-    HeaderComponent,
-    FooterComponent,
-    FormsModule,
-  ],
+  imports: [CommonModule, IonicModule, HeaderComponent, FooterComponent],
 })
 export class BusinessUserManagementComponent implements OnInit {
   businessId: string;
-  businessUsers: BusinessUser[] = [];
+  users$: Observable<BusinessUser[]>;
   loading = true;
   currentUserId: string | null = null;
 
@@ -39,47 +33,38 @@ export class BusinessUserManagementComponent implements OnInit {
     this.businessId = this.route.snapshot.paramMap.get('businessId') || '';
   }
 
-  async ngOnInit() {
+  ngOnInit() {
     try {
-      const user = await this.authService.getCurrentUser();
+      const user = this.authService.getCurrentUser();
       this.currentUserId = user ? user.uid : null;
-      await this.loadBusinessUsers();
+      this.loadUsers();
     } catch (error) {
       this.errorHandler.handleError(error, 'Error initializing component');
     }
   }
 
-  async loadBusinessUsers() {
-    try {
-      this.loading = true;
-      this.businessUsers = await this.businessService.getBusinessUsers(
-        this.businessId
-      );
-      this.errorHandler.showInfo('Business users loaded successfully');
-    } catch (error) {
-      this.errorHandler.handleError(error, 'Error loading business users');
-    } finally {
-      this.loading = false;
-    }
+  loadUsers() {
+    this.users$ = this.businessService.getBusinessUsers(this.businessId);
+    this.loading = true;
   }
 
-  async updateUserRole(userId: string, newRole: string) {
-    try {
-      await this.businessService.updateUserRole(
-        this.businessId,
-        userId,
-        newRole
+  updateUserRole(userId: string, newRole: string) {
+    this.businessService
+      .updateUserRole(this.businessId, userId, newRole)
+      .subscribe(
+        () => {
+          this.errorHandler.showSuccess(
+            `User role updated to ${newRole} successfully`
+          );
+          this.loadUsers(); // Reload users to reflect the change
+        },
+        (error) => {
+          this.errorHandler.handleError(error, 'Error updating user role');
+        }
       );
-      this.errorHandler.showSuccess(
-        `User role updated to ${newRole} successfully`
-      );
-      await this.loadBusinessUsers();
-    } catch (error) {
-      this.errorHandler.handleError(error, 'Error updating user role');
-    }
   }
 
-  async removeUser(userId: string) {
+  removeUser(userId: string) {
     if (userId === this.currentUserId) {
       this.errorHandler.showWarning(
         'You cannot remove yourself from the business'
@@ -87,15 +72,21 @@ export class BusinessUserManagementComponent implements OnInit {
       return;
     }
 
-    try {
-      await this.businessService.removeUserFromBusiness(
-        this.businessId,
-        userId
+    this.businessService
+      .removeUserFromBusiness(this.businessId, userId)
+      .subscribe(
+        () => {
+          this.errorHandler.showSuccess(
+            'User removed from business successfully'
+          );
+          this.loadUsers(); // Reload users to reflect the change
+        },
+        (error) => {
+          this.errorHandler.handleError(
+            error,
+            'Error removing user from business'
+          );
+        }
       );
-      this.errorHandler.showSuccess('User removed from business successfully');
-      await this.loadBusinessUsers();
-    } catch (error) {
-      this.errorHandler.handleError(error, 'Error removing user from business');
-    }
   }
 }

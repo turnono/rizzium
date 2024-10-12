@@ -1,21 +1,30 @@
 <rizzpos-header [title]="'Reports'"></rizzpos-header>
 
 <ion-content class="ion-padding">
-    <ng-container [ngSwitch]="userRole">
-        <ng-container *ngSwitchCase="'manager'">
-            <h2>Sales Reports</h2>
-            <!-- Add basic sales reports -->
-        </ng-container>
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Sales Summary</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <h2>Total Sales: {{ totalSales | currency }}</h2>
+    </ion-card-content>
+  </ion-card>
 
-        <ng-container *ngSwitchCase="'owner'">
-            <h2>Business Reports</h2>
-            <!-- Add comprehensive business reports -->
-        </ng-container>
-
-        <ng-container *ngSwitchDefault>
-            <p>You don't have permission to access this page.</p>
-        </ng-container>
-    </ng-container>
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Top 5 Products</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-list>
+        <ion-item *ngFor="let product of topProducts; let i = index">
+          <ion-label>
+            <h2>{{ i + 1 }}. {{ product.name }}</h2>
+            <p>Total Sold: {{ product.totalSold }}</p>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+    </ion-card-content>
+  </ion-card>
 </ion-content>
 
 <rizzpos-footer></rizzpos-footer>

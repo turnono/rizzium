@@ -1,55 +1,31 @@
 <rizzpos-header [title]="'Sales'"></rizzpos-header>
 
 <ion-content class="ion-padding">
-    <ng-container [ngSwitch]="userRole">
-        <ng-container *ngSwitchCase="'cashier'">
-            <h2>Process New Sale</h2>
-            <ion-grid>
-                <ion-row>
-                    <ion-col size="12" size-md="6">
-                        <ion-list>
-                            <ion-item *ngFor="let product of products">
-                                <ion-label>
-                                    <h2>{{ product.name }}</h2>
-                                    <p>{{ product.price | currency }}</p>
-                                </ion-label>
-                                <ion-button slot="end" (click)="addToCart(product)">Add</ion-button>
-                            </ion-item>
-                        </ion-list>
-                    </ion-col>
-                    <ion-col size="12" size-md="6">
-                        <h3>Cart</h3>
-                        <ion-list>
-                            <ion-item *ngFor="let item of cart">
-                                <ion-label>
-                                    <h2>{{ item.name }}</h2>
-                                    <p>{{ item.price | currency }} x {{ item.quantity }}</p>
-                                </ion-label>
-                                <ion-button slot="end" (click)="removeFromCart(item)">Remove</ion-button>
-                            </ion-item>
-                        </ion-list>
-                        <h3>Total: {{ total | currency }}</h3>
-                        <ion-button expand="block" (click)="processSale()" [disabled]="cart.length === 0">Process
-                            Sale</ion-button>
-                    </ion-col>
-                </ion-row>
-            </ion-grid>
-        </ng-container>
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Sales Summary</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <h2>Total Sales: {{ totalSales | currency }}</h2>
+    </ion-card-content>
+  </ion-card>
 
-        <ng-container *ngSwitchCase="'manager'">
-            <h2>Sales Overview</h2>
-            <!-- Add sales summary and management options -->
-        </ng-container>
-
-        <ng-container *ngSwitchCase="'owner'">
-            <h2>Sales Dashboard</h2>
-            <!-- Add comprehensive sales data and management tools -->
-        </ng-container>
-
-        <ng-container *ngSwitchDefault>
-            <p>You don't have permission to access this page.</p>
-        </ng-container>
-    </ng-container>
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Transaction History</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-list>
+        <ion-item *ngFor="let transaction of transactions$ | async">
+          <ion-label>
+            <h2>{{ transaction.date | date:'short' }}</h2>
+            <p>Total: {{ transaction.total | currency }}</p>
+            <p>Items: {{ transaction.items.length }}</p>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+    </ion-card-content>
+  </ion-card>
 </ion-content>
 
 <rizzpos-footer></rizzpos-footer>

@@ -33,14 +33,8 @@ import {
   Transaction,
   Promotion,
   Purchase,
+  BusinessUser,
 } from '@rizzpos/shared/interfaces';
-
-export interface BusinessUser {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-}
 
 @Injectable({
   providedIn: 'root',
@@ -247,71 +241,68 @@ export class BusinessService {
     }
   }
 
-  async getBusinessUsers(businessId: string): Promise<BusinessUser[]> {
-    try {
-      const businessUsersRef = collection(
-        this.firestore,
-        `businesses/${businessId}/businessUsers`
-      );
-      const querySnapshot = await getDocs(businessUsersRef);
-      return querySnapshot.docs.map(
-        (doc) =>
-          ({
-            id: doc.id,
-            ...doc.data(),
-          } as BusinessUser)
-      );
-    } catch (error) {
-      console.error('Error fetching business users:', error);
-      throw new Error('Failed to fetch business users. Please try again.');
-    }
+  getBusinessUsers(businessId: string): Observable<BusinessUser[]> {
+    const businessUsersRef = collection(
+      this.firestore,
+      `businesses/${businessId}/businessUsers`
+    );
+    return from(getDocs(businessUsersRef)).pipe(
+      map((snapshot) =>
+        snapshot.docs.map(
+          (doc) => ({ id: doc.id, ...doc.data() } as BusinessUser)
+        )
+      )
+    );
   }
 
-  async updateUserRole(
+  updateUserRole(
     businessId: string,
     userId: string,
     newRole: string
-  ): Promise<void> {
-    try {
-      const userRef = doc(
-        this.firestore,
-        `businesses/${businessId}/businessUsers/${userId}`
-      );
-      await updateDoc(userRef, { role: newRole });
-    } catch (error) {
-      console.error('Error updating user role:', error);
-      throw new Error('Failed to update user role. Please try again.');
-    }
+  ): Observable<void> {
+    const userRef = doc(
+      this.firestore,
+      `businesses/${businessId}/businessUsers/${userId}`
+    );
+    return from(updateDoc(userRef, { role: newRole }));
   }
 
-  async removeUserFromBusiness(
-    businessId: string,
-    userId: string
-  ): Promise<void> {
-    try {
-      const userRef = doc(
-        this.firestore,
-        `businesses/${businessId}/businessUsers/${userId}`
-      );
-      await deleteDoc(userRef);
-
-      // Remove the business from the user's businesses array
-      const user = await this.authService.getCurrentUser();
-      if (user) {
-        const userDocRef = doc(this.firestore, `users/${user.uid}`);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          const updatedBusinesses = (userData['businesses'] || []).filter(
-            (id: string) => id !== businessId
-          );
-          await updateDoc(userDocRef, { businesses: updatedBusinesses });
-        }
-      }
-    } catch (error) {
-      console.error('Error removing user from business:', error);
-      throw new Error('Failed to remove user from business. Please try again.');
-    }
+  removeUserFromBusiness(businessId: string, userId: string): Observable<void> {
+    const userRef = doc(
+      this.firestore,
+      `businesses/${businessId}/businessUsers/${userId}`
+    );
+    return new Observable((observer) => {
+      deleteDoc(userRef)
+        .then(() => {
+          this.authService.getCurrentUser().then((user) => {
+            if (user) {
+              const userDocRef = doc(this.firestore, `users/${user.uid}`);
+              getDoc(userDocRef).then((userDoc) => {
+                if (userDoc.exists()) {
+                  const userData = userDoc.data();
+                  const updatedBusinesses = (
+                    userData['businesses'] || []
+                  ).filter((id: string) => id !== businessId);
+                  updateDoc(userDocRef, { businesses: updatedBusinesses })
+                    .then(() => {
+                      observer.next();
+                      observer.complete();
+                    })
+                    .catch((error) => observer.error(error));
+                } else {
+                  observer.next();
+                  observer.complete();
+                }
+              });
+            } else {
+              observer.next();
+              observer.complete();
+            }
+          });
+        })
+        .catch((error) => observer.error(error));
+    });
   }
 
   getActivePromotions(businessId: string): Observable<Promotion[]> {
@@ -366,5 +357,5 @@ export class BusinessService {
     );
   }
 
-  // Add more methods for business management
+  // Add more methods for business management as needed
 }
