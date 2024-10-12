@@ -38,15 +38,13 @@ service cloud.firestore {
 
       // Business Users subcollection
       match /businessUsers/{userId} {
-        allow read: if isSignedIn() && (request.auth.uid == userId || isOwner(businessId));
-        allow create: if isSignedIn() && (request.auth.uid == userId || isOwner(businessId));
-        allow update: if isOwner(businessId);
-        allow delete: if isOwner(businessId);
+        allow read: if isOwner(businessId) || request.auth.uid == userId;
+        allow create, update, delete: if isOwner(businessId);
       }
 
       // Products subcollection
       match /products/{productId} {
-        allow read: if isSignedIn();
+        allow read: if isCashier(businessId);
         allow create, update, delete: if isManager(businessId);
       }
 
