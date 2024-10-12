@@ -1,38 +1,12 @@
-# RizzPOS Angular Application
+# RizzPOS: Point of Sale System
 
-This is the Angular frontend for the RizzPOS system, a point-of-sale application for small businesses.
+RizzPOS is a comprehensive point of sale system built with Angular and Firebase. It provides role-based access control and features for business owners, employees, and customers.
 
-## Features
+## Key Features
 
-- Business management
-- Role-based access control
-- Product management
-- Sales tracking
-- Customer loyalty program
-
-## Getting Started
-
-1. Clone the repository
-2. Install dependencies: `npm install`
-3. Run the development server: `nx serve rizzpos-angular`
-
-## Available Scripts
-
-- `nx serve rizzpos-angular`: Runs the app in development mode
-- `nx build rizzpos-angular`: Builds the app for production
-- `nx test rizzpos-angular`: Runs the test suite
-
-## Project Structure
-
-- `src/app/pages`: Contains all the page components
-- `src/app/components`: Contains reusable UI components
-- `libs/shared/services`: Contains shared services used across the application
-- `libs/shared/ui`: Contains shared UI components
-
-## Contributing
-
-Please read CONTRIBUTING.md for details on our code of conduct and the process for submitting pull requests.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE.md file for details.
+1. **Role-Based Access Control**: Separate dashboards for business owners, managers, cashiers, and customers.
+2. **Business Management**: Create and manage businesses, including user management and role assignments.
+3. **Employee Onboarding**: Generate role-specific URLs for easy employee onboarding.
+4. **Customer Management**: Allow customers to join businesses and access their purchase history and loyalty points.
+5. **Inventory Management**: Track product stock levels and receive low stock alerts.
+6. **Sales Reporting**: View sales summaries and transaction history.
