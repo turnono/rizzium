@@ -1,99 +1,117 @@
-import { TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
+import {
+  ComponentFixture,
+  TestBed,
+  fakeAsync,
+  tick,
+} from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
+import { IonicModule } from '@ionic/angular';
 import { of } from 'rxjs';
 import { JoinComponent } from '../pages/join/join.component';
-import { FirebaseAuthService, BusinessService } from '@rizzpos/shared/services';
+import {
+  AuthService,
+  BusinessService,
+  ErrorHandlerService,
+} from '@rizzpos/shared/services';
 
 describe('User Onboarding Integration Test', () => {
   let component: JoinComponent;
-  let authServiceSpy: jasmine.SpyObj<FirebaseAuthService>;
+  let fixture: ComponentFixture<JoinComponent>;
+  let authServiceSpy: jasmine.SpyObj<AuthService>;
   let businessServiceSpy: jasmine.SpyObj<BusinessService>;
+  let errorHandlerSpy: jasmine.SpyObj<ErrorHandlerService>;
   let router: Router;
 
   beforeEach(async () => {
-    const authServiceMock = jasmine.createSpyObj('FirebaseAuthService', [
-      'getCurrentUser',
-      'signIn',
-    ]);
-    const businessServiceMock = jasmine.createSpyObj('BusinessService', [
+    const authSpy = jasmine.createSpyObj('AuthService', ['getCurrentUser']);
+    const businessSpy = jasmine.createSpyObj('BusinessService', [
       'addUserToBusiness',
+    ]);
+    const errorSpy = jasmine.createSpyObj('ErrorHandlerService', [
+      'handleError',
+      'showSuccess',
     ]);
 
     await TestBed.configureTestingModule({
-      imports: [RouterTestingModule.withRoutes([])],
       declarations: [JoinComponent],
+      imports: [IonicModule.forRoot()],
       providers: [
-        { provide: FirebaseAuthService, useValue: authServiceMock },
-        { provide: BusinessService, useValue: businessServiceMock },
         {
           provide: ActivatedRoute,
           useValue: {
-            queryParams: of({ businessId: 'testBusinessId', role: 'cashier' }),
+            snapshot: {
+              paramMap: {
+                get: (param: string) =>
+                  param === 'businessId' ? 'testBusinessId' : 'cashier',
+              },
+            },
           },
+        },
+        { provide: AuthService, useValue: authSpy },
+        { provide: BusinessService, useValue: businessSpy },
+        { provide: ErrorHandlerService, useValue: errorSpy },
+        {
+          provide: Router,
+          useValue: { navigate: jasmine.createSpy('navigate') },
         },
       ],
     }).compileComponents();
 
-    authServiceSpy = TestBed.inject(
-      FirebaseAuthService
-    ) as jasmine.SpyObj<FirebaseAuthService>;
+    authServiceSpy = TestBed.inject(AuthService) as jasmine.SpyObj<AuthService>;
     businessServiceSpy = TestBed.inject(
       BusinessService
     ) as jasmine.SpyObj<BusinessService>;
+    errorHandlerSpy = TestBed.inject(
+      ErrorHandlerService
+    ) as jasmine.SpyObj<ErrorHandlerService>;
     router = TestBed.inject(Router);
-
-    const fixture = TestBed.createComponent(JoinComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
   });
 
-  it('should handle join process for new user', fakeAsync(() => {
-    authServiceSpy.getCurrentUser.and.returnValue(Promise.resolve(null));
-    authServiceSpy.signIn.and.returnValue(
-      Promise.resolve({ uid: 'newUserId' })
+  beforeEach(() => {
+    fixture = TestBed.createComponent(JoinComponent);
+    component = fixture.componentInstance;
+  });
+
+  it('should handle join for authenticated cashier', fakeAsync(() => {
+    authServiceSpy.getCurrentUser.and.returnValue(
+      Promise.resolve({ uid: 'testUserId' })
     );
     businessServiceSpy.addUserToBusiness.and.returnValue(Promise.resolve());
 
-    const navigateSpy = spyOn(router, 'navigate');
-
-    component.handleJoin();
+    component.ngOnInit();
     tick();
 
-    expect(authServiceSpy.signIn).toHaveBeenCalled();
     expect(businessServiceSpy.addUserToBusiness).toHaveBeenCalledWith(
       'testBusinessId',
-      'newUserId',
+      'testUserId',
       'cashier'
     );
-    expect(navigateSpy).toHaveBeenCalledWith([
+    expect(router.navigate).toHaveBeenCalledWith([
       '/business',
       'testBusinessId',
-      'dashboard',
+      'cashier-dashboard',
     ]);
   }));
 
-  it('should handle join process for existing user', fakeAsync(() => {
+  it('should handle join for authenticated manager', fakeAsync(() => {
+    component.role = 'manager';
     authServiceSpy.getCurrentUser.and.returnValue(
-      Promise.resolve({ uid: 'existingUserId' })
+      Promise.resolve({ uid: 'testUserId' })
     );
     businessServiceSpy.addUserToBusiness.and.returnValue(Promise.resolve());
 
-    const navigateSpy = spyOn(router, 'navigate');
-
-    component.handleJoin();
+    component.ngOnInit();
     tick();
 
-    expect(authServiceSpy.signIn).not.toHaveBeenCalled();
     expect(businessServiceSpy.addUserToBusiness).toHaveBeenCalledWith(
       'testBusinessId',
-      'existingUserId',
-      'cashier'
+      'testUserId',
+      'manager'
     );
-    expect(navigateSpy).toHaveBeenCalledWith([
+    expect(router.navigate).toHaveBeenCalledWith([
       '/business',
       'testBusinessId',
-      'dashboard',
+      'manager-dashboard',
     ]);
   }));
 
@@ -104,9 +122,7 @@ describe('User Onboarding Integration Test', () => {
     );
     businessServiceSpy.addUserToBusiness.and.returnValue(Promise.resolve());
 
-    const navigateSpy = spyOn(router, 'navigate');
-
-    component.handleJoin();
+    component.ngOnInit();
     tick();
 
     expect(businessServiceSpy.addUserToBusiness).toHaveBeenCalledWith(
@@ -114,7 +130,7 @@ describe('User Onboarding Integration Test', () => {
       'customerId',
       'customer'
     );
-    expect(navigateSpy).toHaveBeenCalledWith([
+    expect(router.navigate).toHaveBeenCalledWith([
       '/business',
       'testBusinessId',
       'customer-dashboard',
