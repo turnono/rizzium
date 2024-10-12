@@ -365,5 +365,73 @@ export class BusinessService {
     );
   }
 
+  getBusinessUsersRealtime(businessId: string): Observable<BusinessUser[]> {
+    const businessUsersCollection = collection(
+      this.firestore,
+      `businesses/${businessId}/users`
+    );
+    const businessUsersQuery = query(businessUsersCollection);
+
+    return new Observable<BusinessUser[]>((observer) => {
+      const unsubscribe = onSnapshot(
+        businessUsersQuery,
+        (querySnapshot) => {
+          const businessUsers = querySnapshot.docs.map(
+            (doc) =>
+              ({
+                id: doc.id,
+                ...doc.data(),
+              } as BusinessUser)
+          );
+          observer.next(businessUsers);
+        },
+        (error) => {
+          observer.error(error);
+        }
+      );
+
+      // Return the unsubscribe function to clean up the listener
+      return unsubscribe;
+    });
+  }
+
+  updateBusinessUserRole(
+    businessId: string,
+    userId: string,
+    newRole: string
+  ): Observable<void> {
+    const userDoc = doc(
+      this.firestore,
+      `businesses/${businessId}/users/${userId}`
+    );
+    return new Observable<void>((observer) => {
+      updateDoc(userDoc, { role: newRole })
+        .then(() => {
+          observer.next();
+          observer.complete();
+        })
+        .catch((error) => {
+          observer.error(error);
+        });
+    });
+  }
+
+  removeBusinessUser(businessId: string, userId: string): Observable<void> {
+    const userDoc = doc(
+      this.firestore,
+      `businesses/${businessId}/users/${userId}`
+    );
+    return new Observable<void>((observer) => {
+      deleteDoc(userDoc)
+        .then(() => {
+          observer.next();
+          observer.complete();
+        })
+        .catch((error) => {
+          observer.error(error);
+        });
+    });
+  }
+
   // Add more methods for business management as needed
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { ActivatedRoute } from '@angular/router';
@@ -9,7 +9,7 @@ import {
   ErrorHandlerService,
 } from '@rizzpos/shared/services';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-business-user-management',
@@ -18,11 +18,10 @@ import { Observable } from 'rxjs';
   standalone: true,
   imports: [CommonModule, IonicModule, HeaderComponent, FooterComponent],
 })
-export class BusinessUserManagementComponent implements OnInit {
+export class BusinessUserManagementComponent implements OnInit, OnDestroy {
   businessId: string;
-  users$: Observable<BusinessUser[]>;
-  loading = true;
-  currentUserId: string | null = null;
+  businessUsers$: Observable<BusinessUser[]>;
+  private businessUsersSubscription: Subscription;
 
   constructor(
     private route: ActivatedRoute,
@@ -37,26 +36,36 @@ export class BusinessUserManagementComponent implements OnInit {
     try {
       const user = this.authService.getCurrentUser();
       this.currentUserId = user ? user.uid : null;
-      this.loadUsers();
+      this.loadBusinessUsers();
     } catch (error) {
       this.errorHandler.handleError(error, 'Error initializing component');
     }
   }
 
-  loadUsers() {
-    this.users$ = this.businessService.getBusinessUsers(this.businessId);
-    this.loading = true;
+  ngOnDestroy() {
+    if (this.businessUsersSubscription) {
+      this.businessUsersSubscription.unsubscribe();
+    }
+  }
+
+  loadBusinessUsers() {
+    this.businessUsers$ = this.businessService.getBusinessUsersRealtime(
+      this.businessId
+    );
+    this.businessUsersSubscription = this.businessUsers$.subscribe(
+      () => {},
+      (error) => {
+        this.errorHandler.handleError(error, 'Error loading business users');
+      }
+    );
   }
 
   updateUserRole(userId: string, newRole: string) {
     this.businessService
-      .updateUserRole(this.businessId, userId, newRole)
+      .updateBusinessUserRole(this.businessId, userId, newRole)
       .subscribe(
         () => {
-          this.errorHandler.showSuccess(
-            `User role updated to ${newRole} successfully`
-          );
-          this.loadUsers(); // Reload users to reflect the change
+          this.errorHandler.showSuccess('User role updated successfully');
         },
         (error) => {
           this.errorHandler.handleError(error, 'Error updating user role');
@@ -72,21 +81,13 @@ export class BusinessUserManagementComponent implements OnInit {
       return;
     }
 
-    this.businessService
-      .removeUserFromBusiness(this.businessId, userId)
-      .subscribe(
-        () => {
-          this.errorHandler.showSuccess(
-            'User removed from business successfully'
-          );
-          this.loadUsers(); // Reload users to reflect the change
-        },
-        (error) => {
-          this.errorHandler.handleError(
-            error,
-            'Error removing user from business'
-          );
-        }
-      );
+    this.businessService.removeBusinessUser(this.businessId, userId).subscribe(
+      () => {
+        this.errorHandler.showSuccess('User removed successfully');
+      },
+      (error) => {
+        this.errorHandler.handleError(error, 'Error removing user');
+      }
+    );
   }
 }

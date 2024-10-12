@@ -1,4 +1,4 @@
-<rizzpos-header [title]="'User Management'"></rizzpos-header>
+<rizzpos-header [title]="'Business User Management'"></rizzpos-header>
 
 <ion-content class="ion-padding">
   <ion-card>
@@ -7,19 +7,18 @@
     </ion-card-header>
     <ion-card-content>
       <ion-list>
-        <ion-item *ngFor="let user of users$ | async">
+        <ion-item *ngFor="let user of businessUsers$ | async">
           <ion-label>
-            <h2>{{ user.name }}</h2>
-            <p>Email: {{ user.email }}</p>
+            <h2>{{ user.displayName }}</h2>
+            <p>{{ user.email }}</p>
             <p>Role: {{ user.role }}</p>
           </ion-label>
-          <ion-select [value]="user.role" (ionChange)="updateUserRole(user.id, $event.detail.value)">
+          <ion-select [(ngModel)]="user.role" (ionChange)="updateUserRole(user.id, $event.detail.value)">
             <ion-select-option value="owner">Owner</ion-select-option>
             <ion-select-option value="manager">Manager</ion-select-option>
             <ion-select-option value="cashier">Cashier</ion-select-option>
-            <ion-select-option value="customer">Customer</ion-select-option>
           </ion-select>
-          <ion-button (click)="removeUser(user.id)" color="danger">Remove</ion-button>
+          <ion-button slot="end" color="danger" (click)="removeUser(user.id)">Remove</ion-button>
         </ion-item>
       </ion-list>
     </ion-card-content>
