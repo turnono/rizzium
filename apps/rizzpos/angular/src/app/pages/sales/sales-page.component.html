@@ -1,0 +1,56 @@
+<rizzpos-header [title]="'Sales'"></rizzpos-header>
+
+<ion-content class="ion-padding">
+    <ion-grid>
+        <ion-row>
+            <ion-col size="12" size-md="8">
+                <ion-card>
+                    <ion-card-header>
+                        <ion-card-title>Products</ion-card-title>
+                    </ion-card-header>
+                    <ion-card-content>
+                        <ion-list>
+                            <ion-item *ngFor="let product of products$ | async">
+                                <ion-label>
+                                    <h2>{{ product.name }}</h2>
+                                    <p>Price: {{ product.price | currency }}</p>
+                                </ion-label>
+                                <ion-button slot="end" (click)="addToCart(product)">Add</ion-button>
+                            </ion-item>
+                        </ion-list>
+                    </ion-card-content>
+                </ion-card>
+            </ion-col>
+            <ion-col size="12" size-md="4">
+                <ion-card>
+                    <ion-card-header>
+                        <ion-card-title>Cart</ion-card-title>
+                    </ion-card-header>
+                    <ion-card-content>
+                        <ion-list>
+                            <ion-item *ngFor="let item of cart">
+                                <ion-label>
+                                    <h2>{{ item.product.name }}</h2>
+                                    <p>Quantity: {{ item.quantity }}</p>
+                                    <p>Subtotal: {{ item.product.price * item.quantity | currency }}</p>
+                                </ion-label>
+                                <ion-button slot="end" (click)="removeFromCart(item.product)">Remove</ion-button>
+                            </ion-item>
+                        </ion-list>
+                        <ion-item>
+                            <ion-label>
+                                <h2>Total</h2>
+                            </ion-label>
+                            <ion-note slot="end">{{ getTotalAmount() | currency }}</ion-note>
+                        </ion-item>
+                        <ion-button expand="block" (click)="processTransaction()" [disabled]="cart.length === 0">
+                            Process Transaction
+                        </ion-button>
+                    </ion-card-content>
+                </ion-card>
+            </ion-col>
+        </ion-row>
+    </ion-grid>
+</ion-content>
+
+<rizzpos-footer></rizzpos-footer>
