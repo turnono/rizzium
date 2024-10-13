@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { FirebaseAuthService } from '@rizzpos/shared/services';
 import { Router } from '@angular/router';
-import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
+import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui/organisms';
 import {
   FormBuilder,
   FormGroup,

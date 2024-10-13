@@ -22,7 +22,6 @@
       "@rizzpos/shared/ui/atoms": ["libs/shared/ui/atoms/src/index.ts"],
       "@rizzpos/shared/ui/molecules": ["libs/shared/ui/molecules/src/index.ts"],
       "@rizzpos/shared/ui/organisms": ["libs/shared/ui/organisms/src/index.ts"],
-      "@rizzpos/shared/ui/pages": ["libs/shared/ui/pages/src/index.ts"],
       "@rizzpos/shared/ui/templates": ["libs/shared/ui/templates/src/index.ts"]
     }
   },

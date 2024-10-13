@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { FirebaseAuthService, BusinessService } from '@rizzpos/shared/services';
 import { RouterModule, Router } from '@angular/router';
-import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
+import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui/organisms';
 import { Observable, Subscription, of } from 'rxjs';
 import { switchMap, catchError } from 'rxjs/operators';
 import { BusinessData } from '@rizzpos/shared/interfaces';

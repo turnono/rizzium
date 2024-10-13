@@ -7,7 +7,7 @@ import {
   ProductService,
   ErrorHandlerService,
 } from '@rizzpos/shared/services';
-import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
+import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui/organisms';
 import { Observable, of, catchError, finalize, from } from 'rxjs';
 import { Clipboard } from '@angular/cdk/clipboard';
 import { BusinessData, Product, Transaction } from '@rizzpos/shared/interfaces';

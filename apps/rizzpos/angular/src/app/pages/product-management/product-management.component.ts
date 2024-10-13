@@ -4,7 +4,7 @@ import { IonicModule } from '@ionic/angular';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ProductService, Product } from '@rizzpos/shared/services';
 import { Observable } from 'rxjs';
-import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
+import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui/organisms';
 import { ActivatedRoute } from '@angular/router';
 
 @Component({
