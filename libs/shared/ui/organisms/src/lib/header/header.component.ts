@@ -1,7 +1,8 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { addIcons } from 'ionicons';
 import { arrowBackOutline } from 'ionicons/icons';
-import { addIcons } from 'ionicons'; // Import this
 
 import {
   IonHeader,
@@ -17,10 +18,11 @@ import {
   standalone: true,
   imports: [
     CommonModule,
-    IonBackButton,
+    RouterLink,
     IonHeader,
     IonToolbar,
     IonTitle,
+    IonBackButton,
     IonButtons,
     IonIcon,
   ],

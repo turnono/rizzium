@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule } from '@ionic/angular';
+
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   BusinessService,
@@ -11,13 +11,49 @@ import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui/organisms';
 import { Observable, of, catchError, finalize, from } from 'rxjs';
 import { Clipboard } from '@angular/cdk/clipboard';
 import { BusinessData, Product, Transaction } from '@rizzpos/shared/interfaces';
+import {
+  IonSkeletonText,
+  IonGrid,
+  IonRow,
+  IonCol,
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardContent,
+  IonButton,
+  IonList,
+  IonItem,
+  IonLabel,
+  IonBadge,
+  IonIcon,
+  IonContent,
+} from '@ionic/angular/standalone';
 
 @Component({
   selector: 'app-business-dashboard',
   templateUrl: './business-dashboard.page.html',
   styleUrls: ['./business-dashboard.page.scss'],
   standalone: true,
-  imports: [CommonModule, IonicModule, HeaderComponent, FooterComponent],
+  imports: [
+    CommonModule,
+    HeaderComponent,
+    FooterComponent,
+    IonSkeletonText,
+    IonGrid,
+    IonRow,
+    IonCol,
+    IonCard,
+    IonCardHeader,
+    IonCardTitle,
+    IonCardContent,
+    IonButton,
+    IonList,
+    IonItem,
+    IonLabel,
+    IonBadge,
+    IonIcon,
+    IonContent,
+  ],
 })
 export class BusinessDashboardComponent implements OnInit {
   businessId: string;

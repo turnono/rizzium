@@ -1,12 +1,21 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule } from '@ionic/angular';
+import { ReactiveFormsModule } from '@angular/forms';
 import {
-  FormBuilder,
-  FormGroup,
-  Validators,
-  ReactiveFormsModule,
-} from '@angular/forms';
+  IonContent,
+  IonItem,
+  IonButton,
+  IonLabel,
+  IonInput,
+  IonSelect,
+  IonSelectOption,
+  IonHeader,
+  IonBackButton,
+  IonButtons,
+  IonToolbar,
+  IonTitle,
+} from '@ionic/angular/standalone';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { BusinessService } from '@rizzpos/shared/services';
 import { Router } from '@angular/router';
 
@@ -15,7 +24,22 @@ import { Router } from '@angular/router';
   templateUrl: './business-setup.page.html',
   styleUrls: ['./business-setup.page.scss'],
   standalone: true,
-  imports: [CommonModule, IonicModule, ReactiveFormsModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    IonContent,
+    IonItem,
+    IonButton,
+    IonLabel,
+    IonInput,
+    IonSelect,
+    IonSelectOption,
+    IonHeader,
+    IonTitle,
+    IonToolbar,
+    IonButtons,
+    IonBackButton,
+  ],
 })
 export class BusinessSetupComponent {
   businessForm: FormGroup;

@@ -1,7 +1,10 @@
 import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, RouteReuseStrategy } from '@angular/router';
 import { routes } from './app.routes';
-import { provideIonicAngular } from '@ionic/angular/standalone';
+import {
+  IonicRouteStrategy,
+  provideIonicAngular,
+} from '@ionic/angular/standalone';
 import { ErrorHandlerService } from '@rizzpos/shared/services';
 import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import { getFirestore, provideFirestore } from '@angular/fire/firestore';
@@ -16,10 +19,11 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideAnimationsAsync(),
-    provideIonicAngular({}),
     provideFirebaseApp(() => initializeApp(firebaseConfig)),
     provideFirestore(() => getFirestore()),
     provideAuth(() => getAuth()),
     provideFunctions(() => getFunctions()),
+    { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
+    provideIonicAngular(),
   ],
 };

@@ -1,18 +1,41 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule } from '@ionic/angular';
+
 import { ActivatedRoute, Router } from '@angular/router';
 import { BusinessService } from '@rizzpos/shared/services';
 import { BusinessData } from '@rizzpos/shared/interfaces';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui/organisms';
 import { firstValueFrom } from 'rxjs';
+import {
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardSubtitle,
+  IonCardTitle,
+  IonContent,
+  IonSpinner,
+  IonText,
+} from '@ionic/angular/standalone';
 
 @Component({
   selector: 'app-business-details',
   templateUrl: './business-details.page.html',
   styleUrl: './business-details.page.scss',
   standalone: true,
-  imports: [CommonModule, IonicModule, HeaderComponent, FooterComponent],
+  imports: [
+    IonText,
+    CommonModule,
+    HeaderComponent,
+    FooterComponent,
+    IonContent,
+    IonSpinner,
+    IonText,
+    IonCard,
+    IonCardHeader,
+    IonCardTitle,
+    IonCardContent,
+    IonCardSubtitle,
+  ],
 })
 export class BusinessDetailsComponent implements OnInit {
   businessId: string;
