@@ -1,24 +1,33 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule } from '@ionic/angular';
+
 import { FirebaseAuthService, BusinessService } from '@rizzpos/shared/services';
 import { RouterModule, Router } from '@angular/router';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui/organisms';
 import { Observable, Subscription, of } from 'rxjs';
 import { switchMap, catchError } from 'rxjs/operators';
 import { BusinessData } from '@rizzpos/shared/interfaces';
+import {
+  IonBackButton,
+  IonContent,
+  IonHeader,
+  IonTitle,
+  IonToolbar,
+  IonButtons,
+  IonIcon,
+} from '@ionic/angular/standalone';
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.page.html',
-  styleUrls: ['./home.page.scss'],
+  styleUrl: './home.page.scss',
   standalone: true,
   imports: [
-    CommonModule,
-    IonicModule,
     HeaderComponent,
     FooterComponent,
-    RouterModule,
+    CommonModule,
+    IonIcon,
+    IonContent,
   ],
 })
 export class HomePageComponent implements OnInit, OnDestroy {

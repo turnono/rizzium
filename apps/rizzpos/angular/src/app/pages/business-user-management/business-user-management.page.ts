@@ -25,7 +25,7 @@ import { BusinessUser } from '@rizzpos/shared/interfaces';
     FormsModule,
   ],
 })
-export class BusinessUserManagementComponent implements OnInit, OnDestroy {
+export class BusinessUserManagementPageComponent implements OnInit, OnDestroy {
   businessId: string;
   businessUsers$?: Observable<BusinessUser[]>;
   private businessUsersSubscription?: Subscription;

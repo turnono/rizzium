@@ -1,8 +1,11 @@
-/* You can add global styles to this file, and also import other style files */
+// Import Angular Material theming
+@use '@angular/material' as mat;
 
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+// Include the common styles for Angular Material
+@include mat.core();
 
+
+// Ionic styles
 @import '@ionic/angular/css/core.css';
 @import '@ionic/angular/css/normalize.css';
 @import '@ionic/angular/css/structure.css';
@@ -13,3 +16,12 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 @import '@ionic/angular/css/text-alignment.css';
 @import '@ionic/angular/css/text-transformation.css';
 @import '@ionic/angular/css/flex-utils.css';
+
+// Global styles
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+// Add any additional global styles here
