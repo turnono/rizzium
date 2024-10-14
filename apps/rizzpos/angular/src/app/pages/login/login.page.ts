@@ -16,7 +16,7 @@ import { of, from } from 'rxjs';
 @Component({
   selector: 'app-login',
   templateUrl: './login.page.html',
-  styleUrls: ['./login.page.scss'],
+  styleUrl: './login.page.scss',
   standalone: true,
   imports: [
     CommonModule,

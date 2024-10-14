@@ -1,4 +1,4 @@
-<rizzpos-header [title]="'Inventory'"></rizzpos-header>
+<rizzpos-header [title]="'Inventory Management'"></rizzpos-header>
 
 <ion-content class="ion-padding">
   <ion-card>
@@ -11,10 +11,9 @@
           <ion-label>
             <h2>{{ product.name }}</h2>
             <p>Price: {{ product.price | currency }}</p>
-            <p>Stock: {{ product.stockQuantity }}</p>
           </ion-label>
           <ion-input type="number" [value]="product.stockQuantity" #stockInput></ion-input>
-          <ion-button (click)="updateStock(product, stockInput.value)">Update</ion-button>
+          <ion-button slot="end" (click)="updateStock(product, $any(stockInput.value))">Update Stock</ion-button>
         </ion-item>
       </ion-list>
     </ion-card-content>

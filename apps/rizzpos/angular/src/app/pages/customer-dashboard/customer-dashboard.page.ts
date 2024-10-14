@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { ActivatedRoute } from '@angular/router';
 import { Observable, combineLatest } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
-import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
+import { map } from 'rxjs/operators';
+import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui/organisms';
 import {
   CustomerService,
   BusinessService,
@@ -14,17 +14,17 @@ import { Purchase, Promotion } from '@rizzpos/shared/interfaces';
 
 @Component({
   selector: 'app-customer-dashboard',
-  templateUrl: './customer-dashboard.component.html',
-  styleUrls: ['./customer-dashboard.component.scss'],
+  templateUrl: './customer-dashboard.page.html',
+  styleUrl: './customer-dashboard.page.scss',
   standalone: true,
   imports: [CommonModule, IonicModule, HeaderComponent, FooterComponent],
 })
 export class CustomerDashboardComponent implements OnInit {
   businessId: string;
   customerId: string;
-  purchases$: Observable<Purchase[]>;
-  loyaltyPoints$: Observable<number>;
-  promotions$: Observable<Promotion[]>;
+  purchases$?: Observable<Purchase[]>;
+  loyaltyPoints$?: Observable<number>;
+  promotions$?: Observable<Promotion[]>;
 
   constructor(
     private route: ActivatedRoute,
@@ -62,10 +62,12 @@ export class CustomerDashboardComponent implements OnInit {
       this.purchases$,
       this.loyaltyPoints$,
       this.promotions$,
-    ]).subscribe(
-      () => {},
-      (error) =>
-        this.errorHandler.handleError(error, 'Error loading customer data')
-    );
+    ]).subscribe({
+      next: () => {
+        console.log('Data loaded successfully');
+      },
+      error: (error: unknown) =>
+        this.errorHandler.handleError(error, 'Error loading customer data'),
+    });
   }
 }

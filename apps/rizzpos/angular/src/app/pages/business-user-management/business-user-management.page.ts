@@ -4,24 +4,32 @@ import { IonicModule } from '@ionic/angular';
 import { ActivatedRoute } from '@angular/router';
 import {
   BusinessService,
-  BusinessUser,
   FirebaseAuthService,
   ErrorHandlerService,
 } from '@rizzpos/shared/services';
-import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
+import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui/organisms';
 import { Observable, Subscription } from 'rxjs';
+import { FormsModule } from '@angular/forms';
+import { BusinessUser } from '@rizzpos/shared/interfaces';
 
 @Component({
   selector: 'app-business-user-management',
-  templateUrl: './business-user-management.component.html',
-  styleUrls: ['./business-user-management.component.scss'],
+  templateUrl: './business-user-management.page.html',
+  styleUrl: './business-user-management.page.scss',
   standalone: true,
-  imports: [CommonModule, IonicModule, HeaderComponent, FooterComponent],
+  imports: [
+    CommonModule,
+    IonicModule,
+    HeaderComponent,
+    FooterComponent,
+    FormsModule,
+  ],
 })
 export class BusinessUserManagementComponent implements OnInit, OnDestroy {
   businessId: string;
-  businessUsers$: Observable<BusinessUser[]>;
-  private businessUsersSubscription: Subscription;
+  businessUsers$?: Observable<BusinessUser[]>;
+  private businessUsersSubscription?: Subscription;
+  currentUserId?: string;
 
   constructor(
     private route: ActivatedRoute,
@@ -32,10 +40,10 @@ export class BusinessUserManagementComponent implements OnInit, OnDestroy {
     this.businessId = this.route.snapshot.paramMap.get('businessId') || '';
   }
 
-  ngOnInit() {
+  async ngOnInit() {
     try {
-      const user = this.authService.getCurrentUser();
-      this.currentUserId = user ? user.uid : null;
+      const user = await this.authService.getCurrentUser();
+      this.currentUserId = user ? user.uid : undefined;
       this.loadBusinessUsers();
     } catch (error) {
       this.errorHandler.handleError(error, 'Error initializing component');
@@ -52,12 +60,14 @@ export class BusinessUserManagementComponent implements OnInit, OnDestroy {
     this.businessUsers$ = this.businessService.getBusinessUsersRealtime(
       this.businessId
     );
-    this.businessUsersSubscription = this.businessUsers$.subscribe(
-      () => {},
-      (error) => {
+    this.businessUsersSubscription = this.businessUsers$.subscribe({
+      next: () => {
+        // Handle successful data loading if needed
+      },
+      error: (error) => {
         this.errorHandler.handleError(error, 'Error loading business users');
-      }
-    );
+      },
+    });
   }
 
   updateUserRole(userId: string, newRole: string) {

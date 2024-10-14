@@ -8,8 +8,8 @@ import { IonicModule } from '@ionic/angular';
   selector: 'app-join',
   standalone: true,
   imports: [CommonModule, IonicModule],
-  templateUrl: './join.component.html',
-  styleUrl: './join.component.scss',
+  templateUrl: './join.page.html',
+  styleUrl: './join.page.scss',
 })
 export class JoinComponent implements OnInit {
   businessId: string | null = null;

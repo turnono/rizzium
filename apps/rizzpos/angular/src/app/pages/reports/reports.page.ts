@@ -4,7 +4,7 @@ import { IonicModule } from '@ionic/angular';
 import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
+import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui/organisms';
 import {
   TransactionService,
   ErrorHandlerService,
@@ -13,14 +13,14 @@ import { Transaction } from '@rizzpos/shared/interfaces';
 
 @Component({
   selector: 'app-reports-page',
-  templateUrl: './reports-page.component.html',
-  styleUrls: ['./reports-page.component.scss'],
+  templateUrl: './reports.page.html',
+  styleUrl: './reports.page.scss',
   standalone: true,
   imports: [CommonModule, IonicModule, HeaderComponent, FooterComponent],
 })
 export class ReportsPageComponent implements OnInit {
   businessId: string;
-  transactions$: Observable<Transaction[]>;
+  transactions$?: Observable<Transaction[]>;
   dailySalesData: any;
   monthlySalesData: any;
 

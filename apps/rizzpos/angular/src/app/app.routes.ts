@@ -1,10 +1,10 @@
 import { Route } from '@angular/router';
 import { HomePageComponent } from './pages/home/home.page';
 import { LoginPageComponent } from './pages/login/login.page';
-import { BusinessSetupComponent } from './pages/business-setup/business-setup.component';
-import { BusinessDashboardComponent } from './pages/business-dashboard/business-dashboard.component';
-import { ProductManagementComponent } from './pages/product-management/product-management.component';
-import { JoinComponent } from './pages/join/join.component';
+import { BusinessSetupComponent } from './pages/business-setup/business-setup.page';
+import { BusinessDashboardComponent } from './pages/business-dashboard/business-dashboard.page';
+import { ProductManagementComponent } from './pages/product-management/product-management.page';
+import { JoinComponent } from './pages/join/join.page';
 import { AuthGuard } from '@rizzpos/shared/guards';
 
 export const routes: Route[] = [

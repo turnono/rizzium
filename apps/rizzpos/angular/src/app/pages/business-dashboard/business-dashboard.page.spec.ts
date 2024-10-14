@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { IonicModule } from '@ionic/angular';
 import { ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
-import { BusinessDashboardComponent } from './business-dashboard.component';
+import { BusinessDashboardComponent } from './business-dashboard.page';
 import { BusinessService, ProductService } from '@rizzpos/shared/services';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
 

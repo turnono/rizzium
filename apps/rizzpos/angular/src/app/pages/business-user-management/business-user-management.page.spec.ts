@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
 import { of } from 'rxjs';
-import { BusinessUserManagementComponent } from './business-user-management.component';
+import { BusinessUserManagementComponent } from './business-user-management.page';
 import {
   BusinessService,
   FirebaseAuthService,

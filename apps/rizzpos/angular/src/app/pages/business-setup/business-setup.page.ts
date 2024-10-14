@@ -12,8 +12,8 @@ import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-business-setup',
-  templateUrl: './business-setup.component.html',
-  styleUrls: ['./business-setup.component.scss'],
+  templateUrl: './business-setup.page.html',
+  styleUrls: ['./business-setup.page.scss'],
   standalone: true,
   imports: [CommonModule, IonicModule, ReactiveFormsModule],
 })

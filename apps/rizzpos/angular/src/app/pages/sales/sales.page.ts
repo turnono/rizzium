@@ -4,7 +4,7 @@ import { IonicModule } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
-import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
+import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui/organisms';
 import {
   ProductService,
   TransactionService,
@@ -14,8 +14,8 @@ import { Product, Transaction } from '@rizzpos/shared/interfaces';
 
 @Component({
   selector: 'app-sales-page',
-  templateUrl: './sales-page.component.html',
-  styleUrls: ['./sales-page.component.scss'],
+  templateUrl: './sales.page.html',
+  styleUrl: './sales.page.scss',
   standalone: true,
   imports: [
     CommonModule,
@@ -27,7 +27,7 @@ import { Product, Transaction } from '@rizzpos/shared/interfaces';
 })
 export class SalesPageComponent implements OnInit {
   businessId: string;
-  products$: Observable<Product[]>;
+  products$?: Observable<Product[]>;
   cart: { product: Product; quantity: number }[] = [];
 
   constructor(

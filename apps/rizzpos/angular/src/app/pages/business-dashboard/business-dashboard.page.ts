@@ -14,8 +14,8 @@ import { BusinessData, Product, Transaction } from '@rizzpos/shared/interfaces';
 
 @Component({
   selector: 'app-business-dashboard',
-  templateUrl: './business-dashboard.component.html',
-  styleUrls: ['./business-dashboard.component.scss'],
+  templateUrl: './business-dashboard.page.html',
+  styleUrls: ['./business-dashboard.page.scss'],
   standalone: true,
   imports: [CommonModule, IonicModule, HeaderComponent, FooterComponent],
 })

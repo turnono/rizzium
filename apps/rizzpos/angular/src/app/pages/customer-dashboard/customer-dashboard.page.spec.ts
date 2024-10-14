@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
 import { of } from 'rxjs';
-import { CustomerDashboardComponent } from './customer-dashboard.component';
+import { CustomerDashboardComponent } from './customer-dashboard.page';
 import {
   CustomerService,
   BusinessService,

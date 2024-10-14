@@ -4,14 +4,14 @@ import { IonicModule } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
-import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
+import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui/organisms';
 import { ProductService, ErrorHandlerService } from '@rizzpos/shared/services';
-import { Product } from '@rizzpos/shared/interfaces';
+import { Product } from '@rizzpos/shared/services';
 
 @Component({
   selector: 'app-inventory-page',
-  templateUrl: './inventory-page.component.html',
-  styleUrls: ['./inventory-page.component.scss'],
+  templateUrl: './inventory.page.html',
+  styleUrl: './inventory.page.scss',
   standalone: true,
   imports: [
     CommonModule,
@@ -23,7 +23,7 @@ import { Product } from '@rizzpos/shared/interfaces';
 })
 export class InventoryPageComponent implements OnInit {
   businessId: string;
-  products$: Observable<Product[]>;
+  products$?: Observable<Product[]>;
 
   constructor(
     private route: ActivatedRoute,
@@ -43,8 +43,8 @@ export class InventoryPageComponent implements OnInit {
 
   updateStock(product: Product, newStock: number) {
     this.productService
-      .updateProductStock(this.businessId, product.id, newStock)
-      .subscribe(
+      .updateProduct(product.id as string, { stockQuantity: newStock })
+      .then(
         () => {
           this.errorHandler.showSuccess('Stock updated successfully');
           this.loadProducts(); // Reload products to reflect the changes

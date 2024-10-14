@@ -2,12 +2,15 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { ActivatedRoute, Router } from '@angular/router';
-import { BusinessService, BusinessData } from '@rizzpos/shared/services';
-import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
+import { BusinessService } from '@rizzpos/shared/services';
+import { BusinessData } from '@rizzpos/shared/interfaces';
+import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui/organisms';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-business-details',
-  templateUrl: './business-details.component.html',
+  templateUrl: './business-details.page.html',
+  styleUrl: './business-details.page.scss',
   standalone: true,
   imports: [CommonModule, IonicModule, HeaderComponent, FooterComponent],
 })
@@ -31,8 +34,8 @@ export class BusinessDetailsComponent implements OnInit {
 
   async loadBusinessData() {
     try {
-      this.businessData = await this.businessService.getBusinessData(
-        this.businessId
+      this.businessData = await firstValueFrom(
+        this.businessService.getBusinessData(this.businessId)
       );
       if (!this.businessData) {
         throw new Error('Business not found');

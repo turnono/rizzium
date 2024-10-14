@@ -7,20 +7,20 @@ import {
   TransactionService,
   ErrorHandlerService,
 } from '@rizzpos/shared/services';
-import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui';
+import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui/organisms';
 import { Observable } from 'rxjs';
 import { Product } from '@rizzpos/shared/interfaces';
 
 @Component({
   selector: 'app-cashier-dashboard',
-  templateUrl: './cashier-dashboard.component.html',
-  styleUrls: ['./cashier-dashboard.component.scss'],
+  templateUrl: './cashier-dashboard.page.html',
+  styleUrl: './cashier-dashboard.page.scss',
   standalone: true,
   imports: [CommonModule, IonicModule, HeaderComponent, FooterComponent],
 })
 export class CashierDashboardComponent implements OnInit {
   businessId: string;
-  products$: Observable<Product[]>;
+  products$?: Observable<Product[]>;
   cart: { product: Product; quantity: number }[] = [];
 
   constructor(
@@ -37,7 +37,9 @@ export class CashierDashboardComponent implements OnInit {
   }
 
   loadProducts() {
-    this.products$ = this.productService.getProducts(this.businessId);
+    this.products$ = this.productService.getProducts(
+      this.businessId
+    ) as Observable<Product[]>;
   }
 
   addToCart(product: Product) {
@@ -81,12 +83,12 @@ export class CashierDashboardComponent implements OnInit {
       date: new Date(),
     };
 
-    this.transactionService.createTransaction(transaction).subscribe(
+    this.transactionService.createTransaction(transaction).then(
       () => {
         this.errorHandler.showSuccess('Transaction processed successfully');
         this.cart = [];
       },
-      (error) => {
+      (error: unknown) => {
         this.errorHandler.handleError(error, 'Error processing transaction');
       }
     );

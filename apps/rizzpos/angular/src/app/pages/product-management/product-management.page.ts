@@ -9,8 +9,8 @@ import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-product-management',
-  templateUrl: './product-management.component.html',
-  styleUrls: ['./product-management.component.scss'],
+  templateUrl: './product-management.page.html',
+  styleUrl: './product-management.page.scss',
   standalone: true,
   imports: [
     CommonModule,
@@ -35,6 +35,7 @@ export class ProductManagementComponent implements OnInit {
 
   ngOnInit() {
     // You can add initialization logic here if needed
+    console.log('ProductManagementComponent initialized');
   }
 
   addProduct(product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) {

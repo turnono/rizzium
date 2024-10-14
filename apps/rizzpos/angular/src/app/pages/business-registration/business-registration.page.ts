@@ -11,8 +11,8 @@ import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-business-registration',
-  templateUrl: './business-registration.component.html',
-  styleUrls: ['./business-registration.component.scss'],
+  templateUrl: './business-registration.page.html',
+  styleUrl: './business-registration.page.scss',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
 })
