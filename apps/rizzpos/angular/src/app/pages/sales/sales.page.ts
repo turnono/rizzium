@@ -10,12 +10,14 @@ import {
   TransactionService,
   ErrorHandlerService,
 } from '@rizzpos/shared/services';
-import { Product, Transaction } from '@rizzpos/shared/interfaces';
+import { Product } from '@rizzpos/shared/interfaces';
+import { v4 as uuidv4 } from 'uuid';
+import { Transaction } from '@rizzpos/shared/interfaces';
 
 @Component({
   selector: 'app-sales-page',
   templateUrl: './sales.page.html',
-  styleUrl: './sales.page.scss',
+  styleUrls: ['./sales.page.scss'],
   standalone: true,
   imports: [
     CommonModule,
@@ -78,9 +80,10 @@ export class SalesPageComponent implements OnInit {
 
   processTransaction() {
     const transaction: Transaction = {
+      id: uuidv4(),
       businessId: this.businessId,
       items: this.cart.map((item) => ({
-        productId: item.product.id,
+        productId: item.product.id || '',
         quantity: item.quantity,
         price: item.product.price,
       })),
@@ -88,14 +91,14 @@ export class SalesPageComponent implements OnInit {
       date: new Date(),
     };
 
-    this.transactionService.createTransaction(transaction).subscribe(
-      () => {
+    this.transactionService.createTransaction(transaction).subscribe({
+      next: () => {
         this.errorHandler.showSuccess('Transaction processed successfully');
         this.cart = [];
       },
-      (error) => {
+      error: (error: unknown) => {
         this.errorHandler.handleError(error, 'Error processing transaction');
-      }
-    );
+      },
+    });
   }
 }

@@ -6,7 +6,7 @@ import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui/organisms';
 import { ProductService, ErrorHandlerService } from '@rizzpos/shared/services';
-import { Product } from '@rizzpos/shared/services';
+import { Product } from '@rizzpos/shared/interfaces';
 
 @Component({
   selector: 'app-inventory-page',

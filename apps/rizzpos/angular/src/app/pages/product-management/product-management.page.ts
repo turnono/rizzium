@@ -2,10 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { ProductService, Product } from '@rizzpos/shared/services';
+import { ProductService } from '@rizzpos/shared/services';
 import { Observable } from 'rxjs';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui/organisms';
 import { ActivatedRoute } from '@angular/router';
+import { Product } from '@rizzpos/shared/interfaces';
 
 @Component({
   selector: 'app-product-management',

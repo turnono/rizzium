@@ -11,15 +11,20 @@ export interface BusinessData {
 }
 
 export interface Product {
-  id: string;
+  id?: string;
   name: string;
   description: string;
   price: number;
+  category: string;
   stockQuantity: number;
+  lowStockThreshold: number;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 }
 
 export interface Transaction {
   id: string;
+  businessId: string;
   date: Date;
   total: number;
   items: { productId: string; quantity: number; price: number }[];

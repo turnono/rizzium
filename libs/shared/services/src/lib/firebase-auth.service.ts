@@ -1,3 +1,4 @@
+import { AppUser, UserRole } from '@rizzpos/shared/interfaces';
 import { Injectable } from '@angular/core';
 import {
   Auth,
@@ -22,13 +23,6 @@ import {
 } from '@angular/fire/firestore';
 import { Observable, BehaviorSubject, from } from 'rxjs';
 import { first, tap } from 'rxjs/operators';
-
-export type UserRole = 'owner' | 'manager' | 'cashier' | 'client' | 'anon';
-
-export interface AppUser extends User {
-  role: UserRole;
-  businessId?: string;
-}
 
 @Injectable({
   providedIn: 'root',

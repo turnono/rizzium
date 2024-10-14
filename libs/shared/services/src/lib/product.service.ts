@@ -11,20 +11,9 @@ import {
   getDocs,
   Timestamp,
 } from '@angular/fire/firestore';
+import { Product } from '@rizzpos/shared/interfaces';
 import { Observable, from } from 'rxjs';
 import { map } from 'rxjs/operators';
-
-export interface Product {
-  id?: string;
-  name: string;
-  description: string;
-  price: number;
-  category: string;
-  stockQuantity: number;
-  lowStockThreshold: number;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-}
 
 @Injectable({
   providedIn: 'root',
