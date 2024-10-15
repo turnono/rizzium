@@ -15,7 +15,8 @@
               <ion-card-title>Loyalty Points</ion-card-title>
             </ion-card-header>
             <ion-card-content>
-              <h2>{{ loyaltyPoints$ | async }} points</h2>
+              <h2 class="loyalty-points">{{ loyaltyPoints$ | async }} points</h2>
+              <mat-progress-bar mode="determinate" [value]="(loyaltyPoints$ | async) || 0"></mat-progress-bar>
             </ion-card-content>
           </ion-card>
         </ion-col>
@@ -30,8 +31,9 @@
                   <ion-label>
                     <h2>{{ promotion.title }}</h2>
                     <p>{{ promotion.description }}</p>
-                    <p>Expires: {{ promotion.expiryDate | date:'mediumDate' }}</p>
+                    <ion-note color="medium">Expires: {{ promotion.expiryDate | date:'mediumDate' }}</ion-note>
                   </ion-label>
+                  <ion-badge color="success" slot="end">Active</ion-badge>
                 </ion-item>
               </ion-list>
             </ion-card-content>
@@ -48,14 +50,11 @@
               <ion-list>
                 <ion-item *ngFor="let purchase of purchases$ | async">
                   <ion-label>
-                    <h2>Date: {{ purchase.date | date:'medium' }}</h2>
+                    <h2>{{ purchase.date | date:'medium' }}</h2>
                     <p>Total: {{ purchase.total | currency }}</p>
-                    <p>Items:</p>
-                    <ul>
-                      <li *ngFor="let item of purchase.items">
-                        {{ item.quantity }}x {{ item.productId }} - {{ item.price | currency }}
-                      </li>
-                    </ul>
+                    <ion-chip *ngFor="let item of purchase.items">
+                      {{ item.quantity }}x {{ item.productId }} - {{ item.price | currency }}
+                    </ion-chip>
                   </ion-label>
                 </ion-item>
               </ion-list>

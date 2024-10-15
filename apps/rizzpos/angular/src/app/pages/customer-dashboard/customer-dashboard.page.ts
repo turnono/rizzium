@@ -25,7 +25,11 @@ import {
   IonButton,
   IonCardTitle,
   IonSpinner,
+  IonBadge,
+  IonNote,
+  IonChip,
 } from '@ionic/angular/standalone';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 
 @Component({
   selector: 'app-customer-dashboard',
@@ -33,6 +37,7 @@ import {
   styleUrl: './customer-dashboard.page.scss',
   standalone: true,
   imports: [
+    IonChip,
     CommonModule,
     HeaderComponent,
     FooterComponent,
@@ -49,6 +54,9 @@ import {
     IonCol,
     IonContent,
     IonSpinner,
+    MatProgressBarModule,
+    IonNote,
+    IonBadge,
   ],
 })
 export class CustomerDashboardComponent implements OnInit {

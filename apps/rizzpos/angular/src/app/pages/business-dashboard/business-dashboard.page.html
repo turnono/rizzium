@@ -18,10 +18,14 @@
             </ion-card-header>
             <ion-card-content>
               <ng-container *ngIf="businessData$ | async as businessData">
-                <p><strong>Name:</strong> {{ businessData.businessName }}</p>
-                <p><strong>Type:</strong> {{ businessData.businessType }}</p>
-                <p><strong>Address:</strong> {{ businessData.address }}</p>
-                <p><strong>Phone:</strong> {{ businessData.phoneNumber }}</p>
+                <ion-item lines="none">
+                  <ion-label>
+                    <h2>{{ businessData.businessName }}</h2>
+                    <p>{{ businessData.businessType }}</p>
+                    <p>{{ businessData.address }}</p>
+                    <p>{{ businessData.phoneNumber }}</p>
+                  </ion-label>
+                </ion-item>
               </ng-container>
             </ion-card-content>
           </ion-card>
@@ -32,9 +36,20 @@
               <ion-card-title>Sales Summary</ion-card-title>
             </ion-card-header>
             <ion-card-content>
-              <p><strong>Today's Sales:</strong> {{ todaySales | currency }}</p>
-              <p><strong>This Month's Sales:</strong> {{ monthSales | currency }}</p>
-              <p><strong>Total Products:</strong> {{ totalProducts }}</p>
+              <ion-list>
+                <ion-item>
+                  <ion-label>Today's Sales</ion-label>
+                  <ion-note slot="end" color="primary">{{ todaySales | currency }}</ion-note>
+                </ion-item>
+                <ion-item>
+                  <ion-label>This Month's Sales</ion-label>
+                  <ion-note slot="end" color="primary">{{ monthSales | currency }}</ion-note>
+                </ion-item>
+                <ion-item>
+                  <ion-label>Total Products</ion-label>
+                  <ion-note slot="end" color="primary">{{ totalProducts }}</ion-note>
+                </ion-item>
+              </ion-list>
             </ion-card-content>
           </ion-card>
         </ion-col>
@@ -94,7 +109,7 @@
                     <h2>{{ product.name }}</h2>
                     <p>Current Stock: {{ product.stockQuantity }}</p>
                   </ion-label>
-                  <ion-badge slot="end" color="danger">Low Stock</ion-badge>
+                  <ion-chip color="warn" selected>Low Stock</ion-chip>
                 </ion-item>
               </ion-list>
             </ion-card-content>
@@ -109,8 +124,14 @@
               <ion-card-title>Add Staff</ion-card-title>
             </ion-card-header>
             <ion-card-content>
-              <ion-button expand="block" (click)="copyURL('cashier')">Add Cashier</ion-button>
-              <ion-button expand="block" (click)="copyURL('manager')">Add Manager</ion-button>
+              <ion-button expand="block" (click)="copyURL('cashier')" class="ion-margin-bottom">
+                <ion-icon slot="start" name="person-add"></ion-icon>
+                Add Cashier
+              </ion-button>
+              <ion-button expand="block" (click)="copyURL('manager')">
+                <ion-icon slot="start" name="people"></ion-icon>
+                Add Manager
+              </ion-button>
             </ion-card-content>
           </ion-card>
         </ion-col>
@@ -120,7 +141,10 @@
               <ion-card-title>Customer URL</ion-card-title>
             </ion-card-header>
             <ion-card-content>
-              <ion-button expand="block" (click)="copyURL('customer')">Copy Customer URL</ion-button>
+              <ion-button expand="block" (click)="copyURL('customer')">
+                <ion-icon slot="start" name="link"></ion-icon>
+                Copy Customer URL
+              </ion-button>
             </ion-card-content>
           </ion-card>
         </ion-col>

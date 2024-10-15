@@ -20,6 +20,7 @@ export interface Product {
   lowStockThreshold: number;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+  imageUrl?: string;
 }
 
 export interface Transaction {

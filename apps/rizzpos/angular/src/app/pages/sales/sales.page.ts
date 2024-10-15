@@ -11,6 +11,7 @@ import {
 } from '@rizzpos/shared/services';
 import { Product, Transaction } from '@rizzpos/shared/interfaces';
 import { v4 as uuidv4 } from 'uuid';
+import { addIcons } from 'ionicons';
 import {
   IonButton,
   IonItem,
@@ -26,7 +27,14 @@ import {
   IonCol,
   IonContent,
   IonText,
+  IonIcon,
+  IonBadge,
+  IonThumbnail,
+  IonItemSliding,
+  IonItemOptions,
+  IonItemOption,
 } from '@ionic/angular/standalone';
+import { addCircleOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-sales-page',
@@ -39,10 +47,10 @@ import {
     HeaderComponent,
     FooterComponent,
     IonButton,
-    IonNote,
-    IonList,
     IonItem,
     IonLabel,
+    IonList,
+    IonNote,
     IonCard,
     IonCardHeader,
     IonCardTitle,
@@ -52,12 +60,19 @@ import {
     IonCol,
     IonText,
     IonContent,
+    IonBadge,
+    IonThumbnail,
+    IonItemOption,
+    IonItemOptions,
+    IonItemSliding,
+    IonIcon,
   ],
 })
 export class SalesPageComponent implements OnInit {
   businessId: string;
   products$?: Observable<Product[]>;
   cart: { product: Product; quantity: number }[] = [];
+  defaultProductImage = 'assets/default-product.png';
 
   constructor(
     private route: ActivatedRoute,
@@ -65,6 +80,7 @@ export class SalesPageComponent implements OnInit {
     private transactionService: TransactionService,
     private errorHandler: ErrorHandlerService
   ) {
+    addIcons({ addCircleOutline });
     this.businessId = this.route.snapshot.paramMap.get('businessId') || '';
   }
 
@@ -74,6 +90,10 @@ export class SalesPageComponent implements OnInit {
 
   loadProducts() {
     this.products$ = this.productService.getProducts(this.businessId);
+  }
+
+  getProductImage(product: Product): string {
+    return product.imageUrl ?? this.defaultProductImage;
   }
 
   addToCart(product: Product) {

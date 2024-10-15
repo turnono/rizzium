@@ -27,6 +27,8 @@ import {
   IonBadge,
   IonIcon,
   IonContent,
+  IonNote,
+  IonChip,
 } from '@ionic/angular/standalone';
 
 @Component({
@@ -35,6 +37,7 @@ import {
   styleUrls: ['./business-dashboard.page.scss'],
   standalone: true,
   imports: [
+    IonChip,
     CommonModule,
     HeaderComponent,
     FooterComponent,
@@ -53,6 +56,7 @@ import {
     IonBadge,
     IonIcon,
     IonContent,
+    IonNote,
   ],
 })
 export class BusinessDashboardComponent implements OnInit {
