@@ -30,6 +30,8 @@ import {
   IonNote,
   IonChip,
 } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { personAdd, people, link, cube, cash, barChart } from 'ionicons/icons';
 
 @Component({
   selector: 'app-business-dashboard',
@@ -89,6 +91,8 @@ export class BusinessDashboardComponent implements OnInit {
     this.businessData$ = new Observable<BusinessData | null>();
     this.lowStockProducts$ = new Observable<Product[]>();
     this.recentTransactions$ = new Observable<Transaction[]>();
+
+    addIcons({ personAdd, people, link, cube, cash, barChart });
   }
 
   ngOnInit() {
