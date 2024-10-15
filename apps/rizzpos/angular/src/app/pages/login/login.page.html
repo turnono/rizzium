@@ -20,7 +20,7 @@
         <ion-label position="floating">Password</ion-label>
         <ion-input [type]="hidePassword ? 'password' : 'text'" formControlName="password" required></ion-input>
         <ion-button slot="end" (click)="hidePassword = !hidePassword" fill="clear">
-          <ion-icon [name]="hidePassword ? 'eye-off' : 'eye'"></ion-icon>
+          <ion-icon [name]="hidePassword ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
         </ion-button>
       </ion-item>
       <ion-text color="danger"

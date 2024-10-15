@@ -23,6 +23,8 @@ import {
   IonText,
   IonImg,
 } from '@ionic/angular/standalone';
+import { eyeOffOutline, eyeOutline } from 'ionicons/icons';
+import { addIcons } from 'ionicons';
 
 @Component({
   selector: 'app-login',
@@ -31,7 +33,6 @@ import {
   standalone: true,
   imports: [
     CommonModule,
-
     HeaderComponent,
     FooterComponent,
     ReactiveFormsModule,
@@ -58,6 +59,7 @@ export class LoginPageComponent implements OnInit {
     private authService: FirebaseAuthService,
     private router: Router
   ) {
+    addIcons({ eyeOffOutline, eyeOutline });
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
