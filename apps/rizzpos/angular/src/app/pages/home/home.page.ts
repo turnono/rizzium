@@ -7,7 +7,19 @@ import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui/organisms';
 import { Observable, Subscription, of } from 'rxjs';
 import { switchMap, catchError } from 'rxjs/operators';
 import { BusinessData } from '@rizzpos/shared/interfaces';
-import { IonContent, IonIcon } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import {
+  IonContent,
+  IonFab,
+  IonFabButton,
+  IonIcon,
+  IonItem,
+  IonLabel,
+  IonList,
+  IonSpinner,
+  IonText,
+} from '@ionic/angular/standalone';
+import { addOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-home',
@@ -20,6 +32,13 @@ import { IonContent, IonIcon } from '@ionic/angular/standalone';
     CommonModule,
     IonIcon,
     IonContent,
+    IonList,
+    IonItem,
+    IonLabel,
+    IonSpinner,
+    IonText,
+    IonFab,
+    IonFabButton,
   ],
 })
 export class HomePageComponent implements OnInit, OnDestroy {
@@ -33,6 +52,7 @@ export class HomePageComponent implements OnInit, OnDestroy {
     private businessService: BusinessService,
     private router: Router
   ) {
+    addIcons({ addOutline });
     this.businesses$ = this.authService.user$.pipe(
       switchMap((user) => {
         if (user) {
