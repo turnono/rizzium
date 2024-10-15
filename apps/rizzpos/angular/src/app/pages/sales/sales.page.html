@@ -1,4 +1,4 @@
-<rizzpos-header [title]="'Sales'" [showBackButton]="true"></rizzpos-header>
+<rizzpos-header [title]="'Sales'"></rizzpos-header>
 
 <ion-content class="ion-padding">
   <ion-grid>
@@ -15,7 +15,7 @@
                   <h2>{{ product.name }}</h2>
                   <p>Price: {{ product.price | currency }}</p>
                 </ion-label>
-                <ion-button slot="end" (click)="addToCart(product)">Add</ion-button>
+                <ion-button (click)="addToCart(product)">Add to Cart</ion-button>
               </ion-item>
             </ion-list>
           </ion-card-content>
@@ -32,17 +32,14 @@
                 <ion-label>
                   <h2>{{ item.product.name }}</h2>
                   <p>Quantity: {{ item.quantity }}</p>
-                  <p>Subtotal: {{ item.product.price * item.quantity | currency }}</p>
+                  <p>Price: {{ item.product.price * item.quantity | currency }}</p>
                 </ion-label>
-                <ion-button slot="end" (click)="removeFromCart(item.product)">Remove</ion-button>
+                <ion-button (click)="removeFromCart(item.product)">Remove</ion-button>
               </ion-item>
             </ion-list>
-            <ion-item>
-              <ion-label>
-                <h2>Total</h2>
-              </ion-label>
-              <ion-note slot="end">{{ getTotalAmount() | currency }}</ion-note>
-            </ion-item>
+            <ion-text color="primary">
+              <h2>Total: {{ getTotalAmount() | currency }}</h2>
+            </ion-text>
             <ion-button expand="block" (click)="processTransaction()" [disabled]="cart.length === 0">
               Process Transaction
             </ion-button>

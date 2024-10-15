@@ -9,9 +9,8 @@ import {
   TransactionService,
   ErrorHandlerService,
 } from '@rizzpos/shared/services';
-import { Product } from '@rizzpos/shared/interfaces';
+import { Product, Transaction } from '@rizzpos/shared/interfaces';
 import { v4 as uuidv4 } from 'uuid';
-import { Transaction } from '@rizzpos/shared/interfaces';
 import {
   IonButton,
   IonItem,
@@ -122,11 +121,15 @@ export class SalesPageComponent implements OnInit {
     this.transactionService.createTransaction(transaction).subscribe({
       next: () => {
         this.errorHandler.showSuccess('Transaction processed successfully');
-        this.cart = [];
+        this.resetCart();
       },
       error: (error: unknown) => {
         this.errorHandler.handleError(error, 'Error processing transaction');
       },
     });
+  }
+
+  resetCart() {
+    this.cart = [];
   }
 }

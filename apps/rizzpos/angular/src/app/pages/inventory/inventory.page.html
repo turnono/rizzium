@@ -3,6 +3,19 @@
 <ion-content class="ion-padding">
   <ion-card>
     <ion-card-header>
+      <ion-card-title>Bulk Update Stock</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item>
+        <ion-label position="floating">Quantity to add/remove</ion-label>
+        <ion-input type="number" [(ngModel)]="bulkUpdateQuantity"></ion-input>
+      </ion-item>
+      <ion-button expand="block" (click)="bulkUpdateStock()">Update All Products</ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
       <ion-card-title>Product Inventory</ion-card-title>
     </ion-card-header>
     <ion-card-content>
@@ -10,14 +23,19 @@
         <ion-item *ngFor="let product of products$ | async">
           <ion-label>
             <h2>{{ product.name }}</h2>
-            <p>Price: {{ product.price | currency }}</p>
+            <p>Current Stock: {{ product.stockQuantity }}</p>
           </ion-label>
-          <ion-input type="number" [value]="product.stockQuantity" #stockInput></ion-input>
-          <ion-button slot="end" (click)="updateStock(product, $any(stockInput.value))">Update Stock</ion-button>
+          <ion-badge *ngIf="product.stockQuantity <= lowStockThreshold" color="danger">Low Stock</ion-badge>
+          <ion-input type="number" [value]="product.stockQuantity"
+            (ionChange)="updateStock(product, $event.detail.value ? +$event.detail.value : 0)"></ion-input>
         </ion-item>
       </ion-list>
     </ion-card-content>
   </ion-card>
+
+  <ion-alert [isOpen]="showLowStockAlert" header="Low Stock Alert"
+    message="The product '{{ lowStockProduct?.name }}' is running low on stock. Current quantity: {{ lowStockProduct?.stockQuantity }}"
+    [buttons]="['OK']" (didDismiss)="showLowStockAlert = false"></ion-alert>
 </ion-content>
 
 <rizzpos-footer></rizzpos-footer>
