@@ -25,6 +25,10 @@ service cloud.firestore {
       return hasRole(businessId, 'cashier') || isManager(businessId);
     }
 
+    function isEmployee(businessId) {
+      return isCashier(businessId) || isManager(businessId);
+    }
+
     // Users collection
     match /users/{userId} {
       allow read, write: if request.auth.uid == userId;
@@ -33,7 +37,7 @@ service cloud.firestore {
     // Businesses collection
     match /businesses/{businessId} {
       allow create: if isSignedIn();
-      allow read: if isSignedIn();
+      allow read: if isEmployee(businessId);
       allow update, delete: if isOwner(businessId);
 
       // Business Users subcollection
@@ -42,24 +46,36 @@ service cloud.firestore {
         allow create, update, delete: if isOwner(businessId);
       }
 
-      // Products subcollection
+      // Products subcollection (inventory)
       match /products/{productId} {
-        allow read: if isCashier(businessId);
+        allow read: if isEmployee(businessId);
         allow create, update, delete: if isManager(businessId);
       }
 
-      // Transactions subcollection
+      // Transactions subcollection (sales)
       match /transactions/{transactionId} {
-        allow read: if isCashier(businessId);
+        allow read: if isEmployee(businessId);
         allow create: if isCashier(businessId);
         allow update, delete: if isManager(businessId);
       }
 
       // Customers subcollection
       match /customers/{customerId} {
-        allow read: if isCashier(businessId) || request.auth.uid == customerId;
+        allow read: if isEmployee(businessId);
         allow create, update: if isCashier(businessId);
         allow delete: if isManager(businessId);
+      }
+
+      // Reports subcollection
+      match /reports/{reportId} {
+        allow read: if isManager(businessId);
+        allow create, update, delete: if isOwner(businessId);
+      }
+
+      // Settings subcollection
+      match /settings/{settingId} {
+        allow read: if isEmployee(businessId);
+        allow write: if isOwner(businessId);
       }
     }
   }
