@@ -11,6 +11,10 @@ import {
   IonBackButton,
   IonButtons,
   IonIcon,
+  IonRouterLink,
+  IonButton,
+  IonRouterLinkWithHref,
+  IonRouterOutlet,
 } from '@ionic/angular/standalone';
 
 @Component({
@@ -25,6 +29,10 @@ import {
     IonBackButton,
     IonButtons,
     IonIcon,
+    IonRouterLink,
+    IonButton,
+    IonRouterLinkWithHref,
+    IonRouterOutlet,
   ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss',

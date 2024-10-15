@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule } from '@ionic/angular';
 import { FirebaseAuthService } from '@rizzpos/shared/services';
 import { Router } from '@angular/router';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui/organisms';
@@ -13,6 +12,18 @@ import {
 import { catchError, tap } from 'rxjs/operators';
 import { of, from } from 'rxjs';
 
+import {
+  IonContent,
+  IonIcon,
+  IonInput,
+  IonButton,
+  IonItem,
+  IonLabel,
+  IonSpinner,
+  IonText,
+  IonImg,
+} from '@ionic/angular/standalone';
+
 @Component({
   selector: 'app-login',
   templateUrl: './login.page.html',
@@ -20,10 +31,20 @@ import { of, from } from 'rxjs';
   standalone: true,
   imports: [
     CommonModule,
-    IonicModule,
+
     HeaderComponent,
     FooterComponent,
     ReactiveFormsModule,
+    IonContent,
+    IonSpinner,
+    IonInput,
+    IonItem,
+    IonLabel,
+    IonButton,
+    IonText,
+    IonIcon,
+    IonButton,
+    IonImg,
   ],
 })
 export class LoginPageComponent implements OnInit {

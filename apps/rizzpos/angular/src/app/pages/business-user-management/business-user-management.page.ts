@@ -1,6 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule } from '@ionic/angular';
 import { ActivatedRoute } from '@angular/router';
 import {
   BusinessService,
@@ -11,6 +10,19 @@ import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui/organisms';
 import { Observable, Subscription } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { BusinessUser } from '@rizzpos/shared/interfaces';
+import {
+  IonButton,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardTitle,
+  IonContent,
+  IonItem,
+  IonLabel,
+  IonList,
+  IonSelect,
+  IonSelectOption,
+} from '@ionic/angular/standalone';
 
 @Component({
   selector: 'app-business-user-management',
@@ -19,10 +31,20 @@ import { BusinessUser } from '@rizzpos/shared/interfaces';
   standalone: true,
   imports: [
     CommonModule,
-    IonicModule,
     HeaderComponent,
     FooterComponent,
     FormsModule,
+    IonContent,
+    IonCard,
+    IonCardHeader,
+    IonCardTitle,
+    IonCardContent,
+    IonList,
+    IonItem,
+    IonLabel,
+    IonSelect,
+    IonSelectOption,
+    IonButton,
   ],
 })
 export class BusinessUserManagementPageComponent implements OnInit, OnDestroy {

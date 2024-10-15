@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
@@ -13,6 +12,22 @@ import {
 import { Product } from '@rizzpos/shared/interfaces';
 import { v4 as uuidv4 } from 'uuid';
 import { Transaction } from '@rizzpos/shared/interfaces';
+import {
+  IonButton,
+  IonItem,
+  IonLabel,
+  IonList,
+  IonNote,
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardContent,
+  IonGrid,
+  IonRow,
+  IonCol,
+  IonContent,
+  IonText,
+} from '@ionic/angular/standalone';
 
 @Component({
   selector: 'app-sales-page',
@@ -21,10 +36,23 @@ import { Transaction } from '@rizzpos/shared/interfaces';
   standalone: true,
   imports: [
     CommonModule,
-    IonicModule,
     FormsModule,
     HeaderComponent,
     FooterComponent,
+    IonButton,
+    IonNote,
+    IonList,
+    IonItem,
+    IonLabel,
+    IonCard,
+    IonCardHeader,
+    IonCardTitle,
+    IonCardContent,
+    IonGrid,
+    IonRow,
+    IonCol,
+    IonText,
+    IonContent,
   ],
 })
 export class SalesPageComponent implements OnInit {

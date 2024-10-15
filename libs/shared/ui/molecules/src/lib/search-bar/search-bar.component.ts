@@ -1,7 +1,7 @@
 import { Component, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ButtonComponent } from '@rizzpos/shared/ui/atoms';
-import { InputComponent } from '@rizzpos/shared/ui/atoms';
+import { ButtonComponent } from '../../../../atoms/src/lib/button/button.component';
+import { InputComponent } from '../../../../atoms/src/lib/input/input.component';
 
 @Component({
   selector: 'rizzpos-search-bar',
@@ -9,16 +9,21 @@ import { InputComponent } from '@rizzpos/shared/ui/atoms';
   imports: [CommonModule, ButtonComponent, InputComponent],
   template: `
     <div class="search-bar">
-      <rizzpos-input [placeholder]="'Search...'" (valueChange)="onInputChange($event)"></rizzpos-input>
+      <rizzpos-input
+        [placeholder]="'Search...'"
+        (valueChange)="onInputChange($event)"
+      ></rizzpos-input>
       <rizzpos-button (clicked)="onSearch()">Search</rizzpos-button>
     </div>
   `,
-  styles: [`
-    .search-bar {
-      display: flex;
-      gap: 8px;
-    }
-  `]
+  styles: [
+    `
+      .search-bar {
+        display: flex;
+        gap: 8px;
+      }
+    `,
+  ],
 })
 export class SearchBarComponent {
   @Output() search = new EventEmitter<string>();

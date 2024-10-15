@@ -1,12 +1,21 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui/organisms';
 import { ProductService, ErrorHandlerService } from '@rizzpos/shared/services';
 import { Product } from '@rizzpos/shared/interfaces';
+import { IonCardTitle } from '@ionic/angular/standalone';
+import { IonCard } from '@ionic/angular/standalone';
+import { IonCardHeader } from '@ionic/angular/standalone';
+import { IonCardContent } from '@ionic/angular/standalone';
+import { IonList } from '@ionic/angular/standalone';
+import { IonItem } from '@ionic/angular/standalone';
+import { IonLabel } from '@ionic/angular/standalone';
+import { IonInput } from '@ionic/angular/standalone';
+import { IonButton } from '@ionic/angular/standalone';
+import { IonContent } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'app-inventory-page',
@@ -15,10 +24,19 @@ import { Product } from '@rizzpos/shared/interfaces';
   standalone: true,
   imports: [
     CommonModule,
-    IonicModule,
     FormsModule,
     HeaderComponent,
     FooterComponent,
+    IonCard,
+    IonCardHeader,
+    IonCardTitle,
+    IonCardContent,
+    IonList,
+    IonItem,
+    IonLabel,
+    IonInput,
+    IonButton,
+    IonContent,
   ],
 })
 export class InventoryPageComponent implements OnInit {

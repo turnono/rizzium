@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule } from '@ionic/angular';
 import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -10,13 +9,41 @@ import {
   ErrorHandlerService,
 } from '@rizzpos/shared/services';
 import { Transaction } from '@rizzpos/shared/interfaces';
+import {
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardTitle,
+  IonCol,
+  IonContent,
+  IonGrid,
+  IonItem,
+  IonLabel,
+  IonList,
+  IonRow,
+} from '@ionic/angular/standalone';
 
 @Component({
   selector: 'app-reports-page',
   templateUrl: './reports.page.html',
   styleUrl: './reports.page.scss',
   standalone: true,
-  imports: [CommonModule, IonicModule, HeaderComponent, FooterComponent],
+  imports: [
+    IonContent,
+    CommonModule,
+    HeaderComponent,
+    FooterComponent,
+    IonCard,
+    IonCardHeader,
+    IonCardTitle,
+    IonCardContent,
+    IonGrid,
+    IonRow,
+    IonCol,
+    IonList,
+    IonItem,
+    IonLabel,
+  ],
 })
 export class ReportsPageComponent implements OnInit {
   businessId: string;

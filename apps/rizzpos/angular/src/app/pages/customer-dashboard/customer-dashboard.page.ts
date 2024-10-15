@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule } from '@ionic/angular';
 import { ActivatedRoute } from '@angular/router';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -11,13 +10,41 @@ import {
   ErrorHandlerService,
 } from '@rizzpos/shared/services';
 import { Purchase, Promotion } from '@rizzpos/shared/interfaces';
+import { IonCard } from '@ionic/angular/standalone';
+import { IonCardHeader } from '@ionic/angular/standalone';
+import { IonCardContent } from '@ionic/angular/standalone';
+import { IonList } from '@ionic/angular/standalone';
+import { IonItem } from '@ionic/angular/standalone';
+import { IonLabel } from '@ionic/angular/standalone';
+import { IonGrid } from '@ionic/angular/standalone';
+import { IonRow } from '@ionic/angular/standalone';
+import { IonCol } from '@ionic/angular/standalone';
+import { IonContent } from '@ionic/angular/standalone';
+import { IonButton } from '@ionic/angular/standalone';
+import { IonCardTitle } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'app-customer-dashboard',
   templateUrl: './customer-dashboard.page.html',
   styleUrl: './customer-dashboard.page.scss',
   standalone: true,
-  imports: [CommonModule, IonicModule, HeaderComponent, FooterComponent],
+  imports: [
+    CommonModule,
+    HeaderComponent,
+    FooterComponent,
+    IonCard,
+    IonCardHeader,
+    IonCardTitle,
+    IonCardContent,
+    IonList,
+    IonItem,
+    IonLabel,
+    IonButton,
+    IonGrid,
+    IonRow,
+    IonCol,
+    IonContent,
+  ],
 })
 export class CustomerDashboardComponent implements OnInit {
   businessId: string;

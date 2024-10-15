@@ -1,12 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule } from '@ionic/angular';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ProductService } from '@rizzpos/shared/services';
 import { Observable } from 'rxjs';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui/organisms';
 import { ActivatedRoute } from '@angular/router';
 import { Product } from '@rizzpos/shared/interfaces';
+import { IonList } from '@ionic/angular/standalone';
+import { IonButton, IonItem, IonLabel } from '@ionic/angular/standalone';
+import { IonFab, IonIcon } from '@ionic/angular/standalone';
+import { IonFabButton } from '@ionic/angular/standalone';
+import { IonContent } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'app-product-management',
@@ -15,11 +19,18 @@ import { Product } from '@rizzpos/shared/interfaces';
   standalone: true,
   imports: [
     CommonModule,
-    IonicModule,
     FormsModule,
     ReactiveFormsModule,
     HeaderComponent,
     FooterComponent,
+    IonContent,
+    IonList,
+    IonItem,
+    IonLabel,
+    IonButton,
+    IonFab,
+    IonFabButton,
+    IonIcon,
   ],
 })
 export class ProductManagementComponent implements OnInit {

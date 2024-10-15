@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule } from '@ionic/angular';
 import { ActivatedRoute } from '@angular/router';
 import {
   ProductService,
@@ -10,13 +9,45 @@ import {
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui/organisms';
 import { Observable } from 'rxjs';
 import { Product } from '@rizzpos/shared/interfaces';
+import {
+  IonCardTitle,
+  IonContent,
+  IonGrid,
+  IonRow,
+  IonCol,
+  IonCard,
+  IonCardHeader,
+  IonCardContent,
+  IonList,
+  IonItem,
+  IonLabel,
+  IonButton,
+  IonNote,
+} from '@ionic/angular/standalone';
 
 @Component({
   selector: 'app-cashier-dashboard',
   templateUrl: './cashier-dashboard.page.html',
   styleUrl: './cashier-dashboard.page.scss',
   standalone: true,
-  imports: [CommonModule, IonicModule, HeaderComponent, FooterComponent],
+  imports: [
+    IonNote,
+    IonButton,
+    IonLabel,
+    IonItem,
+    IonList,
+    IonCardContent,
+    IonCardHeader,
+    IonCard,
+    IonCol,
+    IonRow,
+    IonGrid,
+    IonContent,
+    IonCardTitle,
+    CommonModule,
+    HeaderComponent,
+    FooterComponent,
+  ],
 })
 export class CashierDashboardComponent implements OnInit {
   businessId: string;
