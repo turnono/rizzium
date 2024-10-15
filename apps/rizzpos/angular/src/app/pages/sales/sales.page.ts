@@ -70,7 +70,10 @@ import { addCircleOutline } from 'ionicons/icons';
 })
 export class SalesPageComponent implements OnInit {
   businessId: string;
-  products$?: Observable<Product[]>;
+  products$: Observable<Product[]> = new Observable<Product[]>();
+  recentTransactions$: Observable<Transaction[]> = new Observable<
+    Transaction[]
+  >();
   cart: { product: Product; quantity: number }[] = [];
   defaultProductImage = 'assets/default-product.png';
 
@@ -86,10 +89,19 @@ export class SalesPageComponent implements OnInit {
 
   ngOnInit() {
     this.loadProducts();
+    this.loadRecentTransactions();
   }
 
   loadProducts() {
     this.products$ = this.productService.getProducts(this.businessId);
+  }
+
+  loadRecentTransactions() {
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    this.recentTransactions$ = this.transactionService.getTransactions(
+      this.businessId,
+      twentyFourHoursAgo
+    );
   }
 
   getProductImage(product: Product): string {

@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Observable, BehaviorSubject } from 'rxjs';
+import { switchMap, take } from 'rxjs/operators';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui/organisms';
 import { ProductService, ErrorHandlerService } from '@rizzpos/shared/services';
 import { Product } from '@rizzpos/shared/interfaces';
@@ -53,7 +54,9 @@ import {
 })
 export class InventoryPageComponent implements OnInit {
   businessId: string;
-  products$?: Observable<Product[]>;
+  products$: Observable<Product[]> = new Observable<Product[]>(); // Initialize here
+  private pageSize = 20;
+  private lastVisible$ = new BehaviorSubject<Product | null>(null);
   bulkUpdateQuantity = 0;
   lowStockThreshold = 10;
   showLowStockAlert = false;
@@ -72,7 +75,23 @@ export class InventoryPageComponent implements OnInit {
   }
 
   loadProducts() {
-    this.products$ = this.productService.getProducts(this.businessId);
+    this.products$ = this.lastVisible$.pipe(
+      switchMap((lastVisible) =>
+        this.productService.getProducts(
+          this.businessId,
+          this.pageSize,
+          lastVisible
+        )
+      )
+    );
+  }
+
+  loadMore() {
+    this.products$.pipe(take(1)).subscribe((products) => {
+      if (products.length > 0) {
+        this.lastVisible$.next(products[products.length - 1]);
+      }
+    });
   }
 
   updateStock(product: Product, newQuantity: number) {
@@ -85,7 +104,7 @@ export class InventoryPageComponent implements OnInit {
     }
 
     this.productService
-      .updateProduct(product.id!, { stockQuantity: newQuantity })
+      .updateProduct(product.id as string, { stockQuantity: newQuantity })
       .then(() => {
         this.errorHandler.showSuccess('Stock updated successfully');
         this.checkLowStock(product, newQuantity);

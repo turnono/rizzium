@@ -10,6 +10,11 @@ import {
   where,
   getDocs,
   Timestamp,
+  Query,
+  DocumentData,
+  orderBy,
+  limit,
+  startAfter,
 } from '@angular/fire/firestore';
 import { Product } from '@rizzpos/shared/interfaces';
 import { Observable, from } from 'rxjs';
@@ -45,15 +50,27 @@ export class ProductService {
     return deleteDoc(productRef);
   }
 
-  getProducts(businessId: string): Observable<Product[]> {
-    const q = query(
-      collection(this.firestore, 'products'),
-      where('businessId', '==', businessId)
+  getProducts(
+    businessId: string,
+    limitCount = 20,
+    startAfterDoc: Product | null = null
+  ): Observable<Product[]> {
+    const productsRef = collection(this.firestore, 'products');
+    let q: Query<DocumentData> = query(
+      productsRef,
+      where('businessId', '==', businessId),
+      orderBy('name'),
+      limit(limitCount)
     );
+
+    if (startAfterDoc) {
+      q = query(q, startAfter(startAfterDoc.name));
+    }
+
     return from(getDocs(q)).pipe(
       map((querySnapshot) =>
         querySnapshot.docs.map(
-          (doc) => ({ id: doc.id, ...doc.data() } as Product)
+          (doc) => ({ id: doc.id, ...doc.data() } as unknown as Product)
         )
       )
     );

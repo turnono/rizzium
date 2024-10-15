@@ -151,7 +151,7 @@ export class BusinessDashboardComponent implements OnInit {
   }
 
   navigateTo(route: string) {
-    this.router.navigate(['/business', this.businessId, route]);
+    this.router.navigate([route], { relativeTo: this.route });
   }
 
   generateRoleURL(role: 'cashier' | 'manager'): string {

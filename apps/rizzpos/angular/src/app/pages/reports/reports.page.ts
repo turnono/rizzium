@@ -1,14 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui/organisms';
 import {
   TransactionService,
   ErrorHandlerService,
+  ReportService,
 } from '@rizzpos/shared/services';
-import { Transaction } from '@rizzpos/shared/interfaces';
+import { Transaction, SalesReport } from '@rizzpos/shared/interfaces';
 import {
   IonCard,
   IonCardContent,
@@ -45,22 +46,30 @@ import {
     IonLabel,
   ],
 })
-export class ReportsPageComponent implements OnInit {
+export class ReportsPageComponent implements OnInit, OnDestroy {
   businessId: string;
   transactions$?: Observable<Transaction[]>;
   dailySalesData: any;
   monthlySalesData: any;
+  dailySalesReport$: Observable<SalesReport>;
+  private realtimeSubscription?: Subscription;
 
   constructor(
     private route: ActivatedRoute,
     private transactionService: TransactionService,
-    private errorHandler: ErrorHandlerService
+    private errorHandler: ErrorHandlerService,
+    private reportService: ReportService
   ) {
     this.businessId = this.route.snapshot.paramMap.get('businessId') || '';
+    this.dailySalesReport$ = this.reportService.getDailySalesReport(
+      this.businessId
+    );
   }
 
   ngOnInit() {
     this.loadTransactions();
+    this.loadDailySalesReport();
+    this.subscribeToRealtimeUpdates();
   }
 
   loadTransactions() {
@@ -73,6 +82,27 @@ export class ReportsPageComponent implements OnInit {
           return transactions;
         })
       );
+  }
+
+  loadDailySalesReport() {
+    this.dailySalesReport$ = this.reportService.getDailySalesReport(
+      this.businessId
+    );
+  }
+
+  subscribeToRealtimeUpdates() {
+    this.realtimeSubscription = this.reportService
+      .getRealtimeSalesUpdates(this.businessId)
+      .subscribe((update) => {
+        // Handle real-time updates
+        console.log('Received real-time update:', update);
+      });
+  }
+
+  ngOnDestroy() {
+    if (this.realtimeSubscription) {
+      this.realtimeSubscription.unsubscribe();
+    }
   }
 
   prepareDailySalesData(transactions: Transaction[]) {

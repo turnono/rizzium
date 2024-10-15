@@ -27,20 +27,22 @@ export const routes: Route[] = [
     children: [
       { path: '', component: BusinessDashboardComponent },
       { path: 'products', component: ProductManagementComponent },
+      {
+        path: 'sales',
+        loadComponent: () =>
+          import('./pages/sales/sales.page').then((m) => m.SalesPageComponent),
+      },
+      {
+        path: 'inventory',
+        loadComponent: () =>
+          import('./pages/inventory/inventory.page').then(
+            (m) => m.InventoryPageComponent
+          ),
+      },
       // Add more routes for inventory, sales, reports, etc.
     ],
   },
 
-  {
-    path: 'business/:businessId/inventory',
-    canActivate: [AuthGuard],
-    component: InventoryPageComponent,
-  },
-  {
-    path: 'business/:businessId/sales',
-    canActivate: [AuthGuard],
-    component: SalesPageComponent,
-  },
   {
     path: 'business/:businessId/reports',
     canActivate: [AuthGuard],
