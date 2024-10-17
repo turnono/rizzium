@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import {
   Firestore,
   addDoc,
@@ -24,6 +24,7 @@ import {
   BehaviorSubject,
   forkJoin,
   firstValueFrom,
+  Subscription,
 } from 'rxjs';
 import {
   BusinessData,
@@ -37,29 +38,55 @@ import {
 @Injectable({
   providedIn: 'root',
 })
-export class BusinessService {
+export class BusinessService implements OnDestroy {
   private userBusinessesSubject = new BehaviorSubject<BusinessData[]>([]);
   userBusinesses$ = this.userBusinessesSubject.asObservable();
+  private authSubscription: Subscription;
+  private businessesListener: (() => void) | null = null;
 
   constructor(
     private firestore: Firestore,
     private authService: FirebaseAuthService
   ) {
-    this.initUserBusinessesListener();
+    this.authSubscription = this.authService.user$.subscribe((user) => {
+      if (user) {
+        this.initUserBusinessesListener(user.uid);
+      } else {
+        this.stopUserBusinessesListener();
+      }
+    });
   }
 
-  private async initUserBusinessesListener() {
-    const user = await this.authService.getCurrentUser();
-    if (user) {
-      const businessesRef = collection(this.firestore, 'businesses');
-      const q = query(businessesRef, where('ownerId', '==', user.uid));
-      onSnapshot(q, (querySnapshot) => {
+  private initUserBusinessesListener(userId: string) {
+    const businessesRef = collection(this.firestore, 'businesses');
+    const q = query(businessesRef, where('ownerId', '==', userId));
+    this.businessesListener = onSnapshot(
+      q,
+      (querySnapshot) => {
         const businesses = querySnapshot.docs.map(
           (doc) => ({ id: doc.id, ...doc.data() } as BusinessData)
         );
         this.userBusinessesSubject.next(businesses);
-      });
+      },
+      (error) => {
+        console.error('Error fetching businesses:', error);
+      }
+    );
+  }
+
+  private stopUserBusinessesListener() {
+    if (this.businessesListener) {
+      this.businessesListener();
+      this.businessesListener = null;
     }
+    this.userBusinessesSubject.next([]);
+  }
+
+  ngOnDestroy() {
+    if (this.authSubscription) {
+      this.authSubscription.unsubscribe();
+    }
+    this.stopUserBusinessesListener();
   }
 
   async setupBusiness(businessData: Partial<BusinessData>): Promise<string> {

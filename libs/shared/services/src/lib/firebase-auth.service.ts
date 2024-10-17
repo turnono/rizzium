@@ -23,6 +23,7 @@ import {
 } from '@angular/fire/firestore';
 import { Observable, BehaviorSubject, from } from 'rxjs';
 import { first, tap } from 'rxjs/operators';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root',
@@ -32,7 +33,11 @@ export class FirebaseAuthService {
     new BehaviorSubject<AppUser | null>(null);
   user$: Observable<AppUser | null> = this.userSubject.asObservable();
 
-  constructor(private auth: Auth, private firestore: Firestore) {
+  constructor(
+    private auth: Auth,
+    private firestore: Firestore,
+    private router: Router
+  ) {
     onAuthStateChanged(this.auth, (user) => {
       console.log('Auth state changed:', user);
       if (user) {
@@ -98,8 +103,14 @@ export class FirebaseAuthService {
     return 'anon';
   }
 
-  signOut() {
-    return signOut(this.auth);
+  async signOut(): Promise<void> {
+    try {
+      await signOut(this.auth);
+      this.router.navigate(['/login']);
+    } catch (error) {
+      console.error('Error signing out:', error);
+      throw error;
+    }
   }
 
   signInWithEmailAndPassword(

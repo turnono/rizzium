@@ -4,8 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FirebaseAuthService, BusinessService } from '@rizzpos/shared/services';
 import { Router } from '@angular/router';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui/organisms';
-import { Observable, Subscription, of } from 'rxjs';
-import { switchMap, catchError } from 'rxjs/operators';
+import { Observable, Subscription } from 'rxjs';
 import { BusinessData } from '@rizzpos/shared/interfaces';
 import { addIcons } from 'ionicons';
 import {
@@ -47,7 +46,7 @@ export class HomePageComponent implements OnInit, OnDestroy {
   loading = true;
   error: string | null = null;
   private subscription?: Subscription;
-  private alertController = inject(AlertController);
+  private alertController: AlertController = inject(AlertController);
 
   constructor(
     private authService: FirebaseAuthService,
@@ -55,21 +54,7 @@ export class HomePageComponent implements OnInit, OnDestroy {
     private router: Router
   ) {
     addIcons({ addOutline });
-    this.businesses$ = this.authService.user$.pipe(
-      switchMap((user) => {
-        if (user) {
-          return this.businessService.getUserBusinesses$(user.uid).pipe(
-            catchError((error) => {
-              console.error('Error loading businesses:', error);
-              this.error = 'Failed to load businesses. Please try again.';
-              return of([]);
-            })
-          );
-        } else {
-          return of([]);
-        }
-      })
-    );
+    this.businesses$ = this.businessService.userBusinesses$;
   }
 
   ngOnInit() {
@@ -102,7 +87,6 @@ export class HomePageComponent implements OnInit, OnDestroy {
   async headerButtonClicked(event: string) {
     console.log('header button clicked', event);
     if (event === 'logout') {
-      // popup a confirmation dialog
       const alert = await this.alertController.create({
         header: 'Logout',
         message: 'Are you sure you want to logout?',
@@ -115,7 +99,14 @@ export class HomePageComponent implements OnInit, OnDestroy {
             text: 'Logout',
             role: 'confirm',
             handler: () => {
-              this.authService.signOut();
+              this.authService
+                .signOut()
+                .then(() => {
+                  this.router.navigate(['/login']);
+                })
+                .catch((error) => {
+                  console.error('Error during logout:', error);
+                });
             },
           },
         ],
