@@ -19,8 +19,9 @@ export default defineConfig({
       openMode: 0,
     },
     env: {
-      TEST_USER_EMAIL: 'your-actual-test-user@example.com',
-      TEST_USER_PASSWORD: 'your-actual-test-user-password',
+      TEST_USER_EMAIL: 'test1@example.com',
+      TEST_USER_PASSWORD: 'test1234',
     },
+    specPattern: 'src/e2e/**/*.cy.ts',
   },
 });

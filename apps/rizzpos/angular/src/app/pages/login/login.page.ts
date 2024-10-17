@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FirebaseAuthService } from '@rizzpos/shared/services';
 import { Router } from '@angular/router';
@@ -22,6 +22,7 @@ import {
   IonSpinner,
   IonText,
   IonImg,
+  ToastController,
 } from '@ionic/angular/standalone';
 import { eyeOffOutline, eyeOutline } from 'ionicons/icons';
 import { addIcons } from 'ionicons';
@@ -53,6 +54,7 @@ export class LoginPageComponent implements OnInit {
   authMode: 'login' | 'register' = 'login';
   hidePassword = true;
   errorMessage = '';
+  private toastService = inject(ToastController);
 
   constructor(
     private fb: FormBuilder,
@@ -104,7 +106,20 @@ export class LoginPageComponent implements OnInit {
   async register(email: string, password: string) {
     from(this.authService.createUserWithEmailAndPassword(email, password))
       .pipe(
-        tap(() => this.router.navigate(['/home'])),
+        tap(async () => {
+          // TODO: send email verification
+          // pop up a toast
+          const toast = await this.toastService.create({
+            message: 'Registration successful',
+            duration: 5000,
+            position: 'top',
+            color: 'success',
+          });
+          toast.present();
+          this.router.navigate(['/home']);
+          this.loginForm.reset();
+          this.errorMessage = '';
+        }),
         catchError((error) => {
           console.error('Error registering:', error);
           this.errorMessage = error.message;

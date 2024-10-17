@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import { FirebaseAuthService, BusinessService } from '@rizzpos/shared/services';
@@ -20,6 +20,7 @@ import {
   IonText,
 } from '@ionic/angular/standalone';
 import { addOutline } from 'ionicons/icons';
+import { AlertController } from '@ionic/angular';
 
 @Component({
   selector: 'app-home',
@@ -46,6 +47,7 @@ export class HomePageComponent implements OnInit, OnDestroy {
   loading = true;
   error: string | null = null;
   private subscription?: Subscription;
+  private alertController = inject(AlertController);
 
   constructor(
     private authService: FirebaseAuthService,
@@ -95,5 +97,30 @@ export class HomePageComponent implements OnInit, OnDestroy {
 
   createNewBusiness() {
     this.router.navigate(['/business-setup']);
+  }
+
+  async headerButtonClicked(event: string) {
+    console.log('header button clicked', event);
+    if (event === 'logout') {
+      // popup a confirmation dialog
+      const alert = await this.alertController.create({
+        header: 'Logout',
+        message: 'Are you sure you want to logout?',
+        buttons: [
+          {
+            text: 'Cancel',
+            role: 'cancel',
+          },
+          {
+            text: 'Logout',
+            role: 'confirm',
+            handler: () => {
+              this.authService.signOut();
+            },
+          },
+        ],
+      });
+      await alert.present();
+    }
   }
 }

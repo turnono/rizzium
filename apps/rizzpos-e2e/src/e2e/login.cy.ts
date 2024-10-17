@@ -40,4 +40,35 @@ describe('Login Flow', () => {
     cy.get('[data-cy=add-employee-button]').should('exist');
     cy.get('[data-cy=sales-report]').should('exist');
   });
+
+  it('should attempt to login with valid credentials', () => {
+    cy.get('input[type="email"]').type(Cypress.env('TEST_USER_EMAIL'));
+    cy.get('input[type="password"]').type(Cypress.env('TEST_USER_PASSWORD'));
+    cy.get('button[type="submit"]').click();
+
+    // Check for redirection or successful login indicator
+    cy.url().should('not.include', '/login');
+
+    // Add assertions here to check for successful login indicators
+    // For example:
+    // cy.get('[data-cy=user-menu]').should('be.visible');
+  });
+
+  it('should show error message for invalid credentials', () => {
+    cy.get('input[type="email"]').type('invalid@example.com');
+    cy.get('input[type="password"]').type('wrongpassword');
+    cy.get('button[type="submit"]').click();
+
+    // Check for error message
+    // Adjust the selector based on how your app displays error messages
+    cy.get('.error-message')
+      .should('be.visible')
+      .and('contain', 'Invalid email or password');
+  });
+
+  // Placeholder test for Google Sign-In (to be implemented later)
+  it.skip('should have option for Google Sign-In', () => {
+    cy.get('[data-cy=google-signin-button]').should('exist');
+    // Additional Google Sign-In tests will be added here once implemented
+  });
 });

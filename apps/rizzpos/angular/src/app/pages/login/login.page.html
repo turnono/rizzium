@@ -1,4 +1,4 @@
-<rizzpos-header [title]="authMode === 'login' ? 'Login' : 'Register'"></rizzpos-header>
+<rizzpos-header [title]="authMode === 'login' ? 'Login' : 'Register'" [showLogoutButton]="false"></rizzpos-header>
 
 <ion-content class="ion-padding">
   <div class="login-container">
@@ -7,18 +7,20 @@
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
       <ion-item>
         <ion-label position="floating">Email</ion-label>
-        <ion-input type="email" formControlName="email" required></ion-input>
+        <ion-input type="email" formControlName="email" required data-cy="email-input"></ion-input>
+        <ion-text color="danger"
+          *ngIf="loginForm.get('email')?.hasError('required') && loginForm.get('email')?.touched">
+          Email is required
+        </ion-text>
+        <ion-text color="danger" *ngIf="loginForm.get('email')?.hasError('email') && loginForm.get('email')?.touched">
+          Please enter a valid email
+        </ion-text>
       </ion-item>
-      <ion-text color="danger" *ngIf="loginForm.get('email')?.hasError('required') && loginForm.get('email')?.touched">
-        Email is required
-      </ion-text>
-      <ion-text color="danger" *ngIf="loginForm.get('email')?.hasError('email') && loginForm.get('email')?.touched">
-        Please enter a valid email
-      </ion-text>
 
       <ion-item>
         <ion-label position="floating">Password</ion-label>
-        <ion-input [type]="hidePassword ? 'password' : 'text'" formControlName="password" required></ion-input>
+        <ion-input [type]="hidePassword ? 'password' : 'text'" formControlName="password" required
+          data-cy="password-input"></ion-input>
         <ion-button slot="end" (click)="hidePassword = !hidePassword" fill="clear">
           <ion-icon [name]="hidePassword ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
         </ion-button>
@@ -34,14 +36,15 @@
 
       <ion-item *ngIf="authMode === 'register'">
         <ion-label position="floating">Confirm Password</ion-label>
-        <ion-input type="password" formControlName="confirmPassword" required></ion-input>
+        <ion-input type="password" formControlName="confirmPassword" required
+          data-cy="confirm-password-input"></ion-input>
       </ion-item>
       <ion-text color="danger"
         *ngIf="loginForm.hasError('passwordMismatch') && loginForm.get('confirmPassword')?.touched">
         Passwords do not match
       </ion-text>
 
-      <ion-button expand="block" type="submit" class="submit-button">
+      <ion-button expand="block" type="submit" class="submit-button" data-cy="submit-button">
         {{ authMode === 'login' ? 'Sign In' : 'Register' }}
       </ion-button>
     </form>
@@ -55,13 +58,14 @@
       <span style="padding-left: 10px;">Sign in with Google</span>
     </ion-button>
 
-    <p class="auth-toggle">
+    <p class="auth-toggle" data-cy="auth-toggle">
       {{ authMode === 'login' ? 'Don\'t have an account?' : 'Already have an account?' }}
-      <a href="javascript:void(0)" (click)="toggleAuthMode()" (keydown.enter)="toggleAuthMode()">{{ authMode === 'login'
-        ? 'Register' : 'Sign In' }}</a>
+      <ion-button size="small" (click)="toggleAuthMode()" data-cy="auth-toggle-button">{{ authMode === 'login' ?
+        'Register' : 'Sign
+        In' }}</ion-button>
     </p>
 
-    <ion-text color="danger" *ngIf="errorMessage">
+    <ion-text color="danger" *ngIf="errorMessage" data-cy="error-message">
       {{ errorMessage }}
     </ion-text>
   </div>
