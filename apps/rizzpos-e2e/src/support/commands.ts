@@ -21,11 +21,14 @@ declare namespace Cypress {
 }
 
 // -- This is a parent command --
-Cypress.Commands.add('login', (email, password) => {
+Cypress.Commands.add('login', (email: string, password: string) => {
   cy.visit('/login');
   cy.get('[data-cy=email-input]').type(email);
   cy.get('[data-cy=password-input]').type(password);
-  cy.get('[data-cy=login-button]').click();
+  cy.get('[data-cy=submit-button]').click();
+  // Add a check to ensure login was successful
+  cy.wait(5000);
+  cy.url().should('include', '/home');
 });
 
 Cypress.Commands.add('loginAs', (role) => {
@@ -35,7 +38,9 @@ Cypress.Commands.add('loginAs', (role) => {
 });
 
 Cypress.Commands.add('loginAsOwner', () => {
-  cy.login('owner@example.com', 'ownerpassword');
+  const email = 'a@b.com';
+  const password = '12345678';
+  cy.login(email, password);
 });
 //
 // -- This is a child command --

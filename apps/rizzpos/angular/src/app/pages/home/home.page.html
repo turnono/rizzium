@@ -15,7 +15,8 @@
 
   <ng-container *ngIf="!loading && !error">
     <ion-list>
-      <ion-item *ngFor="let business of businesses$ | async" (click)="goToBusiness(business.id)">
+      <ion-item *ngFor="let business of businesses$ | async" (click)="goToBusiness(business.id)"
+        data-cy="business-item">
         <ion-label>
           <h2>{{ business.businessName }}</h2>
           <p>{{ business.businessType }}</p>
@@ -24,13 +25,13 @@
     </ion-list>
 
     <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-      <ion-fab-button (click)="createNewBusiness()">
+      <ion-fab-button (click)="createNewBusiness()" data-cy="create-business-button">
         <ion-icon name="add-outline"></ion-icon>
       </ion-fab-button>
     </ion-fab>
   </ng-container>
 
-  <ion-text *ngIf="!loading && !error && (businesses$ | async)?.length === 0">
+  <ion-text *ngIf="!loading && !error && (businesses$ | async)?.length === 0" data-cy="empty-state-message">
     <p>You don't have any businesses yet. Create one to get started!</p>
   </ion-text>
 </ion-content>

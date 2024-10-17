@@ -11,29 +11,34 @@
   <form [formGroup]="businessForm" (ngSubmit)="onSubmit()">
     <ion-item>
       <ion-label position="floating">Business Name</ion-label>
-      <ion-input formControlName="businessName" required></ion-input>
+      <ion-input formControlName="businessName" required data-cy="business-name-input"></ion-input>
     </ion-item>
 
     <ion-item>
       <ion-label position="floating">Business Type</ion-label>
-      <ion-select formControlName="businessType" required>
-        <ion-select-option value="retail">Retail</ion-select-option>
-        <ion-select-option value="restaurant">Restaurant</ion-select-option>
-        <ion-select-option value="service">Service</ion-select-option>
-        <!-- Add more options as needed -->
-      </ion-select>
+      <ion-input formControlName="businessType" required data-cy="business-type-input"></ion-input>
     </ion-item>
 
     <ion-item>
       <ion-label position="floating">Address</ion-label>
-      <ion-input formControlName="address" required></ion-input>
+      <ion-input formControlName="address"></ion-input>
     </ion-item>
 
     <ion-item>
       <ion-label position="floating">Phone Number</ion-label>
-      <ion-input type="tel" formControlName="phoneNumber" required></ion-input>
+      <ion-input formControlName="phoneNumber"></ion-input>
     </ion-item>
 
-    <ion-button expand="block" type="submit" [disabled]="!businessForm.valid">Set Up Business</ion-button>
+    <ion-button expand="block" type="submit" [disabled]="!businessForm.valid" data-cy="create-business-submit">
+      Create Business
+    </ion-button>
   </form>
+
+  <ion-text color="danger" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </ion-text>
+
+  <ion-text color="success" *ngIf="successMessage">
+    {{ successMessage }}
+  </ion-text>
 </ion-content>

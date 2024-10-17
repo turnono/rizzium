@@ -14,6 +14,7 @@ import {
   IonButtons,
   IonToolbar,
   IonTitle,
+  IonText,
 } from '@ionic/angular/standalone';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { BusinessService } from '@rizzpos/shared/services';
@@ -39,10 +40,13 @@ import { Router } from '@angular/router';
     IonToolbar,
     IonButtons,
     IonBackButton,
+    IonText,
   ],
 })
 export class BusinessSetupComponent {
   businessForm: FormGroup;
+  errorMessage: string | null = null;
+  successMessage: string | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -52,22 +56,30 @@ export class BusinessSetupComponent {
     this.businessForm = this.fb.group({
       businessName: ['', Validators.required],
       businessType: ['', Validators.required],
-      address: ['', Validators.required],
-      phoneNumber: ['', Validators.required],
+      address: [''],
+      phoneNumber: [''],
     });
   }
 
   async onSubmit() {
     if (this.businessForm.valid) {
       try {
+        console.log('Submitting business form:', this.businessForm.value);
         const businessId = await this.businessService.setupBusiness(
           this.businessForm.value
         );
-        this.router.navigate(['/business', businessId, 'dashboard']);
+        console.log('Business created with ID:', businessId);
+        this.successMessage = 'Business created successfully. Redirecting...';
+        setTimeout(() => {
+          this.router.navigate(['/business', businessId, 'dashboard']);
+        }, 2000);
       } catch (error) {
         console.error('Error setting up business:', error);
-        // Handle error (show message to user)
+        this.errorMessage = 'Failed to create business. Please try again.';
       }
+    } else {
+      console.log('Form is invalid:', this.businessForm.errors);
+      this.errorMessage = 'Please fill in all required fields.';
     }
   }
 }

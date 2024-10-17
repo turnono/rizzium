@@ -12,7 +12,6 @@ import {
   Timestamp,
   onSnapshot,
   updateDoc,
-  arrayUnion,
   orderBy,
   limit,
   deleteDoc,
@@ -24,7 +23,6 @@ import {
   map,
   BehaviorSubject,
   forkJoin,
-  of,
   firstValueFrom,
 } from 'rxjs';
 import {
@@ -64,41 +62,38 @@ export class BusinessService {
     }
   }
 
-  async setupBusiness(
-    businessData: Omit<BusinessData, 'id' | 'ownerId' | 'createdAt'>
-  ) {
+  async setupBusiness(businessData: Partial<BusinessData>): Promise<string> {
     const user = await this.authService.getCurrentUser();
-    if (!user) throw new Error('No authenticated user found');
-
-    const fullBusinessData: Omit<BusinessData, 'id'> = {
-      ...businessData,
-      ownerId: user.uid,
-      createdAt: Timestamp.now(),
-    };
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
 
     try {
+      // First, create the business document
       const businessRef = await addDoc(
         collection(this.firestore, 'businesses'),
-        fullBusinessData
-      );
-
-      await setDoc(
-        doc(
-          this.firestore,
-          `businesses/${businessRef.id}/businessUsers/${user.uid}`
-        ),
         {
-          role: 'owner',
-          userId: user.uid,
-          createdAt: Timestamp.now(),
-          displayName: user.displayName || 'Business Owner',
+          ...businessData,
+          ownerId: user.uid,
+          createdAt: new Date(),
         }
       );
 
-      const userRef = doc(this.firestore, `users/${user.uid}`);
-      await updateDoc(userRef, {
-        businesses: arrayUnion(businessRef.id),
-      });
+      // Then, update the user's document with the new business ID
+      const userRef = doc(this.firestore, 'users', user.uid);
+      const userDoc = await getDoc(userRef);
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        await updateDoc(userRef, {
+          businesses: [...(userData['businesses'] || []), businessRef.id],
+        });
+      } else {
+        // If the user document doesn't exist, create it
+        await setDoc(userRef, {
+          businesses: [businessRef.id],
+        });
+      }
 
       return businessRef.id;
     } catch (error) {
@@ -169,6 +164,8 @@ export class BusinessService {
   }
 
   getUserBusinesses$(userId: string): Observable<BusinessData[]> {
+    // Use the userId parameter or remove it if not needed
+    console.log('Fetching businesses for user:', userId);
     return this.userBusinesses$;
   }
 
