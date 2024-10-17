@@ -1,3 +1,4 @@
+import { faker } from '@faker-js/faker';
 import {
   initializeTestEnvironment,
   RulesTestEnvironment,
@@ -12,20 +13,24 @@ describe('Authentication Flow', () => {
 
   describe('Login', () => {
     it('should log in successfully and redirect to the appropriate dashboard', () => {
+      const testEmail =
+        Cypress.env('TEST_USER_EMAIL') || faker.internet.email();
+      const testPassword =
+        Cypress.env('TEST_USER_PASSWORD') || faker.internet.password();
+
       cy.url().then((url) => {
         cy.log(`Current URL before login: ${url}`);
       });
 
-      console.log(Cypress.env('TEST_USER_EMAIL'));
       cy.get('input[type="email"]', { timeout: 10000 })
         .should('be.visible')
         .and('not.be.disabled')
-        .type(Cypress.env('TEST_USER_EMAIL'), { force: true });
+        .type(testEmail, { force: true });
 
       cy.get('input[type="password"]', { timeout: 5000 })
         .should('be.visible')
         .and('not.be.disabled')
-        .type(Cypress.env('TEST_USER_PASSWORD'), { force: true });
+        .type(testPassword, { force: true });
 
       cy.get('button[type="submit"]', { timeout: 5000 }).then(($btn) => {
         cy.log('Submit button properties:', {
@@ -90,10 +95,12 @@ describe('Authentication Flow', () => {
     });
 
     it('should show error message for invalid credentials', () => {
-      cy.get('input[type="email"]').type('invalid@example.com');
-      cy.get('input[type="password"]').type('wrongpassword');
+      const invalidEmail = faker.internet.email();
+      const invalidPassword = faker.internet.password();
 
-      // Log button properties before clicking
+      cy.get('input[type="email"]').type(invalidEmail);
+      cy.get('input[type="password"]').type(invalidPassword);
+
       cy.get('button[type="submit"]').then(($btn) => {
         cy.log('Submit button properties:', {
           isVisible: $btn.is(':visible'),
@@ -103,13 +110,9 @@ describe('Authentication Flow', () => {
         });
       });
 
-      // Use force: true to click the button even if it's not visible
       cy.get('button[type="submit"]').click({ force: true });
 
-      // Wait for the error message with a timeout
-      cy.get('[data-cy=error-message]', { timeout: 10000 }).should(
-        'be.visible'
-      );
+      cy.get('[data-cy=error-message]', { timeout: 3000 }).should('be.visible');
     });
   });
 
@@ -120,59 +123,34 @@ describe('Authentication Flow', () => {
     });
 
     it('should register a new user successfully', () => {
-      // Fill out registration form
-      cy.get('[data-cy=email-input]').type('newuser9@example.com');
-      cy.get('[data-cy=password-input]').type('password123');
-      cy.get('[data-cy=confirm-password-input]').type('password123');
+      const newUserEmail = faker.internet.email();
+      const newUserPassword = faker.internet.password();
 
-      // Submit registration form
+      cy.get('[data-cy=email-input]').type(newUserEmail);
+      cy.get('[data-cy=password-input]').type(newUserPassword);
+      cy.get('[data-cy=confirm-password-input]').type(newUserPassword);
+
       cy.get('[data-cy=submit-button]').click();
 
-      // Check for successful registration
       cy.url().then((url) => {
         cy.log(`Current URL after registration: ${url}`);
         cy.wait(5000);
         if (url.includes('/login')) {
           cy.log('Redirected to login page after registration');
           cy.get('[data-cy=error-message]', { timeout: 10000 }).should(
-            'contain',
-            'already-in-use'
+            'not.exist'
           );
         } else {
           cy.get('ion-toast').should('exist');
         }
       });
 
-      // Log the body content for debugging
       cy.get('body').then(($body) => {
         cy.log('Page content after registration:', $body.text());
       });
 
-      // Take a screenshot for visual debugging
       cy.screenshot('after-registration');
     });
-
-    // it('should show error for existing email during registration', () => {
-    //   cy.get('input[type="email"]').type(Cypress.env('TEST_USER_EMAIL'));
-    //   cy.get('input[type="password"]').first().type('SomePassword123!');
-    //   cy.get('input[type="password"]').eq(1).type('SomePassword123!');
-    //   cy.get('button[type="submit"]').click({ force: true });
-
-    //   cy.get('[data-cy=error-message]', { timeout: 10000 })
-    //     .should('be.visible')
-    //     .and('contain', 'Firebase: Error (auth/email-already-in-use).');
-    // });
-
-    // it('should show error for mismatched passwords', () => {
-    //   cy.get('input[type="email"]').type('newuser@example.com');
-    //   cy.get('input[type="password"]').first().type('Password123!');
-    //   cy.get('input[type="password"]').eq(1).type('DifferentPassword123!');
-    //   cy.get('button[type="submit"]').click({ force: true });
-
-    //   cy.get('[data-cy=password-mismatch-error]', { timeout: 10000 })
-    //     .should('be.visible')
-    //     .and('contain', 'Passwords do not match');
-    // });
   });
 
   // Placeholder test for Google Sign-In (to be implemented later)
