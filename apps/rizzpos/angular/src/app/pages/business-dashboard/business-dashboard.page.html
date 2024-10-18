@@ -66,7 +66,7 @@
                 <ion-row>
                   <ion-col size="6" size-md="3" *ngFor="let action of quickActions">
                     <ion-button (click)="navigateTo(action.route)" expand="block" fill="outline"
-                      class="ion-margin-bottom">
+                      class="ion-margin-bottom" [id]="action.testId">
                       <ion-icon slot="start" [name]="action.icon"></ion-icon>
                       {{ action.label }}
                     </ion-button>

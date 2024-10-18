@@ -25,6 +25,9 @@ import {
   forkJoin,
   firstValueFrom,
   Subscription,
+  tap,
+  catchError,
+  throwError,
 } from 'rxjs';
 import {
   BusinessData,
@@ -455,6 +458,30 @@ export class BusinessService implements OnDestroy {
           observer.error(error);
         });
     });
+  }
+
+  addBusinessUser(
+    businessId: string,
+    userData: { name: string; email: string; role: string }
+  ): Observable<void> {
+    const userDoc = doc(
+      this.firestore,
+      `businesses/${businessId}/users/${userData.email}`
+    );
+    return from(
+      setDoc(userDoc, {
+        name: userData.name,
+        email: userData.email,
+        role: userData.role,
+        createdAt: Timestamp.now(),
+      })
+    ).pipe(
+      tap(() => console.log('User added successfully')),
+      catchError((error) => {
+        console.error('Error adding user:', error);
+        return throwError(() => new Error('Failed to add user'));
+      })
+    );
   }
 
   // Add more methods for business management as needed

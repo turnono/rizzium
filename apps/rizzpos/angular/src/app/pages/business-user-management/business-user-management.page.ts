@@ -1,80 +1,98 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
 import {
-  BusinessService,
-  FirebaseAuthService,
-  ErrorHandlerService,
-} from '@rizzpos/shared/services';
+  FormsModule,
+  ReactiveFormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
+import { BusinessService } from '@rizzpos/shared/services';
+import { Observable, Subscription, of } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui/organisms';
-import { Observable, Subscription } from 'rxjs';
-import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { BusinessUser } from '@rizzpos/shared/interfaces';
 import {
-  IonButton,
   IonCard,
   IonCardContent,
   IonCardHeader,
   IonCardTitle,
   IonContent,
+  IonList,
   IonItem,
   IonLabel,
-  IonList,
   IonSelect,
   IonSelectOption,
+  IonButton,
+  IonModal,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonButtons,
+  IonInput,
+  IonText,
 } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'app-business-user-management',
   templateUrl: './business-user-management.page.html',
-  styleUrl: './business-user-management.page.scss',
+  styleUrls: ['./business-user-management.page.scss'],
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
     HeaderComponent,
     FooterComponent,
-    FormsModule,
-    IonContent,
     IonCard,
+    IonCardContent,
     IonCardHeader,
     IonCardTitle,
-    IonCardContent,
+    IonContent,
     IonList,
     IonItem,
     IonLabel,
     IonSelect,
     IonSelectOption,
     IonButton,
+    IonModal,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonButtons,
+    IonInput,
+    IonText,
   ],
 })
 export class BusinessUserManagementPageComponent implements OnInit, OnDestroy {
   businessId: string;
-  businessUsers$?: Observable<BusinessUser[]>;
-  private businessUsersSubscription?: Subscription;
-  currentUserId?: string;
+  businessUsers$: Observable<BusinessUser[]> = of([]);
+  isAddUserModalOpen = false;
+  addUserForm: FormGroup;
+  errorMessage: string | null = null;
+  private subscription?: Subscription;
 
   constructor(
     private route: ActivatedRoute,
     private businessService: BusinessService,
-    private authService: FirebaseAuthService,
-    private errorHandler: ErrorHandlerService
+    private fb: FormBuilder
   ) {
     this.businessId = this.route.snapshot.paramMap.get('businessId') || '';
+    this.addUserForm = this.fb.group({
+      name: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]],
+      role: ['', Validators.required],
+    });
   }
 
-  async ngOnInit() {
-    try {
-      const user = await this.authService.getCurrentUser();
-      this.currentUserId = user ? user.uid : undefined;
-      this.loadBusinessUsers();
-    } catch (error) {
-      this.errorHandler.handleError(error, 'Error initializing component');
-    }
+  ngOnInit() {
+    this.loadBusinessUsers();
   }
 
   ngOnDestroy() {
-    if (this.businessUsersSubscription) {
-      this.businessUsersSubscription.unsubscribe();
+    if (this.subscription) {
+      this.subscription.unsubscribe();
     }
   }
 
@@ -82,44 +100,70 @@ export class BusinessUserManagementPageComponent implements OnInit, OnDestroy {
     this.businessUsers$ = this.businessService.getBusinessUsersRealtime(
       this.businessId
     );
-    this.businessUsersSubscription = this.businessUsers$.subscribe({
-      next: () => {
-        // Handle successful data loading if needed
-      },
-      error: (error) => {
-        this.errorHandler.handleError(error, 'Error loading business users');
-      },
-    });
+    this.subscription = this.businessUsers$.subscribe(
+      (users) => console.log('Loaded business users:', users),
+      (error) => console.error('Error loading business users:', error)
+    );
   }
 
   updateUserRole(userId: string, newRole: string) {
     this.businessService
       .updateBusinessUserRole(this.businessId, userId, newRole)
-      .subscribe(
-        () => {
-          this.errorHandler.showSuccess('User role updated successfully');
+      .subscribe({
+        next: () => {
+          // Handle success (e.g., show a success message)
         },
-        (error) => {
-          this.errorHandler.handleError(error, 'Error updating user role');
-        }
-      );
+        error: (error) => {
+          this.errorMessage = 'Error updating user role';
+          console.error('Error updating user role:', error);
+        },
+      });
   }
 
   removeUser(userId: string) {
-    if (userId === this.currentUserId) {
-      this.errorHandler.showWarning(
-        'You cannot remove yourself from the business'
-      );
-      return;
-    }
-
-    this.businessService.removeBusinessUser(this.businessId, userId).subscribe(
-      () => {
-        this.errorHandler.showSuccess('User removed successfully');
+    console.log('Attempting to remove user:', userId);
+    this.businessService.removeBusinessUser(this.businessId, userId).subscribe({
+      next: () => {
+        console.log('User removed successfully');
+        // Update the businessUsers$ observable
+        this.businessUsers$ = this.businessUsers$.pipe(
+          map((users) => users.filter((user) => user.id !== userId))
+        );
       },
-      (error) => {
-        this.errorHandler.handleError(error, 'Error removing user');
-      }
-    );
+      error: (error) => {
+        this.errorMessage = 'Error removing user';
+        console.error('Error removing user:', error);
+      },
+    });
+  }
+
+  openAddUserModal() {
+    this.isAddUserModalOpen = true;
+  }
+
+  closeAddUserModal() {
+    this.isAddUserModalOpen = false;
+    this.addUserForm.reset();
+  }
+
+  addUser() {
+    if (this.addUserForm.valid) {
+      const newUser = this.addUserForm.value;
+      console.log('Adding new user:', newUser);
+      this.businessService.addBusinessUser(this.businessId, newUser).subscribe(
+        () => {
+          console.log('User added successfully');
+          this.closeAddUserModal();
+          this.loadBusinessUsers(); // Reload the user list
+          this.errorMessage = null; // Clear any previous error messages
+        },
+        (error) => {
+          console.error('Error adding user:', error);
+          this.errorMessage = 'Failed to add user. Please try again.';
+        }
+      );
+    } else {
+      this.errorMessage = 'Please fill in all required fields correctly.';
+    }
   }
 }

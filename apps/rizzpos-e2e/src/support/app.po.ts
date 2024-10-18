@@ -20,3 +20,17 @@ export const getBusinessSetupErrorMessage = () =>
   cy.get('[data-cy=business-setup-error-message]');
 export const getBusinessSetupSuccessMessage = () =>
   cy.get('[data-cy=business-setup-success-message]');
+
+// Business User Management Page
+export const getUserList = () => cy.get('[data-cy=user-list]');
+export const getAddUserButton = () => cy.get('[data-cy=add-user-button]');
+export const getUserNameInput = () => cy.get('[data-cy=user-name-input]');
+export const getUserEmailInput = () => cy.get('[data-cy=user-email-input]');
+export const getUserRoleSelect = () => cy.get('[data-cy=user-role-select]');
+export const getSubmitUserButton = () => cy.get('[data-cy=submit-user-button]');
+export const getUserItem = (email: string) =>
+  cy.get(`[data-cy=user-item-${email}]`);
+export const getUserRoleSelectByEmail = (email: string) =>
+  cy.get(`[data-cy=user-role-select-${email}]`);
+export const getRemoveUserButton = (email: string) =>
+  cy.get(`[data-cy=remove-user-button-${email}]`);

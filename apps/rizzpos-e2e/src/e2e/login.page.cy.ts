@@ -157,4 +157,12 @@ describe('Authentication Flow', () => {
   it.skip('should have option for Google Sign-In', () => {
     cy.get('[data-cy=google-signin-button]').should('exist');
   });
+
+  describe('Login Page', () => {
+    it('should redirect to home page if user is already authenticated', () => {
+      cy.loginAsOwner(); // This should log in the user
+      cy.visit('/login');
+      cy.url().should('include', '/home');
+    });
+  });
 });

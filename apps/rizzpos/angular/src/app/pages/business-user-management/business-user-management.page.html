@@ -6,23 +6,62 @@
       <ion-card-title>Business Users</ion-card-title>
     </ion-card-header>
     <ion-card-content>
-      <ion-list>
-        <ion-item *ngFor="let user of businessUsers$ | async">
+      <ion-list data-cy="user-list">
+        <ion-item *ngFor="let user of businessUsers$ | async; let i = index" [attr.data-cy]="'user-item-' + i">
           <ion-label>
             <h2>{{ user.name }}</h2>
             <p>{{ user.email }}</p>
-            <p>Role: {{ user.role }}</p>
           </ion-label>
-          <ion-select [(ngModel)]="user.role" (ionChange)="updateUserRole(user.id, $event.detail.value)">
+          <ion-select [attr.data-cy]="'user-role-select-' + i" [(ngModel)]="user.role"
+            (ionChange)="updateUserRole(user.id, $event.detail.value)">
             <ion-select-option value="owner">Owner</ion-select-option>
             <ion-select-option value="manager">Manager</ion-select-option>
             <ion-select-option value="cashier">Cashier</ion-select-option>
           </ion-select>
-          <ion-button slot="end" color="danger" (click)="removeUser(user.id)">Remove</ion-button>
+          <ion-button slot="end" color="danger" [attr.data-cy]="'remove-user-button-' + i"
+            (click)="removeUser(user.id)">Remove</ion-button>
         </ion-item>
       </ion-list>
     </ion-card-content>
   </ion-card>
+
+  <ion-button expand="block" (click)="openAddUserModal()" data-cy="add-user-button">Add User</ion-button>
+
+  <ion-modal [isOpen]="isAddUserModalOpen">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Add User</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="closeAddUserModal()">Close</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <form [formGroup]="addUserForm" (ngSubmit)="addUser()">
+          <ion-item>
+            <ion-label position="floating">Name</ion-label>
+            <ion-input formControlName="name" data-cy="user-name-input"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="floating">Email</ion-label>
+            <ion-input type="email" formControlName="email" data-cy="user-email-input"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label>Role</ion-label>
+            <ion-select formControlName="role" data-cy="user-role-select">
+              <ion-select-option value="manager">Manager</ion-select-option>
+              <ion-select-option value="cashier">Cashier</ion-select-option>
+            </ion-select>
+          </ion-item>
+          <ion-button expand="block" type="submit" data-cy="submit-user-button">Add User</ion-button>
+          <ion-text color="danger" *ngIf="errorMessage" data-cy="error-message">
+            {{ errorMessage }}
+          </ion-text>
+        </form>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
 </ion-content>
 
 <rizzpos-footer></rizzpos-footer>

@@ -73,10 +73,30 @@ export class BusinessDashboardComponent implements OnInit {
   isLoading = true;
 
   quickActions = [
-    { label: 'Inventory', icon: 'cube', route: 'inventory' },
-    { label: 'Sales', icon: 'cash', route: 'sales' },
-    { label: 'Reports', icon: 'bar-chart', route: 'reports' },
-    { label: 'User Management', icon: 'people', route: 'user-management' },
+    {
+      label: 'Inventory',
+      icon: 'cube',
+      route: 'inventory',
+      testId: 'inventory-button',
+    },
+    {
+      label: 'Sales',
+      icon: 'cash',
+      route: 'sales',
+      testId: 'sales-button',
+    },
+    {
+      label: 'Reports',
+      icon: 'bar-chart',
+      route: 'reports',
+      testId: 'reports-button',
+    },
+    {
+      label: 'User Management',
+      icon: 'people',
+      route: 'user-management',
+      testId: 'user-management-button',
+    },
   ];
 
   constructor(

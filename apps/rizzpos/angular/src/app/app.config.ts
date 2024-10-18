@@ -12,6 +12,7 @@ import { getAuth, provideAuth } from '@angular/fire/auth';
 import { getFunctions, provideFunctions } from '@angular/fire/functions';
 import { firebaseConfig } from './firebase-config';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { NotAuthGuard } from './guards/not-auth.guard';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -25,5 +26,6 @@ export const appConfig: ApplicationConfig = {
     provideFunctions(() => getFunctions()),
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
     provideIonicAngular(),
+    NotAuthGuard,
   ],
 };

@@ -6,6 +6,7 @@ import { BusinessDashboardComponent } from './pages/business-dashboard/business-
 import { ProductManagementComponent } from './pages/product-management/product-management.page';
 import { JoinComponent } from './pages/join/join.page';
 import { AuthGuard } from '@rizzpos/shared/guards';
+import { NotAuthGuard } from './guards/not-auth.guard';
 import { InventoryPageComponent } from './pages/inventory/inventory.page';
 import { SalesPageComponent } from './pages/sales/sales.page';
 import { ReportsPageComponent } from './pages/reports/reports.page';
@@ -13,7 +14,11 @@ import { BusinessUserManagementPageComponent } from './pages/business-user-manag
 
 export const routes: Route[] = [
   { path: '', redirectTo: '/home', pathMatch: 'full' },
-  { path: 'login', component: LoginPageComponent },
+  {
+    path: 'login',
+    component: LoginPageComponent,
+    canActivate: [NotAuthGuard], // Add this line
+  },
   { path: 'home', component: HomePageComponent, canActivate: [AuthGuard] },
   {
     path: 'business-setup',
@@ -39,10 +44,8 @@ export const routes: Route[] = [
             (m) => m.InventoryPageComponent
           ),
       },
-      // Add more routes for inventory, sales, reports, etc.
     ],
   },
-
   {
     path: 'business/:businessId/reports',
     canActivate: [AuthGuard],
@@ -53,6 +56,5 @@ export const routes: Route[] = [
     canActivate: [AuthGuard],
     component: BusinessUserManagementPageComponent,
   },
-
   { path: '**', redirectTo: '/home' },
 ];

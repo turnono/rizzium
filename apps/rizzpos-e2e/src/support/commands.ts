@@ -12,17 +12,19 @@
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 declare namespace Cypress {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface Chainable<Subject> {
-    login(email: string, password: string): void;
-    loginAs(role: string): void;
-    loginAsOwner(): void;
+    login(email: string, password: string): Chainable<Subject>;
+    loginAs(role: string): Chainable<Subject>;
+    loginAsOwner(): Chainable<Subject>;
     fillBusinessSetupForm(
       businessName: string,
       businessType: string,
       address: string,
       phoneNumber: string
     ): void;
+    addBusinessUser(name: string, email: string, role: string): void;
+    editUserRole(email: string, newRole: string): void;
+    removeUser(email: string): void;
   }
 }
 
@@ -63,6 +65,35 @@ Cypress.Commands.add(
     cy.get('[data-cy=business-phone-input]').type(phoneNumber);
   }
 );
+
+Cypress.Commands.add(
+  'addBusinessUser',
+  (name: string, email: string, role: string) => {
+    cy.get('[data-cy=add-user-button]').click();
+    cy.get('[data-cy=user-name-input]').type(name);
+    cy.get('[data-cy=user-email-input]').type(email);
+    cy.get('[data-cy=user-role-select]').click();
+
+    cy.get(
+      `.alert-button-inner > .alert-radio-label:contains("${role}")`
+    ).click();
+    cy.get('button.alert-button:contains("OK")').click();
+    cy.get('[data-cy=submit-user-button]').click();
+  }
+);
+
+Cypress.Commands.add('editUserRole', (email: string, newRole: string) => {
+  cy.get(`[data-cy=user-role-select-${email}]`).click();
+
+  cy.get(
+    `.alert-button-inner > .alert-radio-label:contains("${newRole}")`
+  ).click();
+  cy.get('button.alert-button:contains("OK")').click();
+});
+
+Cypress.Commands.add('removeUser', (email: string) => {
+  cy.get(`[data-cy=remove-user-button-${email}]`).click();
+});
 
 //
 // -- This is a child command --
