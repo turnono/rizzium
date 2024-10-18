@@ -17,6 +17,12 @@ declare namespace Cypress {
     login(email: string, password: string): void;
     loginAs(role: string): void;
     loginAsOwner(): void;
+    fillBusinessSetupForm(
+      businessName: string,
+      businessType: string,
+      address: string,
+      phoneNumber: string
+    ): void;
   }
 }
 
@@ -42,6 +48,22 @@ Cypress.Commands.add('loginAsOwner', () => {
   const password = '12345678';
   cy.login(email, password);
 });
+
+Cypress.Commands.add(
+  'fillBusinessSetupForm',
+  (
+    businessName: string,
+    businessType: string,
+    address: string,
+    phoneNumber: string
+  ) => {
+    cy.get('[data-cy=business-name-input]').type(businessName);
+    cy.get('[data-cy=business-type-input]').type(businessType);
+    cy.get('[data-cy=business-address-input]').type(address);
+    cy.get('[data-cy=business-phone-input]').type(phoneNumber);
+  }
+);
+
 //
 // -- This is a child command --
 // Cypress.Commands.add("drag", { prevSubject: 'element'}, (subject, options) => { ... })

@@ -21,12 +21,12 @@
 
     <ion-item>
       <ion-label position="floating">Address</ion-label>
-      <ion-input formControlName="address"></ion-input>
+      <ion-input formControlName="address" data-cy="business-address-input"></ion-input>
     </ion-item>
 
     <ion-item>
       <ion-label position="floating">Phone Number</ion-label>
-      <ion-input formControlName="phoneNumber"></ion-input>
+      <ion-input formControlName="phoneNumber" data-cy="business-phone-input"></ion-input>
     </ion-item>
 
     <ion-button expand="block" type="submit" [disabled]="!businessForm.valid" data-cy="create-business-submit">
@@ -34,11 +34,11 @@
     </ion-button>
   </form>
 
-  <ion-text color="danger" class="ion-text-center" *ngIf="errorMessage" data-cy="home-error-message">
+  <ion-text color="danger" *ngIf="errorMessage" data-cy="business-setup-error-message">
     {{ errorMessage }}
   </ion-text>
 
-  <ion-text color="success" class="ion-text-center" *ngIf="successMessage" data-cy="home-success-message">
+  <ion-text color="success" *ngIf="successMessage" data-cy="business-setup-success-message">
     {{ successMessage }}
   </ion-text>
 </ion-content>
