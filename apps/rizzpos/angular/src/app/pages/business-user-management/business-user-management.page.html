@@ -14,7 +14,6 @@
           </ion-label>
           <ion-select [attr.data-cy]="'user-role-select-' + i" [(ngModel)]="user.role"
             (ionChange)="updateUserRole(user.userId, $event.detail.value)">
-            <ion-select-option value="owner">Owner</ion-select-option>
             <ion-select-option value="manager">Manager</ion-select-option>
             <ion-select-option value="cashier">Cashier</ion-select-option>
           </ion-select>

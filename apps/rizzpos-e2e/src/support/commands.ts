@@ -21,7 +21,11 @@ declare namespace Cypress {
       address: string,
       phoneNumber: string
     ): void;
-    addBusinessUser(name: string, email: string, role: string): void;
+    addBusinessUser(
+      name: string,
+      email: string,
+      role: string
+    ): Chainable<Subject>;
     editUserRole(email: string, newRole: string): void;
     removeUser(email: string): void;
     addItemToCart(itemName: string, quantity: number): Chainable<Subject>;
@@ -79,6 +83,7 @@ Cypress.Commands.add(
     ).click();
     cy.get('button.alert-button:contains("OK")').click();
     cy.get('[data-cy=submit-user-button]').click();
+    cy.wait(5000);
   }
 );
 

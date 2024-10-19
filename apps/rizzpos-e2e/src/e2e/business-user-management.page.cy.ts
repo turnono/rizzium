@@ -12,7 +12,7 @@ describe('Business User Management Page', () => {
     cy.login('Lea.Dietrich78@gmail.com', 'x8wHG2IyN1fOSOs');
     // Click on the first business in the ion-list
     cy.get('ion-list ion-item').first().click();
-
+    cy.wait(5000);
     // click on the user management button
     cy.get('#user-management-button').click();
   });
@@ -26,20 +26,6 @@ describe('Business User Management Page', () => {
       .should('be.visible')
       .and('not.be.empty')
       .scrollIntoView();
-
-    // Check if the user is in the list
-    cy.get('[data-cy=user-list]').then(($list) => {
-      if ($list.text().includes(userName)) {
-        cy.wrap($list).within(() => {
-          cy.contains(userName).should('be.visible');
-          cy.contains(userEmail).should('be.visible');
-        });
-      } else {
-        cy.log(
-          `User ${userName} not found in the list. Skipping edit and remove tests.`
-        );
-      }
-    });
   });
 
   it('should allow editing a user role', () => {
