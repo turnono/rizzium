@@ -9,7 +9,7 @@ describe('Business User Management Page', () => {
   const invalidEmail = 'invalid-email';
 
   beforeEach(() => {
-    cy.loginAsOwner();
+    cy.login('Lea.Dietrich78@gmail.com', 'x8wHG2IyN1fOSOs');
     // Click on the first business in the ion-list
     cy.get('ion-list ion-item').first().click();
 

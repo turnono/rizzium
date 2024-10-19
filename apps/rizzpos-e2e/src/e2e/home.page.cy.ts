@@ -11,7 +11,8 @@ describe('Home Page', () => {
   });
 
   it("should display the user's businesses when authenticated", () => {
-    cy.loginAsOwner();
+    cy.login('Lea.Dietrich78@gmail.com', 'x8wHG2IyN1fOSOs');
+
     cy.url().should('include', '/home');
 
     // Wait for the content to load
@@ -31,7 +32,7 @@ describe('Home Page', () => {
   });
 
   it('should attempt to create a new business', () => {
-    cy.loginAsOwner();
+    cy.login('Lea.Dietrich78@gmail.com', 'x8wHG2IyN1fOSOs');
     cy.url().should('include', '/home');
 
     const businessName = faker.company.name();

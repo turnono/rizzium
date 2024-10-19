@@ -15,7 +15,6 @@ declare namespace Cypress {
   interface Chainable<Subject> {
     login(email: string, password: string): Chainable<Subject>;
     loginAs(role: string): Chainable<Subject>;
-    loginAsOwner(): Chainable<Subject>;
     fillBusinessSetupForm(
       businessName: string,
       businessType: string,
