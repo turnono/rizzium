@@ -18,6 +18,7 @@ import {
   setDoc,
   getDoc,
   updateDoc,
+  arrayUnion,
   Timestamp,
 } from '@angular/fire/firestore';
 import { Observable, BehaviorSubject, from } from 'rxjs';
@@ -175,14 +176,15 @@ export class FirebaseAuthService {
     const user = await this.getCurrentUser();
     if (!user) throw new Error('No authenticated user found');
 
-    const businessUserRef = doc(
-      this.firestore,
-      `businesses/${businessId}/businessUsers/${user.uid}`
-    );
-    const businessUserSnap = await getDoc(businessUserRef);
+    const userDoc = await getDoc(doc(this.firestore, `users/${user.uid}`));
+    const userData = userDoc.data();
 
-    if (businessUserSnap.exists()) {
-      return businessUserSnap.data()['role'] as UserRole;
+    if (
+      userData &&
+      userData['businesses'] &&
+      userData['businesses'][businessId]
+    ) {
+      return userData['businesses'][businessId] as UserRole;
     }
 
     return 'customer';

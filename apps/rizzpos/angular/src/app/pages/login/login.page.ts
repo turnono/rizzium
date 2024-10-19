@@ -1,7 +1,10 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FirebaseAuthService } from '@rizzpos/shared/services';
-import { Router } from '@angular/router';
+import {
+  ErrorHandlerService,
+  FirebaseAuthService,
+} from '@rizzpos/shared/services';
+import { ActivatedRoute, Router } from '@angular/router';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui/organisms';
 import {
   FormBuilder,
@@ -9,7 +12,7 @@ import {
   Validators,
   ReactiveFormsModule,
 } from '@angular/forms';
-import { catchError, tap } from 'rxjs/operators';
+import { catchError, take, tap } from 'rxjs/operators';
 import { of, from } from 'rxjs';
 
 import {
@@ -24,7 +27,7 @@ import {
   IonImg,
   ToastController,
 } from '@ionic/angular/standalone';
-import { eyeOffOutline, eyeOutline } from 'ionicons/icons';
+import { eyeOutline, eyeOffOutline } from 'ionicons/icons';
 import { addIcons } from 'ionicons';
 
 @Component({
@@ -45,7 +48,6 @@ import { addIcons } from 'ionicons';
     IonButton,
     IonText,
     IonIcon,
-    IonButton,
     IonImg,
   ],
 })
@@ -57,12 +59,14 @@ export class LoginPageComponent implements OnInit {
   private toastService = inject(ToastController);
 
   constructor(
-    private fb: FormBuilder,
+    private formBuilder: FormBuilder,
     private authService: FirebaseAuthService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute,
+    private errorHandler: ErrorHandlerService
   ) {
-    addIcons({ eyeOffOutline, eyeOutline });
-    this.loginForm = this.fb.group({
+    addIcons({ eyeOutline, eyeOffOutline });
+    this.loginForm = this.formBuilder.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: [''],
@@ -70,82 +74,116 @@ export class LoginPageComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.authService.user$.subscribe((user) => {
-      if (user) {
-        console.log('User already logged in, redirecting to home');
-        this.router.navigate(['/home']);
+    // Check if there's a returnUrl in the query params
+    this.route.queryParams.pipe(take(1)).subscribe((params: any) => {
+      if (params['returnUrl']) {
+        // If there's a returnUrl, we'll handle it in the login method
+        console.log('Return URL found:', params['returnUrl']);
       }
     });
   }
 
-  onSubmit() {
+  async onSubmit() {
     if (this.loginForm.valid) {
       const { email, password } = this.loginForm.value;
-      if (this.authMode === 'login') {
-        this.signIn(email, password);
-      } else {
-        this.register(email, password);
+      try {
+        if (this.authMode === 'login') {
+          await this.login(email, password);
+        } else {
+          await this.register(email, password);
+        }
+      } catch (error) {
+        this.errorHandler.handleError(error, 'Login failed');
       }
     }
   }
 
-  async signIn(email: string, password: string) {
-    this.authService
-      .signInWithEmailAndPassword(email, password)
-      .pipe(
-        tap(() => this.router.navigate(['/home'])),
-        catchError((error) => {
-          console.error('Error signing in:', error);
-          this.errorMessage = error.message;
-          return of(null);
-        })
-      )
-      .subscribe();
+  async login(email: string, password: string) {
+    try {
+      await this.authService
+        .signInWithEmailAndPassword(email, password)
+        .toPromise();
+      const user = await this.authService.getCurrentUser();
+      if (user) {
+        const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
+        if (returnUrl.includes('businessId')) {
+          // If returning to a business-specific page, get the role for that business
+          const businessId = new URL(
+            returnUrl,
+            window.location.origin
+          ).searchParams.get('businessId');
+          if (businessId) {
+            const role = await this.authService.getUserRoleForBusiness(
+              businessId
+            );
+            this.redirectBasedOnRole(businessId, role);
+          } else {
+            this.router.navigateByUrl(returnUrl);
+          }
+        } else {
+          // If no specific business, redirect to home
+          this.router.navigateByUrl('/home');
+        }
+      }
+    } catch (error) {
+      this.errorHandler.handleError(error, 'Login failed');
+    }
   }
 
   async register(email: string, password: string) {
-    from(this.authService.createUserWithEmailAndPassword(email, password))
-      .pipe(
-        tap(async () => {
-          // TODO: send email verification
-          // pop up a toast
-          const toast = await this.toastService.create({
-            message: 'Registration successful',
-            duration: 5000,
-            position: 'top',
-            color: 'success',
-          });
-          toast.present();
-          this.router.navigate(['/home']);
-          this.loginForm.reset();
-          this.errorMessage = '';
-        }),
-        catchError((error) => {
-          console.error('Error registering:', error);
-          this.errorMessage = error.message;
-          return of(null);
-        })
-      )
-      .subscribe();
-  }
-
-  signInWithGoogle() {
-    this.authService
-      .signInWithGoogle()
-      .pipe(
-        tap(() => this.router.navigate(['/home'])),
-        catchError((error) => {
-          console.error('Error signing in with Google:', error);
-          this.errorMessage = error.message;
-          return of(null);
-        })
-      )
-      .subscribe();
+    try {
+      await this.authService.createUserWithEmailAndPassword(email, password);
+      this.showToast('Registration successful');
+      // go to home page
+      this.router.navigate(['/home']);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'Registration failed');
+    }
   }
 
   toggleAuthMode() {
     this.authMode = this.authMode === 'login' ? 'register' : 'login';
     this.loginForm.reset();
-    this.errorMessage = '';
+  }
+
+  togglePasswordVisibility() {
+    this.hidePassword = !this.hidePassword;
+  }
+
+  async loginWithGoogle() {
+    try {
+      await this.authService.signInWithGoogle().toPromise();
+      this.router.navigate(['/home']);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'Google login failed');
+    }
+  }
+
+  private redirectBasedOnRole(businessId: string, role: string) {
+    switch (role) {
+      case 'owner':
+        this.router.navigate(['/business', businessId, 'dashboard']);
+        break;
+      case 'manager':
+        this.router.navigate(['/business', businessId, 'inventory']);
+        break;
+      case 'cashier':
+        this.router.navigate(['/business', businessId, 'sales']);
+        break;
+      case 'customer':
+        this.router.navigate(['/business', businessId, 'customer-dashboard']);
+        break;
+      default:
+        this.router.navigate(['/home']);
+    }
+  }
+
+  private async showToast(message: string) {
+    const toast = await this.toastService.create({
+      message: message,
+      duration: 2000,
+      position: 'bottom',
+    });
+    toast.present();
   }
 }
