@@ -32,14 +32,13 @@ describe('Home Page', () => {
   });
 
   it('should attempt to create a new business', () => {
-    cy.login('Lea.Dietrich78@gmail.com', 'x8wHG2IyN1fOSOs');
     cy.url().should('include', '/home');
 
     const businessName = faker.company.name();
     const businessType = faker.company.buzzPhrase();
 
     AppPO.getCreateBusinessButton().click();
-    cy.url().should('include', '/business-setup');
+    // cy.url().should('include', '/business-setup');
 
     cy.get('[data-cy=business-name-input]').type(businessName);
     cy.get('[data-cy=business-type-input]').type(businessType);

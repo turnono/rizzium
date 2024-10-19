@@ -127,7 +127,11 @@ Cypress.Commands.add('addItemToCart', (itemName: string, quantity: number) => {
         cy.contains(itemName, { timeout: 30000 })
           .should('exist')
           .then(($item) => {
-            cy.log(`Item "${itemName}" found in the list: ${$item.text()}`);
+            cy.log(
+              `Item "${itemName}" found in the list: ${
+                $item?.text() || 'No text found'
+              }`
+            );
           });
       } else {
         cy.log('Item list is not visible. Attempting to scroll into view.');

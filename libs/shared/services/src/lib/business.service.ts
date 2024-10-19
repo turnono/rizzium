@@ -1,7 +1,6 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import {
   Firestore,
-  addDoc,
   collection,
   doc,
   setDoc,
@@ -93,39 +92,49 @@ export class BusinessService implements OnDestroy {
   }
 
   async setupBusiness(businessData: Partial<BusinessData>): Promise<string> {
-    const user = await this.authService.getCurrentUser();
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
-
     try {
-      // First, create the business document
-      const businessRef = await addDoc(
-        collection(this.firestore, 'businesses'),
-        {
-          ...businessData,
-          ownerId: user.uid,
-          createdAt: new Date(),
-        }
-      );
+      const user = await this.authService.getCurrentUser();
+      if (!user) throw new Error('No authenticated user found');
 
-      // Then, update the user's document with the new business ID
-      const userRef = doc(this.firestore, 'users', user.uid);
+      const businessRef = doc(collection(this.firestore, 'businesses'));
+      const newBusinessData: BusinessData = {
+        id: businessRef.id,
+        businessName: businessData.businessName || '',
+        businessType: businessData.businessType || '',
+        address: businessData.address || '',
+        phoneNumber: businessData.phoneNumber || '',
+        ownerId: user.uid,
+        createdAt: Timestamp.now(),
+      };
+
+      await setDoc(businessRef, newBusinessData);
+
+      const userRef = doc(this.firestore, `users/${user.uid}`);
       const userDoc = await getDoc(userRef);
+      const userData = userDoc.data();
 
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        await updateDoc(userRef, {
-          businesses: [...(userData['businesses'] || []), businessRef.id],
-        });
-      } else {
-        // If the user document doesn't exist, create it
-        await setDoc(userRef, {
-          businesses: [businessRef.id],
-        });
-      }
+      // Initialize businesses as an object if it doesn't exist
+      const updatedBusinesses = {
+        ...(userData?.['businesses'] || {}),
+        [newBusinessData.id]: 'owner',
+      };
 
-      return businessRef.id;
+      await updateDoc(userRef, { businesses: updatedBusinesses });
+
+      // Create a businessUser document
+      const businessUserRef = doc(
+        this.firestore,
+        `businesses/${newBusinessData.id}/businessUsers/${user.uid}`
+      );
+      await setDoc(businessUserRef, {
+        userId: user.uid,
+        role: 'owner',
+        displayName: user.displayName || 'Business Owner',
+        email: user.email,
+        createdAt: Timestamp.now(),
+      });
+
+      return newBusinessData.id;
     } catch (error) {
       console.error('Error setting up business:', error);
       throw new Error('Failed to set up business. Please try again.');

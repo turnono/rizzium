@@ -1,21 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
-import {
-  IonContent,
-  IonItem,
-  IonButton,
-  IonLabel,
-  IonInput,
-  IonSelect,
-  IonSelectOption,
-  IonHeader,
-  IonBackButton,
-  IonButtons,
-  IonToolbar,
-  IonTitle,
-  IonText,
-} from '@ionic/angular/standalone';
+import { IonicModule } from '@ionic/angular';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { BusinessService } from '@rizzpos/shared/services';
 import { Router } from '@angular/router';
@@ -25,23 +11,7 @@ import { Router } from '@angular/router';
   templateUrl: './business-setup.page.html',
   styleUrls: ['./business-setup.page.scss'],
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    IonContent,
-    IonItem,
-    IonButton,
-    IonLabel,
-    IonInput,
-    IonSelect,
-    IonSelectOption,
-    IonHeader,
-    IonTitle,
-    IonToolbar,
-    IonButtons,
-    IonBackButton,
-    IonText,
-  ],
+  imports: [CommonModule, ReactiveFormsModule, IonicModule],
 })
 export class BusinessSetupComponent {
   businessForm: FormGroup;
@@ -75,7 +45,10 @@ export class BusinessSetupComponent {
         }, 2000);
       } catch (error) {
         console.error('Error setting up business:', error);
-        this.errorMessage = 'Failed to create business. Please try again.';
+        this.errorMessage =
+          error instanceof Error
+            ? error.message
+            : 'Failed to create business. Please try again.';
       }
     } else {
       console.log('Form is invalid:', this.businessForm.errors);
