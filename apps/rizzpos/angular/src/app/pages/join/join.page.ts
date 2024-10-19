@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FirebaseAuthService } from '@rizzpos/shared/services';
 import { IonSpinner } from '@ionic/angular/standalone';
 import { IonContent } from '@ionic/angular/standalone';
+import { UserRole } from '@rizzpos/shared/interfaces';
 
 @Component({
   selector: 'app-join',
@@ -31,30 +32,27 @@ export class JoinComponent implements OnInit {
       return;
     }
 
-    this.authService.user$.subscribe((user) => {
-      if (user) {
-        this.handleJoin();
-      } else {
-        this.router.navigate(['/login'], {
-          queryParams: { returnUrl: this.router.url },
-        });
-      }
-    });
+    this.handleJoin();
   }
 
   async handleJoin() {
-    if (!this.businessId) return;
-
     try {
+      const user = await this.authService.getCurrentUser();
+      if (!user) {
+        // Redirect to login page with return URL
+        this.router.navigate(['/login'], {
+          queryParams: { returnUrl: this.router.url },
+        });
+        return;
+      }
+
       await this.authService.handleRoleBasedURL(
-        this.businessId,
-        this.role || undefined
-      );
-      const userRole = await this.authService.getUserRoleForBusiness(
-        this.businessId
+        this.businessId as string,
+        this.role as UserRole
       );
 
-      switch (userRole) {
+      // Redirect based on role
+      switch (this.role) {
         case 'cashier':
           this.router.navigate(['/business', this.businessId, 'sales']);
           break;
@@ -63,13 +61,6 @@ export class JoinComponent implements OnInit {
           break;
         case 'owner':
           this.router.navigate(['/business', this.businessId, 'dashboard']);
-          break;
-        case 'customer':
-          this.router.navigate([
-            '/business',
-            this.businessId,
-            'customer-dashboard',
-          ]);
           break;
         default:
           this.router.navigate([

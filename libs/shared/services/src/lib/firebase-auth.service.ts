@@ -42,8 +42,7 @@ export class FirebaseAuthService {
       console.log('Auth state changed:', user);
       if (user) {
         this.getUserRole(user).then((role) => {
-          const appUser: AppUser = { ...user, role };
-          this.userSubject.next(appUser);
+          this.userSubject.next(user);
         });
       } else {
         this.userSubject.next(null);
@@ -79,7 +78,7 @@ export class FirebaseAuthService {
       displayName: user.displayName,
       photoURL: user.photoURL,
       createdAt: Timestamp.now(),
-      role: user.isAnonymous ? 'anon' : 'customer',
+      businesses: {},
     };
 
     await setDoc(userRef, userData, { merge: true });
@@ -94,13 +93,18 @@ export class FirebaseAuthService {
     );
   }
 
-  private async getUserRole(user: User): Promise<UserRole> {
+  private async getUserRole(
+    user: User
+  ): Promise<{ [businessId: string]: UserRole }> {
     const userRef = doc(this.firestore, `users/${user.uid}`);
     const userSnap = await getDoc(userRef);
     if (userSnap.exists()) {
-      return (userSnap.data()['role'] as UserRole) || 'anon';
+      return (
+        (userSnap.data()['businesses'] as { [businessId: string]: UserRole }) ||
+        {}
+      );
     }
-    return 'anon';
+    return {};
   }
 
   async signOut(): Promise<void> {
@@ -140,7 +144,7 @@ export class FirebaseAuthService {
       const userData = userDoc.data();
       return {
         ...user,
-        role: userData?.['role'] || 'customer', // Use bracket notation here
+        businesses: userData?.['businesses'] || {},
       } as AppUser;
     }
     return null;
@@ -162,7 +166,6 @@ export class FirebaseAuthService {
     await setDoc(
       businessUserRef,
       {
-        role: role || 'customer',
         userId: user.uid,
         createdAt: Timestamp.now(),
         displayName: user.displayName || 'New User',
@@ -176,15 +179,12 @@ export class FirebaseAuthService {
     const user = await this.getCurrentUser();
     if (!user) throw new Error('No authenticated user found');
 
-    const userDoc = await getDoc(doc(this.firestore, `users/${user.uid}`));
-    const userData = userDoc.data();
+    const userRef = doc(this.firestore, `users/${user.uid}`);
+    const userDoc = await getDoc(userRef);
 
-    if (
-      userData &&
-      userData['businesses'] &&
-      userData['businesses'][businessId]
-    ) {
-      return userData['businesses'][businessId] as UserRole;
+    if (userDoc.exists()) {
+      const userData = userDoc.data();
+      return userData?.['businesses']?.[businessId] || 'customer';
     }
 
     return 'customer';

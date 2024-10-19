@@ -29,16 +29,6 @@ service cloud.firestore {
       return isCashier(businessId) || isManager(businessId);
     }
 
-    function isBusinessMember(businessId) {
-      return request.auth.uid != null &&
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.businesses[businessId] != null;
-    }
-
-    function isBusinessOwner(businessId) {
-      return request.auth.uid != null &&
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.businesses[businessId] == 'owner';
-    }
-
     // Users collection
     match /users/{userId} {
       allow read, write: if request.auth.uid == userId;
@@ -47,13 +37,13 @@ service cloud.firestore {
     // Businesses collection
     match /businesses/{businessId} {
       allow create: if isSignedIn();
-      allow read: if isBusinessMember(businessId);
-      allow update, delete: if isBusinessOwner(businessId);
+      allow read: if isEmployee(businessId);
+      allow update, delete: if isOwner(businessId);
 
       // Business Users subcollection
       match /businessUsers/{userId} {
-        allow read: if isBusinessOwner(businessId) || request.auth.uid == userId;
-        allow create, update, delete: if isBusinessOwner(businessId);
+        allow read: if isOwner(businessId) || request.auth.uid == userId;
+        allow create, update, delete: if isOwner(businessId);
       }
 
       // Products subcollection (inventory)
