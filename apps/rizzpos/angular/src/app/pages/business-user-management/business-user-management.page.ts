@@ -127,7 +127,7 @@ export class BusinessUserManagementPageComponent implements OnInit, OnDestroy {
         console.log('User removed successfully');
         // Update the businessUsers$ observable
         this.businessUsers$ = this.businessUsers$.pipe(
-          map((users) => users.filter((user) => user.id !== userId))
+          map((users) => users.filter((user) => user.userId !== userId))
         );
       },
       error: (error) => {

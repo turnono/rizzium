@@ -1,4 +1,5 @@
 import { Timestamp } from '@angular/fire/firestore';
+import { UserRole } from './app-user.interface';
 
 export interface BusinessData {
   id: string;
@@ -46,8 +47,9 @@ export interface Promotion {
 }
 
 export interface BusinessUser {
-  id: string;
-  name: string;
+  userId: string;
+  role: UserRole;
+  displayName: string;
   email: string;
-  role: string;
+  createdAt: Timestamp;
 }

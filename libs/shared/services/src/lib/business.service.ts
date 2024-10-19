@@ -275,9 +275,17 @@ export class BusinessService implements OnDestroy {
     );
     return from(getDocs(businessUsersRef)).pipe(
       map((snapshot) =>
-        snapshot.docs.map(
-          (doc) => ({ id: doc.id, ...doc.data() } as BusinessUser)
-        )
+        snapshot.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            userId: data['userId'] || '',
+            role: data['role'] || '',
+            displayName: data['displayName'] || '',
+            email: data['email'] || '',
+            createdAt: data['createdAt'] || null,
+          } as BusinessUser;
+        })
       )
     );
   }
@@ -406,7 +414,7 @@ export class BusinessService implements OnDestroy {
           const businessUsers = querySnapshot.docs.map(
             (doc) =>
               ({
-                id: doc.id,
+                userId: doc.id,
                 ...doc.data(),
               } as BusinessUser)
           );

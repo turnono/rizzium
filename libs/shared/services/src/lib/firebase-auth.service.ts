@@ -18,7 +18,6 @@ import {
   setDoc,
   getDoc,
   updateDoc,
-  arrayUnion,
   Timestamp,
 } from '@angular/fire/firestore';
 import { Observable, BehaviorSubject, from } from 'rxjs';
@@ -29,9 +28,9 @@ import { Router } from '@angular/router';
   providedIn: 'root',
 })
 export class FirebaseAuthService {
-  private userSubject: BehaviorSubject<AppUser | null> =
-    new BehaviorSubject<AppUser | null>(null);
-  user$: Observable<AppUser | null> = this.userSubject.asObservable();
+  private userSubject: BehaviorSubject<User | null> =
+    new BehaviorSubject<User | null>(null);
+  user$: Observable<User | null> = this.userSubject.asObservable();
 
   constructor(
     private auth: Auth,
@@ -79,7 +78,7 @@ export class FirebaseAuthService {
       displayName: user.displayName,
       photoURL: user.photoURL,
       createdAt: Timestamp.now(),
-      role: user.isAnonymous ? 'anon' : 'client',
+      role: user.isAnonymous ? 'anon' : 'customer',
     };
 
     await setDoc(userRef, userData, { merge: true });
@@ -135,7 +134,15 @@ export class FirebaseAuthService {
 
   async getCurrentUser(): Promise<AppUser | null> {
     const user = await this.user$.pipe(first()).toPromise();
-    return user || null;
+    if (user) {
+      const userDoc = await getDoc(doc(this.firestore, `users/${user.uid}`));
+      const userData = userDoc.data();
+      return {
+        ...user,
+        role: userData?.['role'] || 'customer', // Use bracket notation here
+      } as AppUser;
+    }
+    return null;
   }
 
   async handleRoleBasedURL(businessId: string, role?: string): Promise<void> {
@@ -144,32 +151,24 @@ export class FirebaseAuthService {
 
     const userRef = doc(this.firestore, `users/${user.uid}`);
     await updateDoc(userRef, {
-      businesses: arrayUnion(businessId),
+      [`businesses.${businessId}`]: role || 'customer',
     });
 
     const businessUserRef = doc(
       this.firestore,
       `businesses/${businessId}/businessUsers/${user.uid}`
     );
-    const businessUserSnap = await getDoc(businessUserRef);
-
-    if (!businessUserSnap.exists()) {
-      // If the user doesn't exist in the business, add them with the specified role or as a client
-      await setDoc(
-        businessUserRef,
-        {
-          role: role || 'client',
-          userId: user.uid,
-          createdAt: Timestamp.now(),
-          displayName: user.displayName || 'New User',
-        },
-        { merge: true }
-      );
-    } else if (role && role !== 'owner') {
-      // If the user exists and a new role is specified (but not 'owner'), update the role
-      await updateDoc(businessUserRef, { role: role });
-    }
-    // If the user is already an 'owner', we don't change their role
+    await setDoc(
+      businessUserRef,
+      {
+        role: role || 'customer',
+        userId: user.uid,
+        createdAt: Timestamp.now(),
+        displayName: user.displayName || 'New User',
+        email: user.email,
+      },
+      { merge: true }
+    );
   }
 
   async getUserRoleForBusiness(businessId: string): Promise<UserRole> {
@@ -186,7 +185,7 @@ export class FirebaseAuthService {
       return businessUserSnap.data()['role'] as UserRole;
     }
 
-    return 'client';
+    return 'customer';
   }
 
   // Add more authentication methods as needed

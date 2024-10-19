@@ -59,7 +59,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
     IonBadge,
   ],
 })
-export class CustomerDashboardComponent implements OnInit {
+export class CustomerDashboardPageComponent implements OnInit {
   businessId: string;
   customerId = '';
   purchases$: Observable<Purchase[]>;

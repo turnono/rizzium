@@ -44,13 +44,12 @@ Cypress.Commands.add('login', (email: string, password: string) => {
 Cypress.Commands.add('loginAs', (role) => {
   // Implement role-based login logic here
   // This is a placeholder implementation
-  cy.login(`${role}@example.com`, 'password');
-});
 
-Cypress.Commands.add('loginAsOwner', () => {
-  const email = 'a@b.com';
-  const password = '12345678';
-  cy.login(email, password);
+  if (role === 'customer') {
+    cy.login(`${role}@example.com`, 'jggeytr@hj32');
+  } else {
+    cy.login(`${role}@example.com`, 'password');
+  }
 });
 
 Cypress.Commands.add(

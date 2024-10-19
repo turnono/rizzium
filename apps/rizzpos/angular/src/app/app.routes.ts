@@ -11,6 +11,7 @@ import { InventoryPageComponent } from './pages/inventory/inventory.page';
 import { SalesPageComponent } from './pages/sales/sales.page';
 import { ReportsPageComponent } from './pages/reports/reports.page';
 import { BusinessUserManagementPageComponent } from './pages/business-user-management/business-user-management.page';
+import { CustomerDashboardPageComponent } from './pages/customer-dashboard/customer-dashboard.page';
 
 export const routes: Route[] = [
   { path: '', redirectTo: '/home', pathMatch: 'full' },
@@ -44,17 +45,29 @@ export const routes: Route[] = [
             (m) => m.InventoryPageComponent
           ),
       },
+      {
+        path: 'customer-dashboard',
+        loadComponent: () =>
+          import('./pages/customer-dashboard/customer-dashboard.page').then(
+            (m) => m.CustomerDashboardPageComponent
+          ),
+      },
+      // should reports be here?
+      {
+        path: 'reports',
+        loadComponent: () =>
+          import('./pages/reports/reports.page').then(
+            (m) => m.ReportsPageComponent
+          ),
+      },
+      {
+        path: 'user-management',
+        loadComponent: () =>
+          import(
+            './pages/business-user-management/business-user-management.page'
+          ).then((m) => m.BusinessUserManagementPageComponent),
+      },
     ],
-  },
-  {
-    path: 'business/:businessId/reports',
-    canActivate: [AuthGuard],
-    component: ReportsPageComponent,
-  },
-  {
-    path: 'business/:businessId/user-management',
-    canActivate: [AuthGuard],
-    component: BusinessUserManagementPageComponent,
   },
   { path: '**', redirectTo: '/home' },
 ];

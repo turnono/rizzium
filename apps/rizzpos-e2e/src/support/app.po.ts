@@ -44,3 +44,11 @@ export const getTransactionSuccessMessage = () =>
   cy.get('[data-cy=transaction-success-message]');
 export const getErrorMessage = () => cy.get('[data-cy=error-message]');
 export const getClearCartButton = () => cy.get('[data-cy=clear-cart-button]');
+
+// Customer Dashboard
+export const getCustomerDashboard = () =>
+  cy.get('[data-cy=customer-dashboard]');
+export const getLoyaltyPoints = () => cy.get('[data-cy=loyalty-points]');
+export const getPromotionsList = () => cy.get('[data-cy=promotions-list]');
+export const getPurchaseHistory = () => cy.get('[data-cy=purchase-history]');
+export const getPurchaseItems = () => cy.get('[data-cy=purchase-item]');

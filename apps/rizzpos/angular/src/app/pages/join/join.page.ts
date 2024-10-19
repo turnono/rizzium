@@ -64,7 +64,7 @@ export class JoinComponent implements OnInit {
         case 'owner':
           this.router.navigate(['/business', this.businessId, 'dashboard']);
           break;
-        case 'client':
+        case 'customer':
           this.router.navigate([
             '/business',
             this.businessId,
