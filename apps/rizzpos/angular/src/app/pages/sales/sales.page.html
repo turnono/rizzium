@@ -1,6 +1,6 @@
 <rizzpos-header [title]="'Sales'"></rizzpos-header>
 
-<ion-content class="ion-padding">
+<ion-content class="ion-padding" data-cy="sales-page">
   <ion-grid>
     <ion-row>
       <ion-col size="12" size-md="8">
@@ -9,7 +9,10 @@
             <ion-card-title>Products</ion-card-title>
           </ion-card-header>
           <ion-card-content>
-            <ion-list>
+            <ion-searchbar data-cy="item-search" placeholder="Search products" [disabled]="false"
+              (ionInput)="onSearchChange($event)">
+            </ion-searchbar>
+            <ion-list data-cy="item-list">
               <ion-item *ngFor="let product of products$ | async">
                 <ion-thumbnail slot="start">
                   <img [src]="getProductImage(product)" alt="{{ product.name }}">
@@ -18,8 +21,8 @@
                   <h2>{{ product.name }}</h2>
                   <p>{{ product.price | currency }}</p>
                 </ion-label>
-                <ion-button (click)="addToCart(product)" fill="clear">
-                  <ion-icon name="add-circle" slot="icon-only"></ion-icon>
+                <ion-button (click)="addToCart(product)" fill="clear" data-cy="add-to-cart-button">
+                  <ion-icon name="add-circle-outline" slot="icon-only"></ion-icon>
                 </ion-button>
               </ion-item>
             </ion-list>
@@ -35,7 +38,7 @@
             </ion-card-title>
           </ion-card-header>
           <ion-card-content>
-            <ion-list>
+            <ion-list data-cy="cart-items">
               <ion-item-sliding *ngFor="let item of cart">
                 <ion-item>
                   <ion-label>
@@ -57,12 +60,12 @@
               <ion-label>
                 <h2>Total</h2>
               </ion-label>
-              <ion-note slot="end" color="primary">
+              <ion-note slot="end" color="primary" data-cy="cart-total">
                 <h2>{{ getTotalAmount() | currency }}</h2>
               </ion-note>
             </ion-item>
             <ion-button expand="block" (click)="processTransaction()" [disabled]="cart.length === 0"
-              class="ion-margin-top">
+              class="ion-margin-top" data-cy="complete-sale-button">
               <ion-icon name="cash" slot="start"></ion-icon>
               Process Transaction
             </ion-button>

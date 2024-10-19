@@ -34,3 +34,13 @@ export const getUserRoleSelectByEmail = (email: string) =>
   cy.get(`[data-cy=user-role-select-${email}]`);
 export const getRemoveUserButton = (email: string) =>
   cy.get(`[data-cy=remove-user-button-${email}]`);
+
+// Cashier Dashboard
+export const getCartItemsList = () => cy.get('[data-cy=cart-items]');
+export const getCartTotal = () => cy.get('[data-cy=cart-total]');
+export const getCompleteSaleButton = () =>
+  cy.get('[data-cy=complete-sale-button]');
+export const getTransactionSuccessMessage = () =>
+  cy.get('[data-cy=transaction-success-message]');
+export const getErrorMessage = () => cy.get('[data-cy=error-message]');
+export const getClearCartButton = () => cy.get('[data-cy=clear-cart-button]');

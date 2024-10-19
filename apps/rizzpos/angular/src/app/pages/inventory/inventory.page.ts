@@ -1,6 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import {
+  FormsModule,
+  ReactiveFormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { switchMap, take } from 'rxjs/operators';
@@ -23,7 +29,15 @@ import {
   IonInput,
   IonBadge,
   IonAlert,
+  IonIcon,
+  IonModal,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonButtons,
 } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { addCircleOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-inventory-page',
@@ -33,6 +47,7 @@ import {
   imports: [
     CommonModule,
     FormsModule,
+    ReactiveFormsModule,
     HeaderComponent,
     FooterComponent,
     IonButton,
@@ -50,24 +65,39 @@ import {
     IonInput,
     IonBadge,
     IonAlert,
+    IonIcon,
+    IonModal,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonButtons,
   ],
 })
 export class InventoryPageComponent implements OnInit {
   businessId: string;
-  products$: Observable<Product[]> = new Observable<Product[]>(); // Initialize here
+  products$: Observable<Product[]> = new Observable<Product[]>();
   private pageSize = 20;
   private lastVisible$ = new BehaviorSubject<Product | null>(null);
   bulkUpdateQuantity = 0;
   lowStockThreshold = 10;
   showLowStockAlert = false;
   lowStockProduct: Product | null = null;
+  isAddProductModalOpen = false;
+  addProductForm: FormGroup;
 
   constructor(
     private route: ActivatedRoute,
     private productService: ProductService,
-    private errorHandler: ErrorHandlerService
+    private errorHandler: ErrorHandlerService,
+    private formBuilder: FormBuilder
   ) {
     this.businessId = this.route.snapshot.paramMap.get('businessId') || '';
+    addIcons({ addCircleOutline });
+    this.addProductForm = this.formBuilder.group({
+      name: ['', Validators.required],
+      price: ['', [Validators.required, Validators.min(0)]],
+      stockQuantity: ['', [Validators.required, Validators.min(0)]],
+    });
   }
 
   ngOnInit() {
@@ -115,7 +145,7 @@ export class InventoryPageComponent implements OnInit {
   }
 
   bulkUpdateStock() {
-    this.products$?.subscribe((products) => {
+    this.products$.subscribe((products) => {
       products.forEach((product) => {
         const newQuantity = product.stockQuantity + this.bulkUpdateQuantity;
         this.updateStock(product, newQuantity);
@@ -127,6 +157,41 @@ export class InventoryPageComponent implements OnInit {
     if (newQuantity <= this.lowStockThreshold) {
       this.lowStockProduct = product;
       this.showLowStockAlert = true;
+    }
+  }
+
+  openAddProductModal() {
+    this.isAddProductModalOpen = true;
+  }
+
+  cancelAddProduct() {
+    this.isAddProductModalOpen = false;
+    this.addProductForm.reset();
+  }
+
+  submitAddProduct() {
+    if (this.addProductForm.valid) {
+      const newProduct: Omit<Product, 'id'> = {
+        ...this.addProductForm.value,
+        businessId: this.businessId,
+      };
+      console.log('Submitting new product:', newProduct);
+      this.productService
+        .addProduct(newProduct)
+        .then(() => {
+          console.log('Product added successfully');
+          this.errorHandler.showSuccess('Product added successfully');
+          this.isAddProductModalOpen = false;
+          console.log('Modal should be closed now');
+          this.addProductForm.reset();
+          this.loadProducts();
+        })
+        .catch((error) => {
+          console.error('Error adding product:', error);
+          this.errorHandler.handleError(error, 'Error adding product');
+        });
+    } else {
+      console.log('Form is invalid:', this.addProductForm.errors);
     }
   }
 }

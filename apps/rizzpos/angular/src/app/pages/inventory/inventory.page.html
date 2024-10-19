@@ -1,6 +1,11 @@
 <rizzpos-header [title]="'Inventory Management'"></rizzpos-header>
 
-<ion-content class="ion-padding">
+<ion-content class="ion-padding" data-cy="inventory-page">
+  <ion-button data-cy="add-product-button" (click)="openAddProductModal()">
+    <ion-icon name="add-circle-outline" slot="start"></ion-icon>
+    Add Product
+  </ion-button>
+
   <ion-card>
     <ion-card-header>
       <ion-card-title>Bulk Update Stock</ion-card-title>
@@ -37,5 +42,36 @@
     message="The product '{{ lowStockProduct?.name }}' is running low on stock. Current quantity: {{ lowStockProduct?.stockQuantity }}"
     [buttons]="['OK']" (didDismiss)="showLowStockAlert = false"></ion-alert>
 </ion-content>
+
+<ion-modal [isOpen]="isAddProductModalOpen">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>Add Product</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="cancelAddProduct()">Cancel</ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding">
+      <form (ngSubmit)="submitAddProduct()" [formGroup]="addProductForm">
+        <ion-item>
+          <ion-label position="floating">Name</ion-label>
+          <ion-input data-cy="product-name-input" formControlName="name" type="text"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="floating">Price</ion-label>
+          <ion-input data-cy="product-price-input" formControlName="price" type="number"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="floating">Quantity</ion-label>
+          <ion-input data-cy="product-quantity-input" formControlName="stockQuantity" type="number"></ion-input>
+        </ion-item>
+        <ion-button data-cy="submit-product-button" expand="block" type="submit" [disabled]="!addProductForm.valid">Add
+          Product</ion-button>
+      </form>
+    </ion-content>
+  </ng-template>
+</ion-modal>
 
 <rizzpos-footer></rizzpos-footer>

@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui/organisms';
 import {
   ProductService,
@@ -12,6 +12,7 @@ import {
 import { Product, Transaction } from '@rizzpos/shared/interfaces';
 import { v4 as uuidv4 } from 'uuid';
 import { addIcons } from 'ionicons';
+
 import {
   IonButton,
   IonItem,
@@ -33,8 +34,9 @@ import {
   IonItemSliding,
   IonItemOptions,
   IonItemOption,
+  IonSearchbar,
 } from '@ionic/angular/standalone';
-import { addCircleOutline } from 'ionicons/icons';
+import { addCircleOutline, trash, cash } from 'ionicons/icons';
 
 @Component({
   selector: 'app-sales-page',
@@ -42,6 +44,7 @@ import { addCircleOutline } from 'ionicons/icons';
   styleUrls: ['./sales.page.scss'],
   standalone: true,
   imports: [
+    IonSearchbar,
     CommonModule,
     FormsModule,
     HeaderComponent,
@@ -83,7 +86,7 @@ export class SalesPageComponent implements OnInit {
     private transactionService: TransactionService,
     private errorHandler: ErrorHandlerService
   ) {
-    addIcons({ addCircleOutline });
+    addIcons({ trash, cash, addCircleOutline });
     this.businessId = this.route.snapshot.paramMap.get('businessId') || '';
   }
 
@@ -163,5 +166,18 @@ export class SalesPageComponent implements OnInit {
 
   resetCart() {
     this.cart = [];
+  }
+
+  onSearchChange(event: Event) {
+    const searchTerm = (event.target as HTMLInputElement).value.toLowerCase();
+    this.products$ = this.productService
+      .getProducts(this.businessId)
+      .pipe(
+        map((products: Product[]) =>
+          products.filter((product: Product) =>
+            product.name.toLowerCase().includes(searchTerm)
+          )
+        )
+      );
   }
 }

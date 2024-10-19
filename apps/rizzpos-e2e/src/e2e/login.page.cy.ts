@@ -1,8 +1,4 @@
 import { faker } from '@faker-js/faker';
-import {
-  initializeTestEnvironment,
-  RulesTestEnvironment,
-} from '@firebase/rules-unit-testing';
 
 describe('Authentication Flow', () => {
   beforeEach(() => {
@@ -134,7 +130,7 @@ describe('Authentication Flow', () => {
 
       cy.url().then((url) => {
         cy.log(`Current URL after registration: ${url}`);
-        cy.wait(5000);
+
         if (url.includes('/login')) {
           cy.log('Redirected to login page after registration');
           cy.get('[data-cy=error-message]', { timeout: 10000 }).should(
