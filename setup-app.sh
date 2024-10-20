@@ -9,6 +9,12 @@ prompt() {
   echo "$INPUT"
 }
 
+# Warning message for Firebase project creation
+echo "WARNING: Before proceeding, please ensure that you have created a Firebase project."
+echo "If you haven't created a project yet, please visit: https://console.firebase.google.com/"
+echo "Create a new project or select an existing one before continuing."
+read -p "Press Enter to continue once you have confirmed your Firebase project is ready..."
+
 # Collect necessary inputs
 APP_NAME=$(prompt "Enter your application name")
 
@@ -238,34 +244,36 @@ if [ "$install_ionic" = "y" ]; then
   echo "</ion-app>" >> "apps/$APP_NAME/angular/src/app/app.component.html"
 
   # Update styles.scss
-  cat << EOF > "apps/$APP_NAME/angular/src/styles.scss"
-  // Import Angular Material theming
-  @use '@angular/material' as mat;
+  cat << EOF >> "apps/$APP_NAME/angular/src/styles.scss"
 
-  // Include the common styles for Angular Material
-  @include mat.core();
+// Import Angular Material theming
+@use '@angular/material' as mat;
 
-  // Ionic styles
-  @import '@ionic/angular/css/core.css';
-  @import '@ionic/angular/css/normalize.css';
-  @import '@ionic/angular/css/structure.css';
-  @import '@ionic/angular/css/typography.css';
-  @import '@ionic/angular/css/display.css';
-  @import '@ionic/angular/css/padding.css';
-  @import '@ionic/angular/css/float-elements.css';
-  @import '@ionic/angular/css/text-alignment.css';
-  @import '@ionic/angular/css/text-transformation.css';
-  @import '@ionic/angular/css/flex-utils.css';
+// Include the common styles for Angular Material
+@include mat.core();
 
-  // Global styles
-  html, body {
-    height: 100%;
-    margin: 0;
-    font-family: Roboto, "Helvetica Neue", sans-serif;
-  }
 
-  // Add any additional global styles here
-  EOF
+// Ionic styles
+@import '@ionic/angular/css/core.css';
+@import '@ionic/angular/css/normalize.css';
+@import '@ionic/angular/css/structure.css';
+@import '@ionic/angular/css/typography.css';
+@import '@ionic/angular/css/display.css';
+@import '@ionic/angular/css/padding.css';
+@import '@ionic/angular/css/float-elements.css';
+@import '@ionic/angular/css/text-alignment.css';
+@import '@ionic/angular/css/text-transformation.css';
+@import '@ionic/angular/css/flex-utils.css';
+
+// Global styles
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+// Add any additional global styles here
+EOF
 
   # Update project.json to include Ionic styles
   sed -i '' '/"styles": \[/,/\]/c\
@@ -309,54 +317,33 @@ if [ "$install_ionic" = "y" ]; then
   # Create theme/variables.css file
   mkdir -p "apps/$APP_NAME/angular/src/theme"
   cat << EOF > "apps/$APP_NAME/angular/src/theme/variables.css"
-  /**
-   * Ionic Dark Theme
-   * -----------------------------------------------------
-   * For more info, please see:
-   * https://ionicframework.com/docs/theming/dark-mode
-   */
+/**
+ * Ionic Dark Theme
+ * -----------------------------------------------------
+ * For more info, please see:
+ * https://ionicframework.com/docs/theming/dark-mode
+ */
 
-  /* @import "@ionic/angular/css/palettes/dark.always.css"; */
-  /* @import "@ionic/angular/css/palettes/dark.class.css"; */
-  @import "@ionic/angular/css/palettes/dark.system.css";
-  EOF
+/* @import "@ionic/angular/css/palettes/dark.always.css"; */
+/* @import "@ionic/angular/css/palettes/dark.class.css"; */
+@import "@ionic/angular/css/palettes/dark.system.css";
+EOF
 
   echo "Ionic has been installed and configured for the project."
 fi
 
 # Build the Angular application and functions
-if nx build "$APP_NAME" --prod; then
-  echo "Angular application build completed successfully."
-else
-  echo "Error: Angular application build failed."
-  exit 1
-fi
+nx build "$APP_NAME" --prod
+nx build "${APP_NAME}-functions-user"
 
-if nx build "${APP_NAME}-functions-user"; then
-  echo "Functions build completed successfully."
-else
-  echo "Error: Functions build failed."
-  exit 1
-fi
-
-echo "Setup, build, and deployment completed successfully."
+echo "Build completed successfully."
 
 firebase login
 firebase use --add
 
-# Deploy Firebase application and functions
-if nx deploy "${APP_NAME}-firebase"; then
-  echo "Firebase application deployed successfully."
-else
-  echo "Error: Firebase application deployment failed."
-  exit 1
-fi
-
-if nx deploy "${APP_NAME}-functions-user"; then
-  echo "Firebase functions deployed successfully."
-else
-  echo "Error: Firebase functions deployment failed."
-  exit 1
-fi
+# # Deploy Firebase application and functions
+# # Ensure that the Firebase project is linked via 'firebase use' before deploying
+nx deploy "${APP_NAME}-firebase"
+nx deploy "${APP_NAME}-functions-user"
 
 echo "Deploy completed successfully."
