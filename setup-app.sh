@@ -550,6 +550,16 @@ else
   echo "Warning: project.json not found in the Angular project."
 fi
 
+# Update main field in functions project.json
+FUNCTIONS_PROJECT_JSON="apps/$APP_NAME/functions/project.json"
+if [ -f "$FUNCTIONS_PROJECT_JSON" ]; then
+  # Use sed to update the "main" field
+  sed -i '' 's|"main": ".*"|"main": "apps/'"$APP_NAME"'/functions/user/src/index.ts"|' "$FUNCTIONS_PROJECT_JSON"
+  echo "Updated main field in functions project.json"
+else
+  echo "Warning: project.json not found in the functions folder."
+fi
+
 # Build the Angular application and functions
 nx build "$APP_NAME" --prod
 nx build "${APP_NAME}-functions-user"
@@ -566,5 +576,6 @@ nx deploy "${APP_NAME}-firebase"
 nx deploy "${APP_NAME}-functions-user"
 
 echo "Deploy completed successfully."
+
 
 
