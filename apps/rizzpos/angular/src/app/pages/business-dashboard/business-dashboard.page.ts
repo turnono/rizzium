@@ -176,12 +176,12 @@ export class BusinessDashboardComponent implements OnInit {
 
   generateRoleURL(role: 'cashier' | 'manager'): string {
     const baseUrl = window.location.origin;
-    return `${baseUrl}/join?businessId=${this.businessId}&role=${role}`;
+    return `${baseUrl}?businessId=${this.businessId}&role=${role}`;
   }
 
   generateCustomerURL(): string {
     const baseUrl = window.location.origin;
-    return `${baseUrl}/join?businessId=${this.businessId}`;
+    return `${baseUrl}?businessId=${this.businessId}`;
   }
 
   copyURL(role: 'cashier' | 'manager' | 'customer') {
