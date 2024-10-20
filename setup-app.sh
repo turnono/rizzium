@@ -229,29 +229,43 @@ if [ "$install_ionic" = "y" ]; then
   nx add @ionic/angular --project="$APP_NAME"
 
   # Update app.component.ts
-  sed -i '' 's/import { Component } from '"'"'@angular\/core'"'"';/import { Component } from '"'"'@angular\/core'"'"';\nimport { CommonModule } from '"'"'@angular\/common'"'"';\nimport { IonicModule } from '"'"'@ionic\/angular'"'"';/' "apps/$APP_NAME/angular/src/app/app.component.ts"
-  sed -i '' 's/imports: \[/imports: [CommonModule, IonicModule, /' "apps/$APP_NAME/angular/src/app/app.component.ts"
+  sed -i '' 's/import { Component } from '"'"'@angular\/core'"'"';/import { Component } from '"'"'@angular\/core'"'"';\nimport { CommonModule } from '"'"'@angular\/common'"'"';\nimport { IonRouterOutlet, IonApp } from '"'"'@ionic\/angular\/standalone'"'"';/' "apps/$APP_NAME/angular/src/app/app.component.ts"
+  sed -i '' 's/imports: \[/imports: [CommonModule, IonRouterOutlet, IonApp, /' "apps/$APP_NAME/angular/src/app/app.component.ts"
 
   # Update app.component.html
   echo "<ion-app>" > "apps/$APP_NAME/angular/src/app/app.component.html"
-  echo "  <app-nx-welcome></app-nx-welcome>" >> "apps/$APP_NAME/angular/src/app/app.component.html"
   echo "  <ion-router-outlet></ion-router-outlet>" >> "apps/$APP_NAME/angular/src/app/app.component.html"
   echo "</ion-app>" >> "apps/$APP_NAME/angular/src/app/app.component.html"
 
   # Update styles.scss
-  cat << EOF >> "apps/$APP_NAME/angular/src/styles.scss"
+  cat << EOF > "apps/$APP_NAME/angular/src/styles.scss"
+  // Import Angular Material theming
+  @use '@angular/material' as mat;
 
-@import '@ionic/angular/css/core.css';
-@import '@ionic/angular/css/normalize.css';
-@import '@ionic/angular/css/structure.css';
-@import '@ionic/angular/css/typography.css';
-@import '@ionic/angular/css/display.css';
-@import '@ionic/angular/css/padding.css';
-@import '@ionic/angular/css/float-elements.css';
-@import '@ionic/angular/css/text-alignment.css';
-@import '@ionic/angular/css/text-transformation.css';
-@import '@ionic/angular/css/flex-utils.css';
-EOF
+  // Include the common styles for Angular Material
+  @include mat.core();
+
+  // Ionic styles
+  @import '@ionic/angular/css/core.css';
+  @import '@ionic/angular/css/normalize.css';
+  @import '@ionic/angular/css/structure.css';
+  @import '@ionic/angular/css/typography.css';
+  @import '@ionic/angular/css/display.css';
+  @import '@ionic/angular/css/padding.css';
+  @import '@ionic/angular/css/float-elements.css';
+  @import '@ionic/angular/css/text-alignment.css';
+  @import '@ionic/angular/css/text-transformation.css';
+  @import '@ionic/angular/css/flex-utils.css';
+
+  // Global styles
+  html, body {
+    height: 100%;
+    margin: 0;
+    font-family: Roboto, "Helvetica Neue", sans-serif;
+  }
+
+  // Add any additional global styles here
+  EOF
 
   # Update project.json to include Ionic styles
   sed -i '' '/"styles": \[/,/\]/c\
@@ -295,33 +309,54 @@ EOF
   # Create theme/variables.css file
   mkdir -p "apps/$APP_NAME/angular/src/theme"
   cat << EOF > "apps/$APP_NAME/angular/src/theme/variables.css"
-/**
- * Ionic Dark Theme
- * -----------------------------------------------------
- * For more info, please see:
- * https://ionicframework.com/docs/theming/dark-mode
- */
+  /**
+   * Ionic Dark Theme
+   * -----------------------------------------------------
+   * For more info, please see:
+   * https://ionicframework.com/docs/theming/dark-mode
+   */
 
-/* @import "@ionic/angular/css/palettes/dark.always.css"; */
-/* @import "@ionic/angular/css/palettes/dark.class.css"; */
-@import "@ionic/angular/css/palettes/dark.system.css";
-EOF
+  /* @import "@ionic/angular/css/palettes/dark.always.css"; */
+  /* @import "@ionic/angular/css/palettes/dark.class.css"; */
+  @import "@ionic/angular/css/palettes/dark.system.css";
+  EOF
 
   echo "Ionic has been installed and configured for the project."
 fi
 
 # Build the Angular application and functions
-nx build "$APP_NAME" --prod
-nx build "${APP_NAME}-functions-user"
+if nx build "$APP_NAME" --prod; then
+  echo "Angular application build completed successfully."
+else
+  echo "Error: Angular application build failed."
+  exit 1
+fi
 
-echo "Build completed successfully."
+if nx build "${APP_NAME}-functions-user"; then
+  echo "Functions build completed successfully."
+else
+  echo "Error: Functions build failed."
+  exit 1
+fi
+
+echo "Setup, build, and deployment completed successfully."
 
 firebase login
 firebase use --add
 
-# # Deploy Firebase application and functions
-# # Ensure that the Firebase project is linked via 'firebase use' before deploying
-nx deploy "${APP_NAME}-firebase"
-nx deploy "${APP_NAME}-functions-user"
+# Deploy Firebase application and functions
+if nx deploy "${APP_NAME}-firebase"; then
+  echo "Firebase application deployed successfully."
+else
+  echo "Error: Firebase application deployment failed."
+  exit 1
+fi
+
+if nx deploy "${APP_NAME}-functions-user"; then
+  echo "Firebase functions deployed successfully."
+else
+  echo "Error: Firebase functions deployment failed."
+  exit 1
+fi
 
 echo "Deploy completed successfully."
