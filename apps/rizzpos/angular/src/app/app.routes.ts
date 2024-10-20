@@ -3,6 +3,7 @@ import { HomePageComponent } from './pages/home/home.page';
 import { LoginPageComponent } from './pages/login/login.page';
 import { BusinessSetupComponent } from './pages/business-setup/business-setup.page';
 import { BusinessDashboardComponent } from './pages/business-dashboard/business-dashboard.page';
+import { BusinessPageComponent } from './pages/business/business.page';
 import { ProductManagementComponent } from './pages/product-management/product-management.page';
 import { AuthGuard } from '@rizzpos/shared/guards';
 import { NotAuthGuard } from './guards/not-auth.guard';
@@ -29,7 +30,8 @@ export const routes: Route[] = [
     path: 'business/:businessId',
     canActivate: [AuthGuard],
     children: [
-      { path: '', component: BusinessDashboardComponent },
+      { path: '', component: BusinessPageComponent },
+      { path: 'dashboard', component: BusinessDashboardComponent },
       { path: 'products', component: ProductManagementComponent },
       {
         path: 'sales',
