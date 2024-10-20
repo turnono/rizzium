@@ -305,10 +305,6 @@ Cypress.Commands.add('addTestProducts', (productNames: string[]) => {
     cy.log($body.html());
   });
 
-  // Navigate to the business dashboard
-  cy.log('Navigating to business dashboard');
-  cy.visit('/business-dashboard', { timeout: 3000 });
-
   // Log the current URL after navigation
   cy.url().then((url) => {
     cy.log(`Current URL after navigation: ${url}`);

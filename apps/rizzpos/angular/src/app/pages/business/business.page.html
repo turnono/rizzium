@@ -1,0 +1,12 @@
+<rizzpos-header [title]="(businessData$ | async)?.businessName || 'Business'" [showBackButton]="true"></rizzpos-header>
+
+<ion-content class="ion-padding">
+
+  <!-- edit business -->
+  <ion-button expand="full" (click)="router.navigate(['dashboard'], {
+    relativeTo: this.route
+  })">Go to Dashboard</ion-button>
+
+</ion-content>
+
+<rizzpos-footer></rizzpos-footer>

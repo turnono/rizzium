@@ -1,7 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FirebaseAuthService } from '@rizzpos/shared/services';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { HeaderComponent, FooterComponent } from '@rizzpos/shared/ui/organisms';
 import {
   FormBuilder,
@@ -55,11 +55,13 @@ export class LoginPageComponent implements OnInit {
   hidePassword = true;
   errorMessage = '';
   private toastService = inject(ToastController);
+  businessId?: string;
 
   constructor(
     private fb: FormBuilder,
     private authService: FirebaseAuthService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {
     addIcons({ eyeOffOutline, eyeOutline });
     this.loginForm = this.fb.group({
@@ -70,10 +72,21 @@ export class LoginPageComponent implements OnInit {
   }
 
   ngOnInit() {
+    console.log('Route:', this.route.snapshot.queryParams);
+    this.businessId = this.route.snapshot.queryParams['businessId'] as string;
+    console.log('Business ID:', this.businessId);
     this.authService.user$.subscribe((user) => {
       if (user) {
-        console.log('User already logged in, redirecting to home');
-        this.router.navigate(['/home']);
+        if (this.businessId) {
+          // navigate to the business dashboard
+          console.log(
+            'User already logged in, redirecting to business dashboard'
+          );
+          this.router.navigate(['/business', this.businessId]);
+        } else {
+          console.log('User already logged in, redirecting to home');
+          this.router.navigate(['/home']);
+        }
       }
     });
   }
@@ -93,7 +106,13 @@ export class LoginPageComponent implements OnInit {
     this.authService
       .signInWithEmailAndPassword(email, password)
       .pipe(
-        tap(() => this.router.navigate(['/home'])),
+        tap(() => {
+          if (this.businessId) {
+            this.router.navigate(['/business', this.businessId]);
+          } else {
+            this.router.navigate(['/home']);
+          }
+        }),
         catchError((error) => {
           console.error('Error signing in:', error);
           this.errorMessage = error.message;
@@ -116,7 +135,12 @@ export class LoginPageComponent implements OnInit {
             color: 'success',
           });
           toast.present();
-          this.router.navigate(['/home']);
+          if (this.businessId) {
+            // navigate to the business dashboard
+            this.router.navigate(['/business', this.businessId]);
+          } else {
+            this.router.navigate(['/home']);
+          }
           this.loginForm.reset();
           this.errorMessage = '';
         }),
@@ -133,7 +157,13 @@ export class LoginPageComponent implements OnInit {
     this.authService
       .signInWithGoogle()
       .pipe(
-        tap(() => this.router.navigate(['/home'])),
+        tap(() => {
+          if (this.businessId) {
+            this.router.navigate(['/business', this.businessId]);
+          } else {
+            this.router.navigate(['/home']);
+          }
+        }),
         catchError((error) => {
           console.error('Error signing in with Google:', error);
           this.errorMessage = error.message;
