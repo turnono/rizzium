@@ -557,6 +557,7 @@ nx build "${APP_NAME}-functions-user"
 echo "Build completed successfully."
 
 firebase login
+echo "make sure to use the exact name of the project as you entered it above"
 firebase use --add
 
 # # Deploy Firebase application and functions
