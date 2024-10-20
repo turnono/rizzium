@@ -184,9 +184,6 @@ export const deleteAnonUser = functions.https.onCall(async (data) => {
 });
 EOF
 
-# Add export statement to index.ts
-echo "export * from './main';" > apps/"$APP_NAME"/functions/user/src/index.ts
-
 # Update package.json
 PACKAGE_JSON="apps/$APP_NAME/functions/user/package.json"
 if [ -f "$PACKAGE_JSON" ]; then
@@ -204,7 +201,7 @@ if [ -f "$PACKAGE_JSON" ]; then
   "engines": {
     "node": "18"
   },
-  "main": "src/index.js",
+  "main": "main.js",
   "dependencies": {
     "firebase-admin": "^11.11.1",
     "firebase-functions": "^5.0.1"
@@ -221,7 +218,7 @@ else
   echo "Warning: package.json not found in the functions folder."
 fi
 
-echo "Added initial function code, updated index.ts, and package.json for the Firebase function."
+echo "Added initial function code and package.json for the Firebase function."
 
 # Ask user if they want to install Angular Material
 read -p "Do you want to install Angular Material? (y/n): " install_material
@@ -550,14 +547,18 @@ else
   echo "Warning: project.json not found in the Angular project."
 fi
 
-# Update main field in functions project.json
-FUNCTIONS_PROJECT_JSON="apps/$APP_NAME/functions/project.json"
-if [ -f "$FUNCTIONS_PROJECT_JSON" ]; then
-  # Use sed to update the "main" field
-  sed -i '' 's|"main": ".*"|"main": "apps/'"$APP_NAME"'/functions/user/src/index.ts"|' "$FUNCTIONS_PROJECT_JSON"
-  echo "Updated main field in functions project.json"
+# Remove deploy target from Firebase project.json
+FIREBASE_PROJECT_JSON="apps/$APP_NAME/firebase/project.json"
+if [ -f "$FIREBASE_PROJECT_JSON" ]; then
+  # Use sed to remove the entire "deploy" target
+  sed -i '' '/"deploy": {/,/},/d' "$FIREBASE_PROJECT_JSON"
+
+  # Remove trailing comma from the previous target if it exists
+  sed -i '' '$ s/,$//' "$FIREBASE_PROJECT_JSON"
+
+  echo "Removed deploy target from Firebase project.json"
 else
-  echo "Warning: project.json not found in the functions folder."
+  echo "Warning: project.json not found in the Firebase app folder."
 fi
 
 # Build the Angular application and functions
@@ -576,6 +577,4 @@ nx deploy "${APP_NAME}-firebase"
 nx deploy "${APP_NAME}-functions-user"
 
 echo "Deploy completed successfully."
-
-
 
