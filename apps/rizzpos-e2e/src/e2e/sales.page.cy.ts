@@ -2,11 +2,8 @@ import { faker } from '@faker-js/faker';
 import * as AppPO from '../support/app.po';
 
 describe('Sales', () => {
-  const cashierEmail = 'cashier@example.com';
-  const cashierPassword = 'password123';
-
   beforeEach(() => {
-    cy.loginAs('cashier');
+    cy.login('Lea.Dietrich78@gmail.com', 'x8wHG2IyN1fOSOs');
     // Click on the first business in the ion-list
     cy.get('ion-list ion-item').first().click();
 
@@ -18,7 +15,7 @@ describe('Sales', () => {
         cy.log($body.html());
       });
     });
-
+    cy.wait(3000);
     // Wait for the sales page to load
     cy.get('[data-cy="sales-page"]', { timeout: 10000 }).should('be.visible');
   });
@@ -125,9 +122,10 @@ describe('Sales', () => {
 
     // Take a screenshot of the final state
     cy.screenshot('after-sale-completion');
+    cy.wait(5000);
   });
 
-  // // Error handling
+  // Error handling
   afterEach(() => {
     cy.on('fail', (error) => {
       cy.log('Test failed. Error:', error.message);
@@ -176,20 +174,20 @@ describe('Sales', () => {
   //   cy.screenshot('invalid-item-addition');
   // });
 
-  // it('should clear the cart', () => {
-  //   // Add an item to the cart
-  //   cy.addItemToCart('Item 1', 1);
+  it('should clear the cart', () => {
+    // Add an item to the cart
+    cy.addItemToCart('Item 1', 1);
 
-  //   // Verify item in the cart
-  //   AppPO.getCartItemsList().should('have.length', 1);
+    // Verify item in the cart
+    AppPO.getCartItemsList().should('have.length', 1);
 
-  //   // Clear the cart
-  //   AppPO.getClearCartButton().click();
-
-  //   // Verify cart is empty
-  //   AppPO.getCartItemsList().should('have.length', 0);
-  //   AppPO.getCartTotal().should('contain', '0');
-  // });
+    // Clear the cart
+    AppPO.getClearCartButton().click();
+    cy.wait(2000);
+    // Verify cart is empty
+    AppPO.getCartItemsList().should('have.length', 0);
+    AppPO.getCartTotal().should('contain', '0');
+  });
 
   it('should redirect cashier to the sales page', () => {
     cy.url().then((url) => {

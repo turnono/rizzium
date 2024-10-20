@@ -35,6 +35,9 @@
             <ion-card-title>
               Cart
               <ion-badge color="primary" slot="end">{{ cart.length }}</ion-badge>
+              <ion-button (click)="clearCart()" data-cy="clear-cart-button" size="small">
+                <ion-icon color="danger" name="trash" slot="icon-only"></ion-icon>
+              </ion-button>
             </ion-card-title>
           </ion-card-header>
           <ion-card-content>

@@ -180,4 +180,9 @@ export class SalesPageComponent implements OnInit {
         )
       );
   }
+
+  clearCart() {
+    this.cart = [];
+    this.errorHandler.showSuccess('Cart cleared successfully');
+  }
 }

@@ -206,6 +206,7 @@ Cypress.Commands.add('addItemToCart', (itemName: string, quantity: number) => {
 
   // Take a screenshot of the current state
   cy.screenshot(`after-adding-${itemName}-to-cart`);
+  cy.wait(5000);
 });
 
 Cypress.Commands.add(
