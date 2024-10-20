@@ -332,6 +332,224 @@ EOF
   echo "Ionic has been installed and configured for the project."
 fi
 
+# Check if app.routes.ts exists, and if so, overwrite it
+APP_ROUTES_FILE="apps/$APP_NAME/angular/src/app/app.routes.ts"
+if [ -f "$APP_ROUTES_FILE" ]; then
+  echo "Existing app.routes.ts found. Overwriting with specified content."
+else
+  echo "Creating new app.routes.ts with specified content."
+fi
+
+# Create or overwrite app.routes.ts file with the specified content
+cat << EOF > "$APP_ROUTES_FILE"
+import { Route } from '@angular/router';
+import { NxWelcomeComponent } from './nx-welcome.component';
+
+export const appRoutes: Route[] = [
+  {
+    path: '',
+    component: NxWelcomeComponent,
+  },
+];
+EOF
+
+echo "app.routes.ts has been updated with the specified content."
+
+# Check if app.config.ts exists, and if so, overwrite it
+APP_CONFIG_FILE="apps/$APP_NAME/angular/src/app/app.config.ts"
+if [ -f "$APP_CONFIG_FILE" ]; then
+  echo "Existing app.config.ts found. Overwriting with specified content."
+else
+  echo "Creating new app.config.ts with specified content."
+fi
+
+# Create or overwrite app.config.ts file with the specified content
+cat << EOF > "$APP_CONFIG_FILE"
+import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+import { provideRouter, RouteReuseStrategy } from '@angular/router';
+import { appRoutes } from './app.routes';
+import {
+  IonicRouteStrategy,
+  provideIonicAngular,
+} from '@ionic/angular/standalone';
+import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
+import { getFirestore, provideFirestore } from '@angular/fire/firestore';
+import { getAuth, provideAuth } from '@angular/fire/auth';
+import { getFunctions, provideFunctions } from '@angular/fire/functions';
+import { firebaseConfig } from './firebase-config';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideRouter(appRoutes),
+    provideAnimationsAsync(),
+    provideFirebaseApp(() => initializeApp(firebaseConfig)),
+    provideFirestore(() => getFirestore()),
+    provideAuth(() => getAuth()),
+    provideFunctions(() => getFunctions()),
+    { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
+    provideIonicAngular(),
+  ],
+};
+EOF
+
+echo "app.config.ts has been updated with the specified content."
+
+# Check if firebase-config.ts exists, and if so, overwrite it
+FIREBASE_CONFIG_FILE="apps/$APP_NAME/angular/src/app/firebase-config.ts"
+if [ -f "$FIREBASE_CONFIG_FILE" ]; then
+  echo "Existing firebase-config.ts found. Overwriting with placeholder content."
+else
+  echo "Creating new firebase-config.ts with placeholder content."
+fi
+
+# Create or overwrite firebase-config.ts file with the placeholder content
+cat << EOF > "$FIREBASE_CONFIG_FILE"
+export const firebaseConfig = {};
+EOF
+
+echo "firebase-config.ts has been created/updated with placeholder content."
+
+# Check if styles.scss exists, and if so, overwrite it
+STYLES_FILE="apps/$APP_NAME/angular/src/styles.scss"
+if [ -f "$STYLES_FILE" ]; then
+  echo "Existing styles.scss found. Overwriting with specified content."
+else
+  echo "Creating new styles.scss with specified content."
+fi
+
+# Create or overwrite styles.scss file with the specified content
+cat << EOF > "$STYLES_FILE"
+// Import Angular Material theming
+@use '@angular/material' as mat;
+
+// Include the common styles for Angular Material
+@include mat.core();
+
+
+// Ionic styles
+@import '@ionic/angular/css/core.css';
+@import '@ionic/angular/css/normalize.css';
+@import '@ionic/angular/css/structure.css';
+@import '@ionic/angular/css/typography.css';
+@import '@ionic/angular/css/display.css';
+@import '@ionic/angular/css/padding.css';
+@import '@ionic/angular/css/float-elements.css';
+@import '@ionic/angular/css/text-alignment.css';
+@import '@ionic/angular/css/text-transformation.css';
+@import '@ionic/angular/css/flex-utils.css';
+
+// Global styles
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+// Add any additional global styles here
+EOF
+
+echo "styles.scss has been updated with the specified content."
+
+# Check if app.component.ts exists, and if so, overwrite it
+APP_COMPONENT_FILE="apps/$APP_NAME/angular/src/app/app.component.ts"
+if [ -f "$APP_COMPONENT_FILE" ]; then
+  echo "Existing app.component.ts found. Overwriting with specified content."
+else
+  echo "Creating new app.component.ts with specified content."
+fi
+
+# Create or overwrite app.component.ts file with the specified content
+cat << EOF > "$APP_COMPONENT_FILE"
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { IonRouterOutlet, IonApp } from '@ionic/angular/standalone';
+
+@Component({
+  standalone: true,
+  imports: [CommonModule, IonRouterOutlet, IonApp],
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrl: './app.component.scss',
+})
+export class AppComponent {
+  title = '$APP_NAME';
+}
+EOF
+
+echo "app.component.ts has been updated with the specified content."
+
+
+
+# Create assets folder if it doesn't exist
+ASSETS_FOLDER="apps/$APP_NAME/angular/src/assets"
+mkdir -p "$ASSETS_FOLDER"
+
+# Create google-logo.svg file in the assets folder
+GOOGLE_LOGO_FILE="$ASSETS_FOLDER/google-logo.svg"
+cat << EOF > "$GOOGLE_LOGO_FILE"
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px">
+  <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
+  <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
+  <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
+  <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
+</svg>
+EOF
+
+echo "Created assets folder and added google-logo.svg"
+
+# Find and update firebase.json to use Node.js 18 for functions
+FIREBASE_JSON=$(find . -maxdepth 1 -type f -name "*firebase.json" -print -quit)
+if [ -n "$FIREBASE_JSON" ]; then
+  sed -i '' 's/"runtime": "nodejs16"/"runtime": "nodejs18"/g' "$FIREBASE_JSON"
+  echo "Updated $FIREBASE_JSON to use Node.js 18 for functions runtime."
+else
+  echo "Warning: No file containing 'firebase.json' found in the root directory. Make sure it's created and update the runtime manually if needed."
+fi
+
+
+# Update assets in project.json
+PROJECT_JSON="apps/$APP_NAME/angular/project.json"
+if [ -f "$PROJECT_JSON" ]; then
+  # Use sed to replace the entire "assets" array
+  sed -i '' '/"assets": \[/,/\]/c\
+    "assets": [\
+      "apps/'"$APP_NAME"'/angular/src/favicon.ico",\
+      "apps/'"$APP_NAME"'/angular/src/assets",\
+      {\
+        "glob": "**/*.svg",\
+        "input": "node_modules/ionicons/dist/ionicons/svg",\
+        "output": "./svg"\
+      }\
+    ],' "$PROJECT_JSON"
+
+  echo "Updated assets configuration in project.json"
+else
+  echo "Warning: project.json not found in the Angular project."
+fi
+
+# Update lint configuration in project.json
+PROJECT_JSON="apps/$APP_NAME/angular/project.json"
+if [ -f "$PROJECT_JSON" ]; then
+  # Use sed to replace the entire "lint" object
+  sed -i '' '/"lint": {/,/},/c\
+    "lint": {\
+      "executor": "@nx/eslint:lint",\
+      "outputs": ["{options.outputFile}"],\
+      "options": {\
+        "lintFilePatterns": [\
+          "apps/'"$APP_NAME"'/angular/**/*.ts",\
+          "apps/'"$APP_NAME"'/angular/**/*.html"\
+        ]\
+      }\
+    },' "$PROJECT_JSON"
+
+  echo "Updated lint configuration in project.json"
+else
+  echo "Warning: project.json not found in the Angular project."
+fi
+
 # Build the Angular application and functions
 nx build "$APP_NAME" --prod
 nx build "${APP_NAME}-functions-user"
@@ -347,3 +565,5 @@ nx deploy "${APP_NAME}-firebase"
 nx deploy "${APP_NAME}-functions-user"
 
 echo "Deploy completed successfully."
+
+
