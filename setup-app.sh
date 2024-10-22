@@ -547,19 +547,76 @@ else
   echo "Warning: project.json not found in the Angular project."
 fi
 
-# Remove deploy target from Firebase project.json
-FIREBASE_PROJECT_JSON="apps/$APP_NAME/firebase/project.json"
-if [ -f "$FIREBASE_PROJECT_JSON" ]; then
-  # Use sed to remove the entire "deploy" target
-  sed -i '' '/"deploy": {/,/},/d' "$FIREBASE_PROJECT_JSON"
 
-  # Remove trailing comma from the previous target if it exists
-  sed -i '' '$ s/,$//' "$FIREBASE_PROJECT_JSON"
+# Create or update firebase.json
+FIREBASE_JSON="firebase.${APP_NAME}-firebase.json"
+cat << EOF > "$FIREBASE_JSON"
+{
+  "firestore": {
+    "rules": "apps/$APP_NAME/firebase/firestore.rules",
+    "indexes": "apps/$APP_NAME/firebase/firestore.indexes.json"
+  },
+  "hosting": {
+    "public": "dist/apps/$APP_NAME/angular/browser",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  },
+  "storage": {
+    "rules": "apps/$APP_NAME/firebase/storage.rules"
+  },
+  "functions": [
+    {
+      "source": "dist/apps/$APP_NAME/functions/user",
+      "codebase": "${APP_NAME}-functions-user",
+      "runtime": "nodejs18",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ]
+    }
+  ],
+  "emulators": {
+    "auth": {
+      "port": 9099
+    },
+    "functions": {
+      "port": 5003
+    },
+    "firestore": {
+      "port": 8278
+    },
+    "database": {
+      "port": 9323
+    },
+    "hosting": {
+      "port": 5004
+    },
+    "pubsub": {
+      "port": 8178
+    },
+    "storage": {
+      "port": 9199
+    },
+    "eventarc": {
+      "port": 9299
+    },
+    "ui": {
+      "enabled": true
+    },
+    "singleProjectMode": true
+  }
+}
+EOF
 
-  echo "Removed deploy target from Firebase project.json"
-else
-  echo "Warning: project.json not found in the Firebase app folder."
-fi
+echo "Created/updated $FIREBASE_JSON with correct hosting public path and functions configuration."
 
 # Build the Angular application and functions
 nx build "$APP_NAME" --prod
@@ -577,4 +634,5 @@ nx deploy "${APP_NAME}-firebase"
 nx deploy "${APP_NAME}-functions-user"
 
 echo "Deploy completed successfully."
+
 
