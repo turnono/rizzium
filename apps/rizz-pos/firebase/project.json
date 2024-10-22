@@ -1,0 +1,82 @@
+{
+  "name": "rizz-pos-firebase",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "tags": ["firebase:app", "firebase:name:rizz-pos-firebase"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "echo Build succeeded."
+      }
+    },
+    "watch": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nx run-many --targets=build --projects=tag:firebase:dep:rizz-pos-firebase --parallel=100 --watch"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nx run-many --targets=lint --projects=tag:firebase:dep:rizz-pos-firebase --parallel=100"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nx run-many --targets=test --projects=tag:firebase:dep:rizz-pos-firebase --parallel=100"
+      }
+    },
+    "firebase": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "firebase --config=firebase.rizz-pos-firebase.json --project=rizz-pos"
+      },
+      "configurations": {
+        "production": {
+          "command": "firebase --config=firebase.rizz-pos-firebase.json --project=rizz-pos"
+        }
+      }
+    },
+    "killports": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "kill-port --port 9099,5001,8080,9000,5000,8085,9199,9299,4000,4400,4500"
+      }
+    },
+    "getconfig": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nx run rizz-pos-firebase:firebase functions:config:get > apps/rizz-pos/firebase/environment/.runtimeconfig.json"
+      }
+    },
+    "emulate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "nx run rizz-pos-firebase:killports",
+          "nx run rizz-pos-firebase:firebase emulators:start --import=apps/rizz-pos/firebase/.emulators --export-on-exit"
+        ],
+        "parallel": false
+      }
+    },
+    "serve": {
+      "executor": "@simondotm/nx-firebase:serve",
+      "options": {
+        "commands": [
+          "nx run rizz-pos-firebase:watch",
+          "nx run rizz-pos-firebase:emulate"
+        ]
+      }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "nx run rizz-pos-firebase:firebase deploy"
+      }
+    }
+  },
+  "implicitDependencies": ["rizz-pos-functions-user"]
+}

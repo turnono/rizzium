@@ -1,6 +1,7 @@
 {
   "projects": {
-    "rizzpos": "rizzpos"
+    "rizzpos": "rizzpos",
+    "rizz-pos": "rizzpos"
   },
   "targets": {
     "rizzpos": {

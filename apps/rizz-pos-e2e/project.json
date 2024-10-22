@@ -1,0 +1,10 @@
+{
+  "name": "rizz-pos-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/rizz-pos-e2e/src",
+  "tags": [],
+  "implicitDependencies": ["rizz-pos"],
+  "// targets": "to see all targets run: nx show project rizz-pos-e2e --web",
+  "targets": {}
+}

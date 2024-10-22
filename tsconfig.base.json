@@ -16,8 +16,8 @@
     "baseUrl": ".",
     "paths": {
       "@rizzpos/shared/guards": ["libs/shared/guards/src/index.ts"],
-      "@rizzpos/shared/services": ["libs/shared/services/src/index.ts"],
       "@rizzpos/shared/interfaces": ["libs/shared/interfaces/src/index.ts"],
+      "@rizzpos/shared/services": ["libs/shared/services/src/index.ts"],
       "@rizzpos/shared/ui": ["libs/shared/ui/src/index.ts"],
       "@rizzpos/shared/ui/atoms": ["libs/shared/ui/atoms/src/index.ts"],
       "@rizzpos/shared/ui/molecules": ["libs/shared/ui/molecules/src/index.ts"],
