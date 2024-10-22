@@ -1,21 +1,24 @@
 import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter, RouteReuseStrategy } from '@angular/router';
-import { appRoutes } from './app.routes';
+import { routes } from './app.routes';
 import {
   IonicRouteStrategy,
   provideIonicAngular,
 } from '@ionic/angular/standalone';
+import { ErrorHandlerService } from '@rizzium/shared/services';
 import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import { getFirestore, provideFirestore } from '@angular/fire/firestore';
 import { getAuth, provideAuth } from '@angular/fire/auth';
 import { getFunctions, provideFunctions } from '@angular/fire/functions';
 import { firebaseConfig } from './firebase-config';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { NotAuthGuard } from './guards/not-auth.guard';
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    ErrorHandlerService,
     provideZoneChangeDetection({ eventCoalescing: true }),
-    provideRouter(appRoutes),
+    provideRouter(routes),
     provideAnimationsAsync(),
     provideFirebaseApp(() => initializeApp(firebaseConfig)),
     provideFirestore(() => getFirestore()),
@@ -23,5 +26,6 @@ export const appConfig: ApplicationConfig = {
     provideFunctions(() => getFunctions()),
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
     provideIonicAngular(),
+    NotAuthGuard,
   ],
 };

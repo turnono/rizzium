@@ -18,7 +18,7 @@ import {
 } from '@ionic/angular/standalone';
 
 @Component({
-  selector: 'rizzpos-header',
+  selector: 'rizzium-header',
   standalone: true,
   imports: [
     CommonModule,

@@ -1,4 +1,4 @@
-import { AppUser, UserRole } from '@rizzpos/shared/interfaces';
+import { AppUser, UserRole } from '@rizzium/shared/interfaces';
 import { Injectable } from '@angular/core';
 import {
   Auth,

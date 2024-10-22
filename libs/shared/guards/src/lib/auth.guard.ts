@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { CanActivate, Router } from '@angular/router';
-import { FirebaseAuthService } from '@rizzpos/shared/services';
+import { FirebaseAuthService } from '@rizzium/shared/services';
 import { map, take, tap } from 'rxjs/operators';
 
 @Injectable({

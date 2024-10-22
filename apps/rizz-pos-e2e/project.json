@@ -6,5 +6,26 @@
   "tags": [],
   "implicitDependencies": ["rizz-pos"],
   "// targets": "to see all targets run: nx show project rizz-pos-e2e --web",
-  "targets": {}
+  "targets": {
+    "e2e": {
+      "executor": "@nx/cypress:cypress",
+      "options": {
+        "cypressConfig": "apps/rizz-pos-e2e/cypress.config.ts",
+        "devServerTarget": "rizz-pos:serve:development",
+        "testingType": "e2e"
+      },
+      "configurations": {
+        "production": {
+          "devServerTarget": "rizz-pos:serve:production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/rizz-pos-e2e/**/*.{js,ts}"]
+      }
+    }
+  }
 }

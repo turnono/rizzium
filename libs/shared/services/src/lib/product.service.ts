@@ -16,7 +16,7 @@ import {
   limit,
   startAfter,
 } from '@angular/fire/firestore';
-import { Product } from '@rizzpos/shared/interfaces';
+import { Product } from '@rizzium/shared/interfaces';
 import { Observable, from } from 'rxjs';
 import { map } from 'rxjs/operators';
 

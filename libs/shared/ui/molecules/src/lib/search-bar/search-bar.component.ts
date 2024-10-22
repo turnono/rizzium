@@ -1,19 +1,18 @@
 import { Component, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ButtonComponent } from '../../../../atoms/src/lib/button/button.component';
-import { InputComponent } from '../../../../atoms/src/lib/input/input.component';
+import { InputComponent, ButtonComponent } from '../../../../atoms/src';
 
 @Component({
-  selector: 'rizzpos-search-bar',
+  selector: 'rizzium-search-bar',
   standalone: true,
   imports: [CommonModule, ButtonComponent, InputComponent],
   template: `
     <div class="search-bar">
-      <rizzpos-input
+      <rizzium-input
         [placeholder]="'Search...'"
         (valueChange)="onInputChange($event)"
-      ></rizzpos-input>
-      <rizzpos-button (clicked)="onSearch()">Search</rizzpos-button>
+      ></rizzium-input>
+      <rizzium-button (clicked)="onSearch()">Search</rizzium-button>
     </div>
   `,
   styles: [

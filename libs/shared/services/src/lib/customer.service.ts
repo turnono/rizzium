@@ -11,7 +11,7 @@ import {
   getDocs,
 } from '@angular/fire/firestore';
 import { Observable, from, map } from 'rxjs';
-import { Transaction, Purchase } from '@rizzpos/shared/interfaces';
+import { Transaction, Purchase } from '@rizzium/shared/interfaces';
 
 @Injectable({
   providedIn: 'root',

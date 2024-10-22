@@ -15,14 +15,14 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@rizzpos/shared/guards": ["libs/shared/guards/src/index.ts"],
-      "@rizzpos/shared/interfaces": ["libs/shared/interfaces/src/index.ts"],
-      "@rizzpos/shared/services": ["libs/shared/services/src/index.ts"],
-      "@rizzpos/shared/ui": ["libs/shared/ui/src/index.ts"],
-      "@rizzpos/shared/ui/atoms": ["libs/shared/ui/atoms/src/index.ts"],
-      "@rizzpos/shared/ui/molecules": ["libs/shared/ui/molecules/src/index.ts"],
-      "@rizzpos/shared/ui/organisms": ["libs/shared/ui/organisms/src/index.ts"],
-      "@rizzpos/shared/ui/templates": ["libs/shared/ui/templates/src/index.ts"]
+      "@rizzium/shared/guards": ["libs/shared/guards/src/index.ts"],
+      "@rizzium/shared/interfaces": ["libs/shared/interfaces/src/index.ts"],
+      "@rizzium/shared/services": ["libs/shared/services/src/index.ts"],
+      "@rizzium/shared/ui": ["libs/shared/ui/src/index.ts"],
+      "@rizzium/shared/ui/atoms": ["libs/shared/ui/atoms/src/index.ts"],
+      "@rizzium/shared/ui/molecules": ["libs/shared/ui/molecules/src/index.ts"],
+      "@rizzium/shared/ui/organisms": ["libs/shared/ui/organisms/src/index.ts"],
+      "@rizzium/shared/ui/templates": ["libs/shared/ui/templates/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { IonFooter, IonToolbar, IonTitle } from '@ionic/angular/standalone';
 
 @Component({
-  selector: 'rizzpos-footer',
+  selector: 'rizzium-footer',
   standalone: true,
   imports: [CommonModule, IonFooter, IonToolbar, IonTitle],
   templateUrl: './footer.component.html',

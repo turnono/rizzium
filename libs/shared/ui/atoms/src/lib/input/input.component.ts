@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 @Component({
-  selector: 'rizzpos-input',
+  selector: 'rizzium-input',
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
@@ -12,16 +12,18 @@ import { FormsModule } from '@angular/forms';
       [placeholder]="placeholder"
       [(ngModel)]="value"
       (ngModelChange)="onValueChange($event)"
-    >
+    />
   `,
-  styles: [`
-    input {
-      padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      font-size: 16px;
-    }
-  `]
+  styles: [
+    `
+      input {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 16px;
+      }
+    `,
+  ],
 })
 export class InputComponent {
   @Input() type = 'text';

@@ -35,7 +35,7 @@ import {
   Promotion,
   Purchase,
   BusinessUser,
-} from '@rizzpos/shared/interfaces';
+} from '@rizzium/shared/interfaces';
 
 @Injectable({
   providedIn: 'root',

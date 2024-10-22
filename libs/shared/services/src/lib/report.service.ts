@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { SalesReport } from '@rizzpos/shared/interfaces';
+import { SalesReport } from '@rizzium/shared/interfaces';
 
 @Injectable({
   providedIn: 'root',
