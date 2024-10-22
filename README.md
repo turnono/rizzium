@@ -98,7 +98,7 @@ nx g @simondotm/nx-firebase:app firebase --directory=apps/{app-name} --project={
 
 <!-- add a function to the project -->
 
-nx g @simondotm/nx-firebase:function {function-name} --app={app-name}-firebase --directory=apps/{app-name}/functions
+nx g @simondotm/nx-firebase:function {function-name} --app={app-name}-firebase --directory=apps/{app-name}/functions --runtime=nodejs18
 
 <!-- build all -->
 
