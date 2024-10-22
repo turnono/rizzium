@@ -7,10 +7,10 @@ export default defineConfig({
       cypressDir: 'src',
       bundler: 'webpack',
       webServerCommands: {
-        default: 'nx run rizz-pos:serve',
-        production: 'nx run rizz-pos:serve:production',
+        default: 'nx run rizzpos:serve',
+        production: 'nx run rizzpos:serve:production',
       },
-      ciWebServerCommand: 'nx run rizz-pos:serve-static',
+      ciWebServerCommand: 'nx run rizzpos:serve-static',
     }),
     baseUrl: 'http://localhost:4200',
     pageLoadTimeout: 120000,

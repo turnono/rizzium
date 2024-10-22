@@ -1,10 +1,10 @@
 {
   "firestore": {
-    "rules": "apps/rizz-pos/firebase/firestore.rules",
-    "indexes": "apps/rizz-pos/firebase/firestore.indexes.json"
+    "rules": "apps/rizzpos/firebase/firestore.rules",
+    "indexes": "apps/rizzpos/firebase/firestore.indexes.json"
   },
   "hosting": {
-    "public": "dist/apps/rizz-pos/angular/browser",
+    "public": "dist/apps/rizzpos/angular/browser",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       {
@@ -14,12 +14,12 @@
     ]
   },
   "storage": {
-    "rules": "apps/rizz-pos/firebase/storage.rules"
+    "rules": "apps/rizzpos/firebase/storage.rules"
   },
   "functions": [
     {
-      "source": "dist/apps/rizz-pos/functions/user",
-      "codebase": "rizz-pos-functions-user",
+      "source": "dist/apps/rizzpos/functions/user",
+      "codebase": "rizzpos-functions-user",
       "runtime": "nodejs18",
       "ignore": [
         "node_modules",

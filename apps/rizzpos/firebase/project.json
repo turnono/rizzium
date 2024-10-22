@@ -1,8 +1,8 @@
 {
-  "name": "rizz-pos-firebase",
+  "name": "rizzpos-firebase",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
-  "tags": ["firebase:app", "firebase:name:rizz-pos-firebase"],
+  "tags": ["firebase:app", "firebase:name:rizzpos-firebase"],
   "targets": {
     "build": {
       "executor": "nx:run-commands",
@@ -13,29 +13,29 @@
     "watch": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "nx run-many --targets=build --projects=tag:firebase:dep:rizz-pos-firebase --parallel=100 --watch"
+        "command": "nx run-many --targets=build --projects=tag:firebase:dep:rizzpos-firebase --parallel=100 --watch"
       }
     },
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "nx run-many --targets=lint --projects=tag:firebase:dep:rizz-pos-firebase --parallel=100"
+        "command": "nx run-many --targets=lint --projects=tag:firebase:dep:rizzpos-firebase --parallel=100"
       }
     },
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "nx run-many --targets=test --projects=tag:firebase:dep:rizz-pos-firebase --parallel=100"
+        "command": "nx run-many --targets=test --projects=tag:firebase:dep:rizzpos-firebase --parallel=100"
       }
     },
     "firebase": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "firebase --config=firebase.rizz-pos-firebase.json --project=rizz-pos"
+        "command": "firebase --config=firebase.rizzpos-firebase.json --project=rizzpos"
       },
       "configurations": {
         "production": {
-          "command": "firebase --config=firebase.rizz-pos-firebase.json --project=rizz-pos"
+          "command": "firebase --config=firebase.rizzpos-firebase.json --project=rizzpos"
         }
       }
     },
@@ -48,15 +48,15 @@
     "getconfig": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "nx run rizz-pos-firebase:firebase functions:config:get > apps/rizz-pos/firebase/environment/.runtimeconfig.json"
+        "command": "nx run rizzpos-firebase:firebase functions:config:get > apps/rizzpos/firebase/environment/.runtimeconfig.json"
       }
     },
     "emulate": {
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "nx run rizz-pos-firebase:killports",
-          "nx run rizz-pos-firebase:firebase emulators:start --import=apps/rizz-pos/firebase/.emulators --export-on-exit"
+          "nx run rizzpos-firebase:killports",
+          "nx run rizzpos-firebase:firebase emulators:start --import=apps/rizzpos/firebase/.emulators --export-on-exit"
         ],
         "parallel": false
       }
@@ -65,8 +65,8 @@
       "executor": "@simondotm/nx-firebase:serve",
       "options": {
         "commands": [
-          "nx run rizz-pos-firebase:watch",
-          "nx run rizz-pos-firebase:emulate"
+          "nx run rizzpos-firebase:watch",
+          "nx run rizzpos-firebase:emulate"
         ]
       }
     },
@@ -74,9 +74,9 @@
       "executor": "nx:run-commands",
       "dependsOn": ["build"],
       "options": {
-        "command": "nx run rizz-pos-firebase:firebase deploy"
+        "command": "nx run rizzpos-firebase:firebase deploy"
       }
     }
   },
-  "implicitDependencies": ["rizz-pos-functions-user"]
+  "implicitDependencies": ["rizzpos-functions-user"]
 }

@@ -1,8 +1,8 @@
 export default {
-  displayName: 'rizz-pos',
+  displayName: 'rizzpos',
   preset: '../../../jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
-  coverageDirectory: '../../coverage/apps/rizz-pos',
+  coverageDirectory: '../../coverage/apps/rizzpos',
   transform: {
     '^.+\\.(ts|mjs|js|html)$': [
       'jest-preset-angular',

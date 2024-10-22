@@ -1,26 +1,26 @@
 {
-  "name": "rizz-pos-functions-user",
+  "name": "rizzpos-functions-user",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/rizz-pos/functions/user/src",
+  "sourceRoot": "apps/rizzpos/functions/user/src",
   "projectType": "application",
   "tags": [
     "firebase:function",
-    "firebase:name:rizz-pos-functions-user",
-    "firebase:dep:rizz-pos-firebase"
+    "firebase:name:rizzpos-functions-user",
+    "firebase:dep:rizzpos-firebase"
   ],
   "targets": {
     "build": {
       "executor": "@nx/esbuild:esbuild",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/apps/rizz-pos/functions/user",
-        "main": "apps/rizz-pos/functions/user/src/main.ts",
-        "tsConfig": "apps/rizz-pos/functions/user/tsconfig.app.json",
+        "outputPath": "dist/apps/rizzpos/functions/user",
+        "main": "apps/rizzpos/functions/user/src/main.ts",
+        "tsConfig": "apps/rizzpos/functions/user/tsconfig.app.json",
         "assets": [
-          "apps/rizz-pos/functions/user/src/assets",
+          "apps/rizzpos/functions/user/src/assets",
           {
             "glob": "**/*",
-            "input": "apps/rizz-pos/firebase/environment",
+            "input": "apps/rizzpos/firebase/environment",
             "output": "."
           }
         ],
@@ -40,13 +40,13 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
-        "jestConfig": "apps/rizz-pos/functions/user/jest.config.ts"
+        "jestConfig": "apps/rizzpos/functions/user/jest.config.ts"
       }
     },
     "deploy": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "nx run rizz-pos-firebase:deploy --only functions:rizz-pos-functions-user"
+        "command": "nx run rizzpos-firebase:deploy --only functions:rizzpos-functions-user"
       },
       "dependsOn": ["build"]
     }

@@ -1,22 +1,22 @@
 {
-  "name": "rizz-pos-e2e",
+  "name": "rizzpos-e2e",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
-  "sourceRoot": "apps/rizz-pos-e2e/src",
+  "sourceRoot": "apps/rizzpos-e2e/src",
   "tags": [],
-  "implicitDependencies": ["rizz-pos"],
-  "// targets": "to see all targets run: nx show project rizz-pos-e2e --web",
+  "implicitDependencies": ["rizzpos"],
+  "// targets": "to see all targets run: nx show project rizzpos-e2e --web",
   "targets": {
     "e2e": {
       "executor": "@nx/cypress:cypress",
       "options": {
-        "cypressConfig": "apps/rizz-pos-e2e/cypress.config.ts",
-        "devServerTarget": "rizz-pos:serve:development",
+        "cypressConfig": "apps/rizzpos-e2e/cypress.config.ts",
+        "devServerTarget": "rizzpos:serve:development",
         "testingType": "e2e"
       },
       "configurations": {
         "production": {
-          "devServerTarget": "rizz-pos:serve:production"
+          "devServerTarget": "rizzpos:serve:production"
         }
       }
     },
@@ -24,7 +24,7 @@
       "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["apps/rizz-pos-e2e/**/*.{js,ts}"]
+        "lintFilePatterns": ["apps/rizzpos-e2e/**/*.{js,ts}"]
       }
     }
   }
