@@ -98,11 +98,12 @@ nx g @simondotm/nx-firebase:app firebase --directory=apps/{app-name} --project={
 
 <!-- add a function to the project -->
 
-nx g @simondotm/nx-firebase:function {function-name} --app={app-name}-firebase --directory=apps/{app-name}/functions --runtime=nodejs18
+nx g @simondotm/nx-firebase:function {function-name} --app={app-name}-firebase --directory=apps/{app-name}/functions
 
 <!-- build all -->
 
 nx build {app-name} --prod
+nx build {app-name}-firebase
 
 nx build {app-name}-functions-{function-name}
 
@@ -118,3 +119,41 @@ nx serve {app-name}-firebase
 nx deploy {app-name}-firebase
 
 <!-- nx deploy {app-name}-functions-{function-name} -->
+
+<!-- when creating a new function, add the following to the function's eslint.config.js -->
+
+<!--
+import nx from '@nx/eslint-plugin';
+
+export default [
+  ...nx.configs['flat/base'],
+  ...nx.configs['flat/typescript'],
+  ...nx.configs['flat/javascript'],
+  {
+    ignores: ['**/dist'],
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          enforceBuildableLibDependency: true,
+          allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?js$'],
+          depConstraints: [
+            {
+              sourceTag: '*',
+              onlyDependOnLibsWithTags: ['*'],
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {},
+  },
+];
+-->
+<!-- make sure that the node versions/targets are on node 18 -->

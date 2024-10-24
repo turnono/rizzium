@@ -23,7 +23,7 @@ Nx-Firebase will add `firebase-tools`, `firebase-admin` and `firebase-functions`
 - Read about the [Firebase CLI here](https://firebase.google.com/docs/cli)
 - `firebase login` - Authenticate the Firebase CLI
 - `firebase use --add` - Add your Firebase Project as a target to `.firebaserc`
-- `nx g @simondotm/nx-firebase:function my-function --firebaseApp rizzpos-firebase --runtime=nodejs18` - Add a firebase function to this project
+- `nx g @simondotm/nx-firebase:function my-function --firebaseApp rizzpos-firebase` - Add a firebase function to this project
 
 See the plugin [README](https://github.com/simondotm/nx-firebase/blob/main/README.md) for more information.
 

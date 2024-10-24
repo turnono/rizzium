@@ -18,6 +18,12 @@
   },
   "functions": [
     {
+      "codebase": "rizzpos-functions-test",
+      "source": "dist/apps/rizzpos/functions/test",
+      "runtime": "nodejs18",
+      "ignore": ["*.local"]
+    },
+    {
       "source": "dist/apps/rizzpos/functions/user",
       "codebase": "rizzpos-functions-user",
       "runtime": "nodejs18",

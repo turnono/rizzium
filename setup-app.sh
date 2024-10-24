@@ -28,7 +28,7 @@ nx generate @simondotm/nx-firebase:app firebase --directory=apps/"$APP_NAME" --p
 
 # Add Firebase function
 #    Property 'runTime' does not match the schema. '18' should be a 'string'.
-nx generate @simondotm/nx-firebase:function user --app="${APP_NAME}-firebase" --directory=apps/"$APP_NAME"/functions --runtime=nodejs18
+nx generate @simondotm/nx-firebase:function user --app="${APP_NAME}-firebase" --directory=apps/"$APP_NAME"/functions
 
 # Create the angular directory if it doesn't exist
 mkdir -p apps/"$APP_NAME"/angular
@@ -620,7 +620,7 @@ echo "Created/updated $FIREBASE_JSON with correct hosting public path and functi
 
 # Build the Angular application and functions
 nx build "$APP_NAME" --prod
-nx build "${APP_NAME}-functions-user"
+nx build "${APP_NAME}-firebase"
 
 echo "Build completed successfully."
 
