@@ -28,13 +28,25 @@ jobs:
       - name: Determine affected apps
         id: affected
         run: |
-          AFFECTED_APPS=$(npx nx print-affected --type=app --select=projects)
+          AFFECTED_APPS=$(npx nx affected --base=origin/main~1 --head=HEAD --type=app --select=projects)
           echo "Affected apps: $AFFECTED_APPS"
           echo "affected_apps=$AFFECTED_APPS" >> $GITHUB_OUTPUT
 
       - name: Build affected apps
         if: steps.affected.outputs.affected_apps != ''
-        run: npx nx affected --target=build --prod
+        run: |
+          IFS=',' read -ra APPS <<< "${{ steps.affected.outputs.affected_apps }}"
+          for APP in "${APPS[@]}"; do
+            echo "Building $APP"
+            npx nx build "$APP" --prod
+            npx nx build "${APP}-firebase"
+          done
+
+      - name: Configure Firebase project
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: |
+          firebase use --add ${{ secrets.FIREBASE_PROJECT_ID }} --token $FIREBASE_TOKEN
 
       - name: Deploy affected apps to Firebase
         if: steps.affected.outputs.affected_apps != ''
@@ -44,8 +56,8 @@ jobs:
           IFS=',' read -ra APPS <<< "${{ steps.affected.outputs.affected_apps }}"
           for APP in "${APPS[@]}"; do
             echo "Deploying $APP"
-            npx nx deploy $APP-firebase
-            npx nx deploy $APP-functions-user
+            npx nx deploy "${APP}-firebase"
+            npx nx deploy "${APP}-functions-user"
           done
 
       - name: Comment PR with deployment results
@@ -54,7 +66,7 @@ jobs:
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
-            const apps = '${{ steps.affected.outputs.affected_apps }}'.split(',');
+            const apps = '${{ steps.affected.outputs.affected_apps }}'.split(',').filter(Boolean);
             const status = '${{ job.status }}';
             let comment = '## Deployment Status\n\n';
             if (apps.length === 0) {
