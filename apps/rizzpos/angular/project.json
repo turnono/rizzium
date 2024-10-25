@@ -1,10 +1,10 @@
 {
   "name": "rizzpos",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "prefix": "app",
   "sourceRoot": "apps/rizzpos/angular/src",
-  "tags": ["rizzpos"],
+  "tags": [],
   "targets": {
     "build": {
       "executor": "@angular-devkit/build-angular:application",
@@ -17,12 +17,50 @@
         "tsConfig": "apps/rizzpos/angular/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
         "assets": [
+          "apps/rizzpos/angular/src/favicon.ico",
+          "apps/rizzpos/angular/src/assets",
           {
-            "glob": "**/*",
-            "input": "apps/rizzpos/angular/public"
+            "glob": "**/*.svg",
+            "input": "node_modules/ionicons/dist/ionicons/svg",
+            "output": "./svg"
           }
         ],
-        "styles": ["apps/rizzpos/angular/src/styles.scss"],
+        "styles": [
+          "apps/rizzpos/angular/src/styles.scss",
+          {
+            "input": "node_modules/@ionic/angular/css/core.css"
+          },
+          {
+            "input": "node_modules/@ionic/angular/css/normalize.css"
+          },
+          {
+            "input": "node_modules/@ionic/angular/css/structure.css"
+          },
+          {
+            "input": "node_modules/@ionic/angular/css/typography.css"
+          },
+          {
+            "input": "node_modules/@ionic/angular/css/display.css"
+          },
+          {
+            "input": "node_modules/@ionic/angular/css/padding.css"
+          },
+          {
+            "input": "node_modules/@ionic/angular/css/float-elements.css"
+          },
+          {
+            "input": "node_modules/@ionic/angular/css/text-alignment.css"
+          },
+          {
+            "input": "node_modules/@ionic/angular/css/text-transformation.css"
+          },
+          {
+            "input": "node_modules/@ionic/angular/css/flex-utils.css"
+          },
+          {
+            "input": "apps/rizzpos/angular/src/theme/variables.css"
+          }
+        ],
         "scripts": []
       },
       "configurations": {
@@ -31,12 +69,12 @@
             {
               "type": "initial",
               "maximumWarning": "500kb",
-              "maximumError": "1mb"
+              "maximumError": "5mb"
             },
             {
               "type": "anyComponentStyle",
               "maximumWarning": "2kb",
-              "maximumError": "4kb"
+              "maximumError": "10kb"
             }
           ],
           "outputHashing": "all"
@@ -47,7 +85,7 @@
           "sourceMap": true
         }
       },
-      "defaultConfiguration": "development"
+      "defaultConfiguration": "production"
     },
     "serve": {
       "executor": "@angular-devkit/build-angular:dev-server",
@@ -68,7 +106,14 @@
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint"
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "apps/rizzpos/angular/**/*.ts",
+          "apps/rizzpos/angular/**/*.html"
+        ]
+      }
     },
     "test": {
       "executor": "@nx/jest:jest",
@@ -82,8 +127,32 @@
       "options": {
         "buildTarget": "rizzpos:build",
         "port": 4200,
-        "staticFilePath": "dist/apps/rizzpos/angular/browser",
+        "staticFilePath": "dist/apps/rizzpos/angular",
         "spa": true
+      }
+    },
+    "ionic-cordova-serve": {
+      "executor": "@ionic/angular-toolkit:cordova-serve",
+      "options": {
+        "cordovaBuildTarget": "rizzpos:ionic-cordova-build",
+        "devServerTarget": "rizzpos:serve"
+      },
+      "configurations": {
+        "production": {
+          "cordovaBuildTarget": "rizzpos:ionic-cordova-build:production",
+          "devServerTarget": "rizzpos:serve:production"
+        }
+      }
+    },
+    "ionic-cordova-build": {
+      "executor": "@ionic/angular-toolkit:cordova-build",
+      "options": {
+        "browserTarget": "rizzpos:build"
+      },
+      "configurations": {
+        "production": {
+          "browserTarget": "rizzpos:build:production"
+        }
       }
     }
   }

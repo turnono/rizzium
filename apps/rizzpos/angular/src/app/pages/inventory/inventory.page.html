@@ -1,0 +1,77 @@
+<rizzium-header [title]="'Inventory Management'"></rizzium-header>
+
+<ion-content class="ion-padding" data-cy="inventory-page">
+  <ion-button data-cy="add-product-button" (click)="openAddProductModal()">
+    <ion-icon name="add-circle-outline" slot="start"></ion-icon>
+    Add Product
+  </ion-button>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Bulk Update Stock</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item>
+        <ion-label position="floating">Quantity to add/remove</ion-label>
+        <ion-input type="number" [(ngModel)]="bulkUpdateQuantity"></ion-input>
+      </ion-item>
+      <ion-button expand="block" (click)="bulkUpdateStock()">Update All Products</ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Product Inventory</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-list>
+        <ion-item *ngFor="let product of products$ | async">
+          <ion-label>
+            <h2>{{ product.name }}</h2>
+            <p>Current Stock: {{ product.stockQuantity }}</p>
+          </ion-label>
+          <ion-badge *ngIf="product.stockQuantity <= lowStockThreshold" color="danger">Low Stock</ion-badge>
+          <ion-input type="number" [value]="product.stockQuantity"
+            (ionChange)="updateStock(product, $event.detail.value ? +$event.detail.value : 0)"></ion-input>
+        </ion-item>
+      </ion-list>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-alert [isOpen]="showLowStockAlert" header="Low Stock Alert"
+    message="The product '{{ lowStockProduct?.name }}' is running low on stock. Current quantity: {{ lowStockProduct?.stockQuantity }}"
+    [buttons]="['OK']" (didDismiss)="showLowStockAlert = false"></ion-alert>
+</ion-content>
+
+<ion-modal [isOpen]="isAddProductModalOpen">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>Add Product</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="cancelAddProduct()">Cancel</ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding">
+      <form (ngSubmit)="submitAddProduct()" [formGroup]="addProductForm">
+        <ion-item>
+          <ion-label position="floating">Name</ion-label>
+          <ion-input data-cy="product-name-input" formControlName="name" type="text"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="floating">Price</ion-label>
+          <ion-input data-cy="product-price-input" formControlName="price" type="number"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="floating">Quantity</ion-label>
+          <ion-input data-cy="product-quantity-input" formControlName="stockQuantity" type="number"></ion-input>
+        </ion-item>
+        <ion-button data-cy="submit-product-button" expand="block" type="submit" [disabled]="!addProductForm.valid">Add
+          Product</ion-button>
+      </form>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<rizzium-footer></rizzium-footer>

@@ -1,0 +1,69 @@
+{
+  "firestore": {
+    "rules": "apps/rizzpos/firebase/firestore.rules",
+    "indexes": "apps/rizzpos/firebase/firestore.indexes.json"
+  },
+  "hosting": {
+    "public": "dist/apps/rizzpos/angular/browser",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  },
+  "storage": {
+    "rules": "apps/rizzpos/firebase/storage.rules"
+  },
+  "functions": [
+    {
+      "codebase": "rizzpos-functions-test",
+      "source": "dist/apps/rizzpos/functions/test",
+      "runtime": "nodejs18",
+      "ignore": ["*.local"]
+    },
+    {
+      "source": "dist/apps/rizzpos/functions/user",
+      "codebase": "rizzpos-functions-user",
+      "runtime": "nodejs18",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ]
+    }
+  ],
+  "emulators": {
+    "auth": {
+      "port": 9099
+    },
+    "functions": {
+      "port": 5003
+    },
+    "firestore": {
+      "port": 8278
+    },
+    "database": {
+      "port": 9323
+    },
+    "hosting": {
+      "port": 5004
+    },
+    "pubsub": {
+      "port": 8178
+    },
+    "storage": {
+      "port": 9199
+    },
+    "eventarc": {
+      "port": 9299
+    },
+    "ui": {
+      "enabled": true
+    },
+    "singleProjectMode": true
+  }
+}

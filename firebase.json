@@ -18,8 +18,8 @@
   },
   "functions": [
     {
-      "codebase": "rizzpos-functions-delete-anon-user",
-      "source": "dist/apps/rizzpos/functions/delete-anon-user",
+      "codebase": "rizzpos-functions-user",
+      "source": "dist/apps/rizzpos/functions/user",
       "runtime": "nodejs18",
       "ignore": ["*.local"]
     }

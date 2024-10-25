@@ -2,20 +2,6 @@
   "projects": {
     "rizzpos": "rizzpos"
   },
-  "targets": {
-    "rizzpos": {
-      "hosting": {
-        "rizzpos": [
-          "rizzpos"
-        ],
-        "pp": [
-          "pp-rizzpos"
-        ],
-        "tos": [
-          "tos-rizzpos"
-        ]
-      }
-    }
-  },
+  "targets": {},
   "etags": {}
 }

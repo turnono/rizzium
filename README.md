@@ -87,13 +87,10 @@ nx g @nx/angular:app {app-name} --directory=apps/{app-name}
 
 <!-- create a firebase project in firebase console and get the config -->
 
-choose a name for the firebase project
-create a prod project with your name because you want to secure the domain name
-set the Environment type to production in the project settings
-now create a new dev project,
-add -dev to the name
-add firebase config to the project in the dev environment file
-make sure projects is on the blaze plan
+- choose a name and create a project with the same name (because you want to secure the domain name)
+- set the Environment type to production in the project settings
+- enable firestore, storage, hosting, functions and authentication (use providers -> google, anonymous, email)
+- make sure the project is on the "blaze plan"
 
 <!-- add a firebase project to the app -->
 
@@ -105,21 +102,58 @@ nx g @simondotm/nx-firebase:function {function-name} --app={app-name}-firebase -
 
 <!-- build all -->
 
-nx build {app-name}
 nx build {app-name} --prod
+nx build {app-name}-firebase
 
 nx build {app-name}-functions-{function-name}
 
 <!-- run the firebase project -->
-
-nx serve {app-name}-firebase
-
-<!-- deploy -->
 <!-- npx kill-port 9099 5003 8278 9323 5004 8178 9199 9299 9324 8279 -->
 <!-- firebase login -->
 <!-- firebase use {app-name} -->
 
-nx deploy {app-name}-firebase
-nx deploy {app-name}-functions-{function-name}
+nx serve {app-name}-firebase
 
-<!--  running a test here -->
+<!-- deploy -->
+
+nx deploy {app-name}-firebase
+
+<!-- nx deploy {app-name}-functions-{function-name} -->
+
+<!-- when creating a new function, add the following to the function's eslint.config.js -->
+
+<!--
+import nx from '@nx/eslint-plugin';
+
+export default [
+  ...nx.configs['flat/base'],
+  ...nx.configs['flat/typescript'],
+  ...nx.configs['flat/javascript'],
+  {
+    ignores: ['**/dist'],
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          enforceBuildableLibDependency: true,
+          allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?js$'],
+          depConstraints: [
+            {
+              sourceTag: '*',
+              onlyDependOnLibsWithTags: ['*'],
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {},
+  },
+];
+-->
+<!-- make sure that the node versions/targets are on node 18 -->

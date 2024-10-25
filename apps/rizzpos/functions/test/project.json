@@ -1,0 +1,54 @@
+{
+  "name": "rizzpos-functions-test",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/rizzpos/functions/test/src",
+  "projectType": "application",
+  "tags": [
+    "firebase:function",
+    "firebase:name:rizzpos-functions-test",
+    "firebase:dep:rizzpos-firebase"
+  ],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/rizzpos/functions/test",
+        "main": "apps/rizzpos/functions/test/src/main.ts",
+        "tsConfig": "apps/rizzpos/functions/test/tsconfig.app.json",
+        "assets": [
+          "apps/rizzpos/functions/test/src/assets",
+          {
+            "glob": "**/*",
+            "input": "apps/rizzpos/firebase/environment",
+            "output": "."
+          }
+        ],
+        "generatePackageJson": true,
+        "platform": "node",
+        "bundle": true,
+        "thirdParty": false,
+        "dependenciesFieldType": "dependencies",
+        "target": "node18",
+        "format": ["esm"],
+        "esbuildOptions": {
+          "logLevel": "info"
+        }
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/rizzpos/functions/test/jest.config.ts"
+      }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nx run rizzpos-firebase:deploy --only functions:rizzpos-functions-test"
+      },
+      "dependsOn": ["build"]
+    }
+  }
+}
