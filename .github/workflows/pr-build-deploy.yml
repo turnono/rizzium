@@ -23,10 +23,24 @@ jobs:
       - name: Install Firebase CLI
         run: npm install -g firebase-tools --legacy-peer-deps
 
+      - name: List NX projects
+        run: npx nx list
+
       - name: Build app
         run: |
-          npx nx build rizzpos --prod
-          npx nx build rizzpos-firebase
+          echo "Building rizzpos app..."
+          npx nx build rizzpos --configuration=production --verbose
+          if [ $? -ne 0 ]; then
+            echo "rizzpos build failed"
+            exit 1
+          fi
+
+          echo "Building rizzpos-firebase..."
+          npx nx build rizzpos-firebase --verbose
+          if [ $? -ne 0 ]; then
+            echo "rizzpos-firebase build failed"
+            exit 1
+          fi
 
       - name: Configure Firebase project
         env:
