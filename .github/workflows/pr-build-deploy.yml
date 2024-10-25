@@ -11,8 +11,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -25,65 +23,35 @@ jobs:
       - name: Install Firebase CLI
         run: npm install -g firebase-tools --legacy-peer-deps
 
-      - name: Determine affected apps
-        id: affected
+      - name: Build app
         run: |
-          AFFECTED_APPS=$(npx nx affected --target=build --base=origin/main~1 --head=HEAD --select=projects)
-          if [ -z "$AFFECTED_APPS" ]; then
-            echo "No affected apps found."
-          else
-            echo "Affected apps: $AFFECTED_APPS"
-            echo "affected_apps=$AFFECTED_APPS" >> $GITHUB_OUTPUT
-          fi
+          npx nx build rizzpos --prod
+          npx nx build rizzpos-firebase
 
-      # - name: Build affected apps
-      #   if: steps.affected.outputs.affected_apps != ''
-      #   run: |
-      #     IFS=',' read -ra APPS <<< "${{ steps.affected.outputs.affected_apps }}"
-      #     for APP in "${APPS[@]}"; do
-      #       echo "Building $APP"
-      #       npx nx build "$APP" --prod
-      #       npx nx build "${APP}-firebase"
-      #     done
+      - name: Configure Firebase project
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: |
+          firebase use --add ${{ secrets.FIREBASE_PROJECT_ID }} --token $FIREBASE_TOKEN
 
-      # - name: Configure Firebase project
-      #   env:
-      #     FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-      #   run: |
-      #     firebase use --add ${{ secrets.FIREBASE_PROJECT_ID }} --token $FIREBASE_TOKEN
+      - name: Deploy to Firebase
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: |
+          npx nx deploy rizzpos-firebase
 
-      # - name: Deploy affected apps to Firebase
-      #   if: steps.affected.outputs.affected_apps != ''
-      #   env:
-      #     FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-      #   run: |
-      #     IFS=' ' read -ra APPS <<< "${{ steps.affected.outputs.affected_apps }}"
-      #     for APP in "${APPS[@]}"; do
-      #       echo "Deploying $APP"
-      #       npx nx deploy ${APP}-firebase
-      #       npx nx deploy ${APP}-functions-user
-      #     done
-
-      # - name: Comment PR with deployment results
-      #   uses: actions/github-script@v7
-      #   if: always()
-      #   with:
-      #     github-token: ${{ secrets.GITHUB_TOKEN }}
-      #     script: |
-      #       const apps = '${{ steps.affected.outputs.affected_apps }}'.split(',');
-      #       const status = '${{ job.status }}';
-      #       let comment = '## Deployment Status\n\n';
-      #       if (apps.length === 0) {
-      #         comment += 'No apps were affected by this PR.\n';
-      #       } else {
-      #         comment += 'The following apps were deployed:\n\n';
-      #         apps.forEach(app => {
-      #           comment += `- ${app}: ${status === 'success' ? '✅ Deployed' : '❌ Failed'}\n`;
-      #         });
-      #       }
-      #       github.rest.issues.createComment({
-      #         issue_number: context.payload.pull_request.number,
-      #         owner: context.repo.owner,
-      #         repo: context.repo.name,
-      #         body: comment
-      #       })
+      - name: Comment PR with deployment results
+        uses: actions/github-script@v7
+        if: always()
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const status = '${{ job.status }}';
+            let comment = '## Deployment Status\n\n';
+            comment += `rizzpos: ${status === 'success' ? '✅ Deployed' : '❌ Failed'}\n`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.name,
+              body: comment
+            })
