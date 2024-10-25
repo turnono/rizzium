@@ -35,11 +35,11 @@ jobs:
       - name: Build affected apps
         if: steps.affected.outputs.affected_apps != ''
         run: |
-          IFS=' ' read -ra APPS <<< "${{ steps.affected.outputs.affected_apps }}"
+          IFS=',' read -ra APPS <<< "${{ steps.affected.outputs.affected_apps }}"
           for APP in "${APPS[@]}"; do
             echo "Building $APP"
-            npx nx build $APP --prod
-            npx nx build ${APP}-firebase
+            nx build "$APP" --prod
+            nx build "${APP}-firebase"
           done
 
       - name: Configure Firebase project
