@@ -29,8 +29,12 @@ jobs:
         id: affected
         run: |
           AFFECTED_APPS=$(npx nx affected --target=build --base=origin/main~1 --head=HEAD --select=projects)
-          echo "Affected apps: $AFFECTED_APPS"
-          echo "affected_apps=$AFFECTED_APPS" >> $GITHUB_OUTPUT
+          if [ -z "$AFFECTED_APPS" ]; then
+            echo "No affected apps found."
+          else
+            echo "Affected apps: $AFFECTED_APPS"
+            echo "affected_apps=$AFFECTED_APPS" >> $GITHUB_OUTPUT
+          fi
 
       # - name: Build affected apps
       #   if: steps.affected.outputs.affected_apps != ''
