@@ -12,7 +12,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # Fetch all history for all branches and tags
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -28,7 +28,8 @@ jobs:
       - name: Determine affected apps
         id: affected
         run: |
-          AFFECTED_APPS=$(npx nx show projects --affected)
+          git fetch origin ${{ github.base_ref }}
+          AFFECTED_APPS=$(npx nx affected:apps --base=origin/${{ github.base_ref }} --head=${{ github.event.pull_request.head.sha }})
           echo "Affected apps: $AFFECTED_APPS"
           echo "affected_apps=$AFFECTED_APPS" >> $GITHUB_OUTPUT
 
