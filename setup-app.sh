@@ -184,6 +184,9 @@ export const deleteAnonUser = functions.https.onCall(async (data) => {
 });
 EOF
 
+# TODO: User needs to provide the Firebase configuration from the Firebase Console
+# Reminder: Obtain the Firebase config object from the Firebase Console and add it to the appropriate configuration file
+
 # Update package.json
 PACKAGE_JSON="apps/$APP_NAME/functions/user/package.json"
 if [ -f "$PACKAGE_JSON" ]; then
@@ -625,9 +628,9 @@ nx build "${APP_NAME}-firebase"
 echo "Build completed successfully."
 
 firebase login
-echo "make sure to use the exact name of the project as you entered it above"
 firebase use --add
 
+echo "make sure to use the exact name of the project as you entered it above"
 # # Deploy Firebase application and functions
 # # Ensure that the Firebase project is linked via 'firebase use' before deploying
 nx deploy "${APP_NAME}-firebase"
