@@ -44,9 +44,6 @@ jobs:
 
       - uses: nrwl/nx-set-shas@v4
 
-      - name: Build affected apps
-        run: npx nx-cloud record -- npx nx affected -t build --prod
-
       - name: Build rizzpos app
         run: |
           npx nx-cloud record -- npx nx build rizzpos --prod
