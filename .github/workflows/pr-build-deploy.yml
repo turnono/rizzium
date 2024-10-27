@@ -84,4 +84,11 @@ jobs:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
         run: |
           echo "Deploying to Firebase..."
-          npx nx deploy rizzpos-firebase --verbose
+          # First try with direct firebase deploy
+          firebase deploy --only hosting,functions --token "$FIREBASE_TOKEN" --project "${{ secrets.FIREBASE_PROJECT_ID }}" --json
+
+          # If direct deploy fails, try nx deploy with debug
+          if [ $? -ne 0 ]; then
+            echo "Direct firebase deploy failed, trying nx deploy..."
+            DEBUG=* npx nx deploy rizzpos-firebase --verbose
+          fi
