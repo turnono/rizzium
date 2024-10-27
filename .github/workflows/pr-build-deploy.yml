@@ -57,11 +57,20 @@ jobs:
       # Build Firebase functions
       - name: Build Firebase Functions
         run: |
-          npx nx build rizzpos-firebase
+          npx nx-cloud record -- npx nx build rizzpos-functions-user
+          npx nx-cloud record -- npx nx build rizzpos-functions-test
+          npx nx-cloud record -- npx nx build rizzpos-firebase
+
+      # Configure Firebase
+      - name: Configure Firebase
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: |
+          firebase use --add ${{ secrets.FIREBASE_PROJECT_ID }} --token $FIREBASE_TOKEN
 
       # Deploy to Firebase
       - name: Deploy to Firebase
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
         run: |
-          npx nx deploy rizzpos-firebase
+          npx nx-cloud record -- npx nx deploy rizzpos-firebase
