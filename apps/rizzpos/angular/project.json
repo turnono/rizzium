@@ -9,7 +9,6 @@
     "build": {
       "executor": "@angular-devkit/build-angular:application",
       "outputs": ["{options.outputPath}"],
-      "cache": true,
       "options": {
         "outputPath": "dist/apps/rizzpos/angular",
         "index": "apps/rizzpos/angular/src/index.html",
