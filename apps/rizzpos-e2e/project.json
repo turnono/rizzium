@@ -18,8 +18,7 @@
         "production": {
           "devServerTarget": "rizzpos:serve:production"
         }
-      },
-      "cache": true
+      }
     },
     "lint": {
       "executor": "@nx/linter:eslint",
