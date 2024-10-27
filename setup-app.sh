@@ -71,11 +71,12 @@ else
   echo "Warning: eslint.config.js not found in the Angular project."
 fi
 
-# Update tsconfig.json to extend from the correct base tsconfig
+# Update tsconfig.json to extend from the correct base tsconfig and set strict to false
 TSCONFIG_JSON="apps/$APP_NAME/angular/tsconfig.json"
 if [ -f "$TSCONFIG_JSON" ]; then
   sed -i '' 's|"extends": "../../tsconfig.base.json"|"extends": "../../../tsconfig.base.json"|g' "$TSCONFIG_JSON"
-  echo "Updated tsconfig.json to extend from the correct base tsconfig."
+  sed -i '' 's|"strict": true|"strict": false|g' "$TSCONFIG_JSON"
+  echo "Updated tsconfig.json to extend from the correct base tsconfig and set strict to false."
 else
   echo "Warning: tsconfig.json not found in the Angular project."
 fi
