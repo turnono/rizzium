@@ -34,7 +34,8 @@
         "esbuildOptions": {
           "logLevel": "info"
         }
-      }
+      },
+      "cache": true
     },
     "test": {
       "executor": "@nx/jest:jest",

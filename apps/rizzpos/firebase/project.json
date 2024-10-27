@@ -13,7 +13,8 @@
           "echo Build succeeded for all functions."
         ],
         "parallel": true
-      }
+      },
+      "cache": true
     },
     "watch": {
       "executor": "nx:run-commands",
