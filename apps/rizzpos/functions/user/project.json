@@ -12,6 +12,7 @@
     "build": {
       "executor": "@nx/esbuild:esbuild",
       "outputs": ["{options.outputPath}"],
+      "cache": true,
       "options": {
         "outputPath": "dist/apps/rizzpos/functions/user",
         "main": "apps/rizzpos/functions/user/src/main.ts",

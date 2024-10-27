@@ -9,6 +9,7 @@
   "targets": {
     "e2e": {
       "executor": "@nx/cypress:cypress",
+      "cache": true,
       "options": {
         "cypressConfig": "apps/rizzpos-e2e/cypress.config.ts",
         "devServerTarget": "rizzpos:serve:development",
