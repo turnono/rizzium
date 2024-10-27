@@ -53,3 +53,15 @@ jobs:
         run: |
           echo "Build failed. Here's the last 100 lines of output:"
           npx nx build rizzpos --prod --verbose | tail -n 100
+
+      # Build Firebase functions
+      - name: Build Firebase Functions
+        run: |
+          npx nx-cloud record -- nx build rizzpos-firebase
+
+      # Deploy to Firebase
+      - name: Deploy to Firebase
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: |
+          npx nx-cloud record -- nx deploy {app-name}-firebase
