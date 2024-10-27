@@ -50,7 +50,3 @@ jobs:
       - name: Build rizzpos app
         run: |
           npx nx-cloud record -- npx nx build rizzpos --prod
-        if: failure()
-        run: |
-          echo "Build failed. Here's the last 100 lines of output:"
-          npx nx build rizzpos --prod | tail -n 100
