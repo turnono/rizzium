@@ -11,11 +11,16 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+
+      - name: Start Nx Cloud CI Run
+        run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - name: Cache
         uses: actions/cache@v4.1.2
@@ -34,21 +39,18 @@ jobs:
       - name: Install Firebase CLI
         run: npm install -g firebase-tools --legacy-peer-deps
 
-      - name: Print versions and environment
-        run: |
-          echo "Node version:"
-          node --version
-          echo "Nx version:"
-          npx nx --version
-          echo "NPM version:"
-          npm --version
-          echo "Environment variables:"
-          env
+      - name: Connect to Nx Cloud
+        run: npx nx connect-to-nx-cloud
 
-      - name: List NX projects
-        run: npx nx list
+      - uses: nrwl/nx-set-shas@v4
 
-      - name: Build app
+      - name: Build affected apps
+        run: npx nx-cloud record -- npx nx affected -t build --prod
+
+      - name: Build rizzpos app
         run: |
-          echo "Building rizzpos app..."
-          npx nx build rizzpos --prod
+          npx nx-cloud record -- npx nx build rizzpos --prod
+        if: failure()
+        run: |
+          echo "Build failed. Here's the last 100 lines of output:"
+          npx nx build rizzpos --prod | tail -n 100
