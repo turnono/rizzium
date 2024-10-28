@@ -47,13 +47,13 @@ jobs:
           npx nx build rizzpos --prod
 
       # Build Firebase functions with better error handling
-      - name: Build Firebase Functions
+      - name: Build Firebase
         run: |
-          echo "Building functions..."
-          npx nx build rizzpos-functions --verbose
-
           echo "Building firebase project..."
           npx nx build rizzpos-firebase --verbose
+
+          echo "Building functions..."
+          npx nx build rizzpos-functions --verbose
 
       # Verify function builds
       - name: Verify function builds
