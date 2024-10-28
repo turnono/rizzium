@@ -15,7 +15,6 @@ on:
 env:
   APP_NAME: rizzpos
   FIREBASE_PROJECT_ID: ${{ secrets.RIZZPOS_FIREBASE_PROJECT_ID }}
-  FIREBASE_TOKEN: ${{ secrets.RIZZPOS_FIREBASE_TOKEN }}
 
 jobs:
   build-and-deploy:
@@ -67,12 +66,16 @@ jobs:
           echo "Building all Firebase functions..."
           npx nx run-many --target=build --projects=tag:firebase:dep:${{ env.APP_NAME }}-firebase --verbose
 
+      # Authenticate with service account
+      - name: Authenticate to Google Cloud
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.RIZZPOS_GCP_SA_KEY }}
+
       # Deploy only on push to main
       - name: Deploy to Firebase
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          echo "Configuring Firebase project..."
-          firebase use ${{ env.FIREBASE_PROJECT_ID }} --token ${{ env.FIREBASE_TOKEN }} --non-interactive
-
           echo "Deploying to Firebase..."
-          firebase deploy --only hosting,functions --token "${{ env.FIREBASE_TOKEN }}" --project "${{ env.FIREBASE_PROJECT_ID }}"
+          firebase deploy --only hosting,functions --project "${{ secrets.RIZZPOS_FIREBASE_PROJECT_ID }}"
