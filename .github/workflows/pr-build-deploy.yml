@@ -49,11 +49,8 @@ jobs:
       # Build Firebase functions with better error handling
       - name: Build Firebase Functions
         run: |
-          echo "Building user functions..."
-          npx nx build rizzpos-functions-user --verbose
-
-          echo "Building test functions..."
-          npx nx build rizzpos-functions-test --verbose
+          echo "Building functions..."
+          npx nx build rizzpos-functions --verbose
 
           echo "Building firebase project..."
           npx nx build rizzpos-firebase --verbose
@@ -61,12 +58,8 @@ jobs:
       # Verify function builds
       - name: Verify function builds
         run: |
-          if [ ! -d "dist/apps/rizzpos/functions/user" ]; then
-            echo "User functions build failed - output directory missing"
-            exit 1
-          fi
-          if [ ! -d "dist/apps/rizzpos/functions/test" ]; then
-            echo "Test functions build failed - output directory missing"
+          if [ ! -d "dist/apps/rizzpos/functions" ]; then
+            echo "functions build failed - output directory missing"
             exit 1
           fi
 
@@ -78,17 +71,10 @@ jobs:
           echo "Configuring Firebase project..."
           firebase use ${{ secrets.FIREBASE_PROJECT_ID }} --token $FIREBASE_TOKEN --non-interactive
 
-      # Deploy to Firebase with better error handling
+      # Deploy to Firebase - simplified since direct deploy works
       - name: Deploy to Firebase
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
         run: |
           echo "Deploying to Firebase..."
-          # First try with direct firebase deploy
-          firebase deploy --only hosting,functions --token "$FIREBASE_TOKEN" --project "${{ secrets.FIREBASE_PROJECT_ID }}" --json
-
-          # If direct deploy fails, try nx deploy with debug
-          if [ $? -ne 0 ]; then
-            echo "Direct firebase deploy failed, trying nx deploy..."
-            DEBUG=* npx nx deploy rizzpos-firebase --verbose
-          fi
+          firebase deploy --only hosting,functions --token "$FIREBASE_TOKEN" --project "${{ secrets.FIREBASE_PROJECT_ID }}"
