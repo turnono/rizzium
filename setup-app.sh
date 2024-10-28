@@ -639,4 +639,100 @@ nx deploy "${APP_NAME}-functions-user"
 
 echo "Deploy completed successfully."
 
+# Create GitHub Actions workflow directory and file
+WORKFLOW_DIR=".github/workflows"
+mkdir -p "$WORKFLOW_DIR"
+
+# Create the workflow file for the app
+WORKFLOW_FILE="$WORKFLOW_DIR/${APP_NAME}.yml"
+cat << EOF > "$WORKFLOW_FILE"
+name: ${APP_NAME^} CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/${APP_NAME}/**'  # Only this app
+      - 'libs/shared/**'    # Shared libraries used by app
+      - '.github/workflows/${APP_NAME}.yml'
+  pull_request:
+    paths:
+      - 'apps/${APP_NAME}/**'
+      - 'libs/shared/**'
+
+env:
+  APP_NAME: ${APP_NAME}
+  RIZZPOS_FIREBASE_PROJECT_ID: \${{ secrets.RIZZPOS_FIREBASE_PROJECT_ID }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Cache
+        uses: actions/cache@v4.1.2
+        with:
+          path: |
+            ~/.npm
+            node_modules
+            .nx/cache
+            dist
+          key: \${{ runner.os }}-\${{ env.APP_NAME }}-\${{ hashFiles('**/package-lock.json') }}-\${{ hashFiles('**/*.ts') }}
+          restore-keys: |
+            \${{ runner.os }}-\${{ env.APP_NAME }}-
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools@13.16.0
+
+      - name: Connect to Nx Cloud
+        run: npx nx connect-to-nx-cloud
+
+      - uses: nrwl/nx-set-shas@v4
+
+      # Build Angular app - NX will handle all dependencies
+      - name: Build Angular app
+        run: npx nx build \${{ env.APP_NAME }} --prod
+
+      # Build Firebase components - NX will handle all dependencies
+      - name: Build Firebase
+        run: |
+          echo "Building firebase project..."
+          npx nx build \${{ env.APP_NAME }}-firebase --verbose
+
+          echo "Building all Firebase functions..."
+          npx nx run-many --target=build --projects=tag:firebase:dep:\${{ env.APP_NAME }}-firebase --verbose
+
+      # Authenticate with service account
+      - name: Authenticate to Google Cloud
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: \${{ secrets.RIZZPOS_GCP_SA_KEY }}
+
+      # Deploy only on push to main
+      - name: Deploy to Firebase
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          echo "Deploying to Firebase..."
+          firebase deploy --only hosting,functions --project "\${{ env.RIZZPOS_FIREBASE_PROJECT_ID }}"
+EOF
+
+echo "Created GitHub Actions workflow file at $WORKFLOW_FILE"
+echo "IMPORTANT: Make sure to add these secrets to your GitHub repository:"
+echo "  - RIZZPOS_FIREBASE_PROJECT_ID: Your Firebase project ID"
+echo "  - RIZZPOS_GCP_SA_KEY: Your Google Cloud service account key JSON"
+
 

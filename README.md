@@ -85,13 +85,6 @@ And join the Nx community:
 
 nx g @nx/angular:app {app-name} --directory=apps/{app-name}
 
-<!-- create a firebase project in firebase console and get the config -->
-
-- choose a name and create a project with the same name (because you want to secure the domain name)
-- set the Environment type to production in the project settings
-- enable firestore, storage, hosting, functions and authentication (use providers -> google, anonymous, email)
-- make sure the project is on the "blaze plan"
-
 <!-- add a firebase project to the app -->
 
 nx g @simondotm/nx-firebase:app firebase --directory=apps/{app-name} --project={app-name}
