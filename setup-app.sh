@@ -663,7 +663,7 @@ on:
 
 env:
   APP_NAME: ${APP_NAME}
-  RIZZPOS_FIREBASE_PROJECT_ID: \${{ secrets.RIZZPOS_FIREBASE_PROJECT_ID }}
+  FIREBASE_PROJECT_ID: \${{ secrets.RIZZPOS_FIREBASE_PROJECT_ID }}
 
 jobs:
   build-and-deploy:
@@ -727,7 +727,7 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           echo "Deploying to Firebase..."
-          firebase deploy --only hosting,functions --project "\${{ env.RIZZPOS_FIREBASE_PROJECT_ID }}"
+          firebase deploy --only hosting,functions --project "\${{ env.FIREBASE_PROJECT_ID }}"
 EOF
 
 echo "Created GitHub Actions workflow file at $WORKFLOW_FILE"
