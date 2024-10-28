@@ -46,14 +46,14 @@ jobs:
         run: |
           npx nx build rizzpos --prod
 
-      # Build Firebase functions with better error handling
+      # Build all Firebase functions using project tags
       - name: Build Firebase
         run: |
           echo "Building firebase project..."
           npx nx build rizzpos-firebase --verbose
 
-          echo "Building functions..."
-          npx nx build rizzpos-functions --verbose
+          echo "Building all Firebase functions..."
+          npx nx run-many --target=build --projects=tag:firebase:function --verbose
 
       # Verify function builds
       - name: Verify function builds
