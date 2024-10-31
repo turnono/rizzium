@@ -23,6 +23,27 @@ Before setting up service accounts, you need to:
 4. Click "Generate New Private Key" button
 5. Save the JSON file securely (DO NOT commit this to git)
 
+### Required IAM Roles
+
+Your service account needs these roles:
+
+- Cloud Functions Admin
+- Firebase Admin SDK Administrator Service Agent
+- Firebase Authentication Admin
+- Firebase Hosting Admin
+- Firebase Realtime Database Admin
+- Service Account Token Creator
+- Service Account User
+- Storage Admin
+
+To add these roles:
+
+1. Go to Google Cloud Console IAM (https://console.cloud.google.com/iam-admin/iam)
+2. Find your service account
+3. Click the edit (pencil) icon
+4. Add each required role
+5. Save changes
+
 ## Adding Secrets to GitHub Repository
 
 1. Go to your GitHub repository
