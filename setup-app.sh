@@ -663,7 +663,7 @@ on:
 
 env:
   APP_NAME: ${APP_NAME}
-  FIREBASE_PROJECT_ID: \${{ secrets.RIZZPOS_FIREBASE_PROJECT_ID }}
+  FIREBASE_PROJECT_ID: \${{ secrets.${APP_NAME}_FIREBASE_PROJECT_ID }}
 
 jobs:
   build-and-deploy:
@@ -720,7 +720,7 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: google-github-actions/auth@v1
         with:
-          credentials_json: \${{ secrets.RIZZPOS_GCP_SA_KEY }}
+          credentials_json: \${{ secrets.${APP_NAME}_GCP_SA_KEY }}
 
       # Deploy only on push to main
       - name: Deploy to Firebase
@@ -732,7 +732,7 @@ EOF
 
 echo "Created GitHub Actions workflow file at $WORKFLOW_FILE"
 echo "IMPORTANT: Make sure to add these secrets to your GitHub repository:"
-echo "  - RIZZPOS_FIREBASE_PROJECT_ID: Your Firebase project ID"
-echo "  - RIZZPOS_GCP_SA_KEY: Your Google Cloud service account key JSON"
+echo "  - FIREBASE_PROJECT_ID: Your Firebase project ID"
+echo "  - GCP_SA_KEY: Your Google Cloud service account key JSON"
 
 
