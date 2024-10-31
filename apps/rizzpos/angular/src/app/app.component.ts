@@ -11,4 +11,5 @@ import { IonRouterOutlet, IonApp } from '@ionic/angular/standalone';
 })
 export class AppComponent {
   title = 'RizzPOS';
+  test = 'test1';
 }
