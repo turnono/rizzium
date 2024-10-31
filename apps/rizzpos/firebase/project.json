@@ -77,9 +77,10 @@
       }
     },
     "deploy": {
-      "executor": "@simondotm/nx-firebase:deploy",
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
       "options": {
-        "config": "firebase.rizzpos-firebase.json"
+        "command": "nx run rizzpos-firebase:firebase deploy "
       }
     }
   }
