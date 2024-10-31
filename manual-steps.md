@@ -25,41 +25,52 @@ Before setting up service accounts, you need to:
 
 ### Required IAM Roles
 
-Your service account needs these roles:
+Your service account needs exactly these roles:
 
-- Cloud Functions Admin (`cloudfunctions.admin`)
+- Cloud Functions Admin
+- Cloud Storage for Firebase Admin
+- Firebase Admin
 - Firebase Admin SDK Administrator Service Agent
 - Firebase Authentication Admin
+- Firebase Extensions API Service Agent
+- Firebase Extensions Publisher - Extensions Admin
 - Firebase Hosting Admin
 - Firebase Realtime Database Admin
+- Firebase Rules Admin
 - Service Account Token Creator
 - Service Account User
-- Storage Admin (`storage.admin`)
-- Firebase Storage Admin
-- Cloud Storage Admin
-- Storage Object Admin (`storage.objectAdmin`)
-- Firebase Extensions Admin
-- Cloud Build Editor
-- Cloud Artifacts Reader
+- Storage Admin
+- Storage Object Admin
 
 To add these roles:
 
 1. Go to Google Cloud Console IAM (https://console.cloud.google.com/iam-admin/iam)
 2. Find your service account
 3. Click the edit (pencil) icon
-4. Add each required role
+4. Add each required role exactly as listed above
 5. Save changes
 
-Note: For Firebase deployments, ensure all required APIs are enabled:
+### Required APIs
 
-- `firebasestorage.googleapis.com`
-- `cloudfunctions.googleapis.com`
-- `cloudbuild.googleapis.com`
-- `artifactregistry.googleapis.com`
-- `firebaseextensions.googleapis.com`
+Ensure these APIs are enabled in your project:
 
-You can enable these APIs in the Google Cloud Console under:
-APIs & Services > Library
+1. Go to Google Cloud Console: https://console.cloud.google.com/apis/library
+2. Search for and enable each API:
+   - Cloud Functions API
+   - Cloud Storage API
+   - Cloud Build API
+   - Cloud Billing API
+   - Firebase Management API
+   - Firebase Extensions API
+   - Firebase Hosting API
+   - Firebase Rules API
+   - Identity and Access Management (IAM) API
+
+Note: The Cloud Billing API is especially important for deployments. To enable it:
+
+1. Go to https://console.cloud.google.com/apis/library/cloudbilling.googleapis.com
+2. Click "Enable"
+3. Ensure your project is linked to a billing account
 
 ## Adding Secrets to GitHub Repository
 

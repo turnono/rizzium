@@ -15,6 +15,37 @@ echo "If you haven't created a project yet, please visit: https://console.fireba
 echo "Create a new project or select an existing one before continuing."
 read -p "Press Enter to continue once you have confirmed your Firebase project is ready..."
 
+# Add after Firebase project creation warning
+echo "WARNING: Please ensure your service account has these exact roles:"
+echo "- Cloud Functions Admin"
+echo "- Cloud Storage for Firebase Admin"
+echo "- Firebase Admin"
+echo "- Firebase Admin SDK Administrator Service Agent"
+echo "- Firebase Authentication Admin"
+echo "- Firebase Extensions API Service Agent"
+echo "- Firebase Extensions Publisher - Extensions Admin"
+echo "- Firebase Hosting Admin"
+echo "- Firebase Realtime Database Admin"
+echo "- Firebase Rules Admin"
+echo "- Service Account Token Creator"
+echo "- Service Account User"
+echo "- Storage Admin"
+echo "- Storage Object Admin"
+echo ""
+echo "IMPORTANT: You must also enable these APIs:"
+echo "- Cloud Functions API"
+echo "- Cloud Storage API"
+echo "- Cloud Build API"
+echo "- Cloud Billing API (https://console.cloud.google.com/apis/library/cloudbilling.googleapis.com)"
+echo "- Firebase Management API"
+echo "- Firebase Extensions API"
+echo "- Firebase Hosting API"
+echo "- Firebase Rules API"
+echo "- Identity and Access Management (IAM) API"
+echo ""
+echo "Visit: https://console.cloud.google.com/apis/library"
+read -p "Press Enter once you have added all required roles and enabled all APIs..."
+
 # Collect necessary inputs
 APP_NAME=$(prompt "Enter your application name")
 
