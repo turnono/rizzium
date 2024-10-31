@@ -735,4 +735,8 @@ echo "IMPORTANT: Make sure to add these secrets to your GitHub repository:"
 echo "  - FIREBASE_PROJECT_ID: Your Firebase project ID"
 echo "  - GCP_SA_KEY: Your Google Cloud service account key JSON"
 
+# After Firebase project selection
+echo "Exporting Firestore indexes..."
+firebase --project="$APP_NAME" firestore:indexes > "apps/$APP_NAME/firebase/firestore.indexes.json"
+
 

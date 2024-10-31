@@ -27,14 +27,20 @@ Before setting up service accounts, you need to:
 
 Your service account needs these roles:
 
-- Cloud Functions Admin
+- Cloud Functions Admin (`cloudfunctions.admin`)
 - Firebase Admin SDK Administrator Service Agent
 - Firebase Authentication Admin
 - Firebase Hosting Admin
 - Firebase Realtime Database Admin
 - Service Account Token Creator
 - Service Account User
-- Storage Admin
+- Storage Admin (`storage.admin`)
+- Firebase Storage Admin
+- Cloud Storage Admin
+- Storage Object Admin (`storage.objectAdmin`)
+- Firebase Extensions Admin
+- Cloud Build Editor
+- Cloud Artifacts Reader
 
 To add these roles:
 
@@ -43,6 +49,17 @@ To add these roles:
 3. Click the edit (pencil) icon
 4. Add each required role
 5. Save changes
+
+Note: For Firebase deployments, ensure all required APIs are enabled:
+
+- `firebasestorage.googleapis.com`
+- `cloudfunctions.googleapis.com`
+- `cloudbuild.googleapis.com`
+- `artifactregistry.googleapis.com`
+- `firebaseextensions.googleapis.com`
+
+You can enable these APIs in the Google Cloud Console under:
+APIs & Services > Library
 
 ## Adding Secrets to GitHub Repository
 
@@ -72,3 +89,21 @@ After setting up the project, you'll need to:
 
 1. Get your Firebase config object from Project Settings > General > Your Apps
 2. Add this config to your app's `firebase-config.ts` file
+
+### Managing Firestore Indexes
+
+To get current Firestore indexes from your project:
+
+```bash
+# Export current indexes to firestore.indexes.json
+firebase firestore:indexes > apps/your-app-name/firebase/firestore.indexes.json
+
+# For specific project/app
+firebase --project=your-project-id firestore:indexes > apps/your-app-name/firebase/firestore.indexes.json
+```
+
+For RizzPOS example:
+
+```bash
+firebase --project=rizzpos firestore:indexes > apps/rizzpos/firebase/firestore.indexes.json
+```
