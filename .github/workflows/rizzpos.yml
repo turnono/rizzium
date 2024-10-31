@@ -81,4 +81,4 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           echo "Deploying to Firebase..."
-          firebase deploy --only hosting,functions --project "${{ env.FIREBASE_PROJECT_ID }}"
+          nx deploy ${{ env.APP_NAME }}-firebase
