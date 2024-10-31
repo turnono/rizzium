@@ -11,7 +11,7 @@ on:
     paths:
       - 'apps/rizzpos/**'
       - 'libs/shared/**'
-      - 'firebase.rizzpos-firebase.json' # also if change in rizzpos.yml, change in setup-app.sh, firebase.rizzpos-firebase.json
+      - 'firebase.rizzpos-firebase.json'
       - '.github/workflows/rizzpos.yml'
       - 'setup-app.sh'
       - 'package.json'
