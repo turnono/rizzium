@@ -1,16 +1,12 @@
 name: RizzPOS CI/CD
 
 on:
-  push:
+  pull_request:
     branches:
       - main
     paths:
       - 'apps/rizzpos/**' # Only the rizzpos app
       - 'libs/shared/**' # Shared libraries used by rizzpos
-  pull_request:
-    paths:
-      - 'apps/rizzpos/**'
-      - 'libs/shared/**'
       - 'firebase.rizzpos-firebase.json'
       - '.github/workflows/rizzpos.yml'
       - 'setup-app.sh'
