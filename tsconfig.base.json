@@ -22,7 +22,8 @@
       "@rizzium/shared/ui/atoms": ["libs/shared/ui/atoms/src/index.ts"],
       "@rizzium/shared/ui/molecules": ["libs/shared/ui/molecules/src/index.ts"],
       "@rizzium/shared/ui/organisms": ["libs/shared/ui/organisms/src/index.ts"],
-      "@rizzium/shared/ui/templates": ["libs/shared/ui/templates/src/index.ts"]
+      "@rizzium/shared/ui/templates": ["libs/shared/ui/templates/src/index.ts"],
+      "@rizzium/swarm-agents": ["libs/shared/swarm-agents/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
