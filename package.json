@@ -17,8 +17,8 @@
     "@angular/platform-browser-dynamic": "~18.2.0",
     "@angular/router": "~18.2.0",
     "@capacitor/core": "6.1.2",
-    "@ionic/angular": "latest",
     "dayjs": "^1.11.13",
+    "dotenv": "^16.4.5",
     "firebase": "^10.10.0",
     "firebase-admin": "^11.11.1",
     "firebase-functions": "^5.0.1",
@@ -27,7 +27,7 @@
     "rxjs": "~7.8.0",
     "uuid": "^10.0.0",
     "zone.js": "~0.14.3",
-    "dotenv": "^16.4.5"
+    "@ionic/angular": "latest"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "~18.2.0",
@@ -40,7 +40,7 @@
     "@eslint/js": "^9.8.0",
     "@faker-js/faker": "^9.0.3",
     "@firebase/rules-unit-testing": "^3.0.4",
-    "@ionic/angular": "^8.3.3",
+    "@ionic/angular": "^8.4.0",
     "@ionic/angular-toolkit": "12.1.1",
     "@nx/angular": "19.8.3",
     "@nx/cypress": "19.8.3",
