@@ -71,11 +71,8 @@ jobs:
         with:
           credentials_json: ${{ secrets.HMNUJKJGGXSDX_GCP_SA_KEY }}
 
-      # Deploy on PR to main
+      # Deploy
       - name: Deploy to Firebase
         run: |
           echo "Deploying to Firebase..."
-          echo "Deploying ${{ env.APP_NAME }}-firebase"
-          echo "secrets: ${{ secrets.HMNUJKJGGXSDX_GCP_SA_KEY }}"
-          echo "projectId: ${{ secrets.HMNUJKJGGXSDX_FIREBASE_PROJECT_ID }}"
-          npx nx deploy ${{ env.APP_NAME }}-firebase --verbose
+          npx nx deploy ${{ env.APP_NAME }}-firebase
