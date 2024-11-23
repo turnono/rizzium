@@ -75,6 +75,20 @@ jobs:
 
       # Deploy
       - name: Deploy to Firebase
+        env:
+          DEBUG: '*'
+          FIREBASE_DEBUG: true
         run: |
-          echo "Deploying to Firebase..."
-          npx nx deploy ${{ env.APP_NAME }}-firebase
+          echo "Starting deployment with debug info..."
+          echo "Project ID: $FIREBASE_PROJECT_ID"
+
+          # Verify Firebase CLI
+          firebase --version
+
+          # List Firebase projects to verify auth
+          echo "Verifying Firebase authentication..."
+          firebase projects:list
+
+          # Run deployment with verbose flag
+          echo "Running nx deploy..."
+          npx nx deploy ${{ env.APP_NAME }}-firebase --verbose
