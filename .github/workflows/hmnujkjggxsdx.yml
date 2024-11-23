@@ -1,0 +1,80 @@
+name: hmnujkjggxsdx CI/CD
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'apps/hmnujkjggxsdx/**' # Only the app
+      - 'libs/shared/**' # Shared libraries used by app
+      - 'firebase.hmnujkjggxsdx-firebase.json'
+      - '.github/workflows/hmnujkjggxsdx.yml'
+      - 'setup-app.sh'
+      - 'package.json'
+env:
+  APP_NAME: hmnujkjggxsdx
+  FIREBASE_PROJECT_ID: ${{ secrets.HMNUJKJGGXSDX_FIREBASE_PROJECT_ID }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Cache
+        uses: actions/cache@v4.1.2
+        with:
+          path: |
+            ~/.npm
+            node_modules
+            .nx/cache
+            dist
+          key: ${{ runner.os }}-${{ env.APP_NAME }}-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**/*.ts') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ env.APP_NAME }}-
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools@13.16.0
+
+      - name: Connect to Nx Cloud
+        run: npx nx connect-to-nx-cloud
+
+      - uses: nrwl/nx-set-shas@v4
+
+      # Build Angular app - NX will handle all dependencies
+      - name: Build Angular app
+        run: npx nx build ${{ env.APP_NAME }} --prod
+
+      # Build Firebase components - NX will handle all dependencies
+      - name: Build Firebase
+        run: |
+          echo "Building firebase project..."
+          npx nx build ${{ env.APP_NAME }}-firebase --verbose
+
+          echo "Building all Firebase functions..."
+          npx nx run-many --target=build --projects=tag:firebase:dep:${{ env.APP_NAME }}-firebase --verbose
+
+      # Authenticate with service account
+      - name: Authenticate to Google Cloud
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.HMNUJKJGGXSDX_GCP_SA_KEY }}
+
+      # Deploy only on push to main
+      - name: Deploy to Firebase
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          echo "Deploying to Firebase..."
+          npx nx deploy ${{ env.APP_NAME }}-firebase
