@@ -10,5 +10,5 @@ import { IonRouterOutlet, IonApp } from '@ionic/angular/standalone';
   styleUrl: './app.component.scss',
 })
 export class AppComponent {
-  title = 'hmnujkjggxsdx';
+  title = 'TESTTSTSTS';
 }
