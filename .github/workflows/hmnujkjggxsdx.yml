@@ -75,27 +75,21 @@ jobs:
 
       # Deploy
       - name: Deploy to Firebase
-        env:
-          DEBUG: '*'
-          FIREBASE_DEBUG: true
         run: |
           echo "Starting deployment with debug info..."
 
-          # Print environment info
-          echo "Firebase CLI version:"
+          # Print Firebase debug info
           firebase --version
-
-          # Test Firebase authentication
-          echo "Testing Firebase authentication..."
           firebase projects:list
 
-          # Run deployment with maximum verbosity
-          echo "Running deployment..."
-          npx nx deploy ${{ env.APP_NAME }}-firebase --verbose 2>&1 | tee deploy.log
+          # Run deployment with maximum verbosity and debug flags
+          FIREBASE_DEBUG=true DEBUG="@firebase/*" npx nx deploy ${{ env.APP_NAME }}-firebase --verbose
 
-          # If deployment fails, show the last few lines of the log
+          # If deployment fails, check Firebase debug log
           if [ $? -ne 0 ]; then
-            echo "Deployment failed. Last 50 lines of deploy.log:"
-            tail -n 50 deploy.log
+            echo "Deployment failed. Firebase debug log:"
+            cat firebase-debug.log
             exit 1
           fi
+        env:
+          DEBUG: '*'
