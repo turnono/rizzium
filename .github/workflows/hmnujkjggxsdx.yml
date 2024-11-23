@@ -73,32 +73,42 @@ jobs:
         with:
           credentials_json: ${{ secrets.HMNUJKJGGXSDX_GCP_SA_KEY }}
 
-      # Deploy
-      - name: Deploy to Firebase
+      # Setup and Verify GCP Credentials
+      - name: Setup and Verify GCP Credentials
         run: |
-          echo "Checking GCP credentials file..."
-          if [ -f "$GOOGLE_APPLICATION_CREDENTIALS" ]; then
-            echo "GCP credentials file exists"
-            ls -l $GOOGLE_APPLICATION_CREDENTIALS
-            # Print service account email (safely)
-            jq -r '.client_email' $GOOGLE_APPLICATION_CREDENTIALS
+          # Create credentials file
+          echo "${{ secrets.HMNUJKJGGXSDX_GCP_SA_KEY }}" > /tmp/gcp.base64
+
+          # Check base64 content (first few chars safely)
+          echo "First few chars of base64: $(head -c 10 /tmp/gcp.base64)..."
+
+          # Attempt to decode
+          cat /tmp/gcp.base64 | base64 -d > /tmp/gcp.json || {
+            echo "Failed to decode base64"
+            echo "Input appears to be invalid base64"
+            exit 1
+          }
+
+          # Verify JSON structure
+          if jq -e . >/dev/null 2>&1 < /tmp/gcp.json; then
+            echo "✓ Valid JSON structure"
+            echo "✓ Service account email: $(jq -r .client_email /tmp/gcp.json)"
+            echo "✓ Project ID: $(jq -r .project_id /tmp/gcp.json)"
+            chmod 600 /tmp/gcp.json
           else
-            echo "GCP credentials file missing!"
+            echo "× Invalid JSON structure"
+            exit 1
           fi
 
-          echo "Testing Firebase CLI access..."
-          firebase projects:list
-
-          echo "Checking environment variables..."
-          echo "Project ID: $HMNUJKJGGXSDX_FIREBASE_PROJECT_ID"
-          echo "APP_NAME: $APP_NAME"
-
-          echo "Running deployment with verbose logging..."
-          npx nx deploy $APP_NAME-firebase --verbose
+      # Deploy
+      - name: Deploy to Firebase
+        if: success()
+        run: |
+          echo "Using service account from: $GOOGLE_APPLICATION_CREDENTIALS"
+          npx nx deploy ${{ env.APP_NAME }}-firebase --verbose
         env:
-          APP_NAME: ${{ env.APP_NAME }}
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/gcp.json
-          HMNUJKJGGXSDX_FIREBASE_PROJECT_ID: ${{ secrets.HMNUJKJGGXSDX_FIREBASE_PROJECT_ID }}
-          HMNUJKJGGXSDX_GCP_SA_KEY: ${{ secrets.HMNUJKJGGXSDX_GCP_SA_KEY }}
+          FIREBASE_PROJECT_ID: ${{ secrets.HMNUJKJGGXSDX_FIREBASE_PROJECT_ID }}
+          APP_NAME: ${{ env.APP_NAME }}
           DEBUG: '*'
           FIREBASE_DEBUG: true
