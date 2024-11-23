@@ -3,6 +3,16 @@
 # Exit immediately if a command exits with a non-zero status
 set -e
 
+echo "Initializing Firebase Setup Agent..."
+npx tsx libs/shared/swarm-agents/src/lib/cli/setup-firebase.ts
+
+# Add this function near the top of the file
+get_package_version() {
+  local package=$1
+  local version=$(node -p "require('./package.json').dependencies['$package'] || require('./package.json').devDependencies['$package']" 2>/dev/null)
+  echo ${version//[\"\']/}
+}
+
 # Function to prompt for input
 prompt() {
   read -p "$1: " INPUT
@@ -46,11 +56,28 @@ echo ""
 echo "Visit: https://console.cloud.google.com/apis/library"
 read -p "Press Enter once you have added all required roles and enabled all APIs..."
 
-# Collect necessary inputs
-APP_NAME=$(prompt "Enter your application name")
+# Get the project name from user input
+echo "Please enter your project name (lowercase, no spaces):"
+read APP_NAME
+APP_NAME=$(echo "$APP_NAME" | tr '[:upper:]' '[:lower:]' | tr -d ' ')
+
+if [ -z "$APP_NAME" ]; then
+  echo "Failed to get project name from Firebase setup"
+  exit 1
+fi
+
+echo "Using project name: $APP_NAME"
 
 # Generate Angular application inside apps/{app-name}/angular
-nx generate @nx/angular:app "$APP_NAME" --directory=apps/"$APP_NAME" --projectNameAndRootFormat=as-provided
+nx generate @nx/angular:app "$APP_NAME" \
+  --directory=apps/"$APP_NAME" \
+  --projectNameAndRootFormat=as-provided \
+  --bundler=esbuild \
+  --ssr=false \
+  --standalone \
+  --routing=true \
+  --style=scss \
+  --no-interactive
 # then move public, src folders and all files, except the firebase and functions folders to apps/{app-name}/angular
 
 
@@ -258,13 +285,15 @@ echo "Added initial function code and package.json for the Firebase function."
 # Ask user if they want to install Angular Material
 read -p "Do you want to install Angular Material? (y/n): " install_material
 if [ "$install_material" = "y" ]; then
-  nx add @angular/material --project="$APP_NAME"
+  MATERIAL_VERSION=$(get_package_version "@angular/material")
+  nx add @angular/material@18.2.9 --project="$APP_NAME"
 fi
 
 # Ask user if they want to install Ionic
 read -p "Do you want to install Ionic? (y/n): " install_ionic
 if [ "$install_ionic" = "y" ]; then
-  nx add @ionic/angular --project="$APP_NAME"
+  IONIC_VERSION=$(get_package_version "@ionic/angular")
+  nx add @ionic/angular@8.4.0 --project="$APP_NAME"
 
   # Update app.component.ts
   sed -i '' 's/import { Component } from '"'"'@angular\/core'"'"';/import { Component } from '"'"'@angular\/core'"'"';\nimport { CommonModule } from '"'"'@angular\/common'"'"';\nimport { IonRouterOutlet, IonApp } from '"'"'@ionic\/angular\/standalone'"'"';/' "apps/$APP_NAME/angular/src/app/app.component.ts"
@@ -653,48 +682,46 @@ EOF
 
 echo "Created/updated $FIREBASE_JSON with correct hosting public path and functions configuration."
 
-# Build the Angular application and functions
+# After Firebase setup and before deployment
+echo "Building Angular application and Firebase functions..."
 nx build "$APP_NAME" --prod
 nx build "${APP_NAME}-firebase"
+nx build "${APP_NAME}-functions-user"
 
-echo "Build completed successfully."
-
+# Then deploy
+echo "Deploying to Firebase..."
 firebase login
 firebase use --add
 
 echo "make sure to use the exact name of the project as you entered it above"
-# # Deploy Firebase application and functions
-# # Ensure that the Firebase project is linked via 'firebase use' before deploying
 nx deploy "${APP_NAME}-firebase"
-nx deploy "${APP_NAME}-functions-user"
-
-echo "Deploy completed successfully."
 
 # Create GitHub Actions workflow directory and file
 WORKFLOW_DIR=".github/workflows"
 mkdir -p "$WORKFLOW_DIR"
 
+# Convert APP_NAME to uppercase for secrets
+UPPERCASE_APP_NAME=$(echo "$APP_NAME" | tr '[:lower:]' '[:upper:]')
+
 # Create the workflow file for the app
 WORKFLOW_FILE="$WORKFLOW_DIR/${APP_NAME}.yml"
 cat << EOF > "$WORKFLOW_FILE"
-name: ${APP_NAME^} CI/CD
+name: ${APP_NAME} CI/CD
 
 on:
-  push:
+  pull_request:
     branches:
       - main
     paths:
-      - 'apps/${APP_NAME}/**'  # Only this app
-      - 'libs/shared/**'    # Shared libraries used by app
+      - 'apps/${APP_NAME}/**' # Only the app
+      - 'libs/shared/**' # Shared libraries used by app
+      - 'firebase.${APP_NAME}-firebase.json'
       - '.github/workflows/${APP_NAME}.yml'
-  pull_request:
-    paths:
-      - 'apps/${APP_NAME}/**'
-      - 'libs/shared/**'
-
+      - 'setup-app.sh'
+      - 'package.json'
 env:
   APP_NAME: ${APP_NAME}
-  FIREBASE_PROJECT_ID: \${{ secrets.${APP_NAME}_FIREBASE_PROJECT_ID }}
+  FIREBASE_PROJECT_ID: \${{ secrets.${UPPERCASE_APP_NAME}_FIREBASE_PROJECT_ID }}
 
 jobs:
   build-and-deploy:
@@ -751,23 +778,18 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: google-github-actions/auth@v1
         with:
-          credentials_json: \${{ secrets.${APP_NAME}_GCP_SA_KEY }}
+          credentials_json: \${{ secrets.${UPPERCASE_APP_NAME}_GCP_SA_KEY }}
 
       # Deploy only on push to main
       - name: Deploy to Firebase
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           echo "Deploying to Firebase..."
-          firebase deploy --only hosting,functions --project "\${{ env.FIREBASE_PROJECT_ID }}"
+          npx nx deploy \${{ env.APP_NAME }}-firebase
 EOF
 
 echo "Created GitHub Actions workflow file at $WORKFLOW_FILE"
 echo "IMPORTANT: Make sure to add these secrets to your GitHub repository:"
 echo "  - FIREBASE_PROJECT_ID: Your Firebase project ID"
 echo "  - GCP_SA_KEY: Your Google Cloud service account key JSON"
-
-# After Firebase project selection
-echo "Exporting Firestore indexes..."
-firebase --project="$APP_NAME" firestore:indexes > "apps/$APP_NAME/firebase/firestore.indexes.json"
-
 

@@ -18,6 +18,7 @@
       "@rizzium/shared/guards": ["libs/shared/guards/src/index.ts"],
       "@rizzium/shared/interfaces": ["libs/shared/interfaces/src/index.ts"],
       "@rizzium/shared/services": ["libs/shared/services/src/index.ts"],
+      "@rizzium/shared/swarm-agents": ["libs/shared/swarm-agents/src/index.ts"],
       "@rizzium/shared/ui": ["libs/shared/ui/src/index.ts"],
       "@rizzium/shared/ui/atoms": ["libs/shared/ui/atoms/src/index.ts"],
       "@rizzium/shared/ui/molecules": ["libs/shared/ui/molecules/src/index.ts"],

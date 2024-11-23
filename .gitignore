@@ -53,3 +53,9 @@ pubsub-debug.log
 ui-debug.log
 firebase-export*
 .secret.local
+
+# Environment variables
+.env
+.env.local
+.env.*
+!.env.example

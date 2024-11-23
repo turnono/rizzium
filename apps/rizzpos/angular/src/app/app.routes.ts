@@ -7,11 +7,6 @@ import { BusinessPageComponent } from './pages/business/business.page';
 import { ProductManagementComponent } from './pages/product-management/product-management.page';
 import { AuthGuard } from '@rizzium/shared/guards';
 import { NotAuthGuard } from './guards/not-auth.guard';
-import { InventoryPageComponent } from './pages/inventory/inventory.page';
-import { SalesPageComponent } from './pages/sales/sales.page';
-import { ReportsPageComponent } from './pages/reports/reports.page';
-import { BusinessUserManagementPageComponent } from './pages/business-user-management/business-user-management.page';
-import { CustomerDashboardPageComponent } from './pages/customer-dashboard/customer-dashboard.page';
 
 export const routes: Route[] = [
   { path: '', redirectTo: '/home', pathMatch: 'full' },
@@ -34,36 +29,27 @@ export const routes: Route[] = [
       { path: 'products', component: ProductManagementComponent },
       {
         path: 'sales',
-        loadComponent: () =>
-          import('./pages/sales/sales.page').then((m) => m.SalesPageComponent),
+        loadComponent: () => import('./pages/sales/sales.page').then((m) => m.SalesPageComponent),
       },
       {
         path: 'inventory',
-        loadComponent: () =>
-          import('./pages/inventory/inventory.page').then(
-            (m) => m.InventoryPageComponent
-          ),
+        loadComponent: () => import('./pages/inventory/inventory.page').then((m) => m.InventoryPageComponent),
       },
       {
         path: 'customer-dashboard',
         loadComponent: () =>
-          import('./pages/customer-dashboard/customer-dashboard.page').then(
-            (m) => m.CustomerDashboardPageComponent
-          ),
+          import('./pages/customer-dashboard/customer-dashboard.page').then((m) => m.CustomerDashboardPageComponent),
       },
       {
         path: 'reports',
-        loadComponent: () =>
-          import('./pages/reports/reports.page').then(
-            (m) => m.ReportsPageComponent
-          ),
+        loadComponent: () => import('./pages/reports/reports.page').then((m) => m.ReportsPageComponent),
       },
       {
         path: 'user-management',
         loadComponent: () =>
-          import(
-            './pages/business-user-management/business-user-management.page'
-          ).then((m) => m.BusinessUserManagementPageComponent),
+          import('./pages/business-user-management/business-user-management.page').then(
+            (m) => m.BusinessUserManagementPageComponent
+          ),
       },
     ],
   },
