@@ -611,6 +611,29 @@ else
   echo "Warning: project.json not found in the Angular project."
 fi
 
+# Update build target in firebase project.json
+FIREBASE_PROJECT_JSON="apps/$APP_NAME/firebase/project.json"
+if [ -f "$FIREBASE_PROJECT_JSON" ]; then
+  # Use sed to replace the entire "build" target
+  sed -i '' '/"build": {/,/},/c\
+    "build": {\
+      "executor": "nx:run-commands",\
+      "cache": true,\
+      "options": {\
+        "commands": [\
+          "nx run-many --target=build --projects=tag:firebase:dep:'"$APP_NAME"'-firebase",\
+          "echo Build succeeded for all functions."\
+        ],\
+        "parallel": true\
+      }\
+    },' "$FIREBASE_PROJECT_JSON"
+
+  echo "Updated build target in firebase project.json"
+else
+  echo "Warning: project.json not found in the Firebase project."
+fi
+
+
 
 # Create or update firebase.json
 FIREBASE_JSON="firebase.${APP_NAME}-firebase.json"
@@ -791,5 +814,5 @@ EOF
 echo "Created GitHub Actions workflow file at $WORKFLOW_FILE"
 echo "IMPORTANT: Make sure to add these secrets to your GitHub repository:"
 echo "  - FIREBASE_PROJECT_ID: Your Firebase project ID"
-echo "  - GCP_SA_KEY: Your Google Cloud service account key JSON"
+echo "  - GCP_SA_KEY: Your Google Cloud service account key JSON. (check bottom of README.md for more details)"
 

@@ -291,3 +291,74 @@ For RizzPOS example:
 ```bash
 firebase --project=rizzpos firestore:indexes > apps/rizzpos/firebase/firestore.indexes.json
 ```
+
+# Firebase Service Account Setup for CI/CD
+
+## Overview
+
+This document outlines the required steps for setting up Firebase service accounts for CI/CD deployments in our monorepo. The setup has been verified to work with our current GitHub Actions workflow.
+
+## Required Service Account Permissions
+
+The minimum required permissions for successful deployment are:
+
+- Cloud Functions Admin
+- Cloud Storage for Firebase Admin
+- Firebase Admin
+- Firebase Authentication Admin
+- Firebase Hosting Admin
+- Firestore Service Agent
+- Service Account User
+
+## Setup Process
+
+1. Create Service Account:
+
+   ```
+   https://console.cloud.google.com/iam-admin/iam?project=[YOUR-PROJECT-ID]
+   ```
+
+2. Generate and download service account key (JSON format)
+
+3. Add to GitHub Secrets as: `[PROJECT_NAME]_GCP_SA_KEY`
+
+### Option 2: Nx Cloud Debugging
+
+- Requires temporary public repository access
+- Provides detailed deployment logs at: `https://cloud.nx.app/runs/[run-id]`
+- Should only be used for debugging purposes
+
+## Security Considerations
+
+Reference our security guidelines:
+
+```markdown:GETTING_STARTED.md
+startLine: 187
+endLine: 192
+```
+
+## Troubleshooting
+
+Common issues and solutions:
+
+1. Invalid JWT Signature
+
+   - Verify the entire service account JSON is properly copied to GitHub Secrets
+   - Ensure no formatting issues in the JSON
+
+2. Permission Denied
+
+   - Verify all required permissions are assigned
+   - Check if all necessary APIs are enabled
+
+3. Deployment Fails
+   - Enable debug logging as shown in the GitHub Actions implementation
+   - Temporarily make repository public to access Nx Cloud logs
+   - Check Firebase Console for additional error details
+
+## Future Improvements
+
+1. Automate service account creation and permission assignment
+2. Create validation scripts for service account permissions
+3. Implement service account key rotation
+4. Develop automated API enablement process
