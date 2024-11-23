@@ -14,6 +14,8 @@ on:
 env:
   APP_NAME: hmnujkjggxsdx
   FIREBASE_PROJECT_ID: ${{ secrets.HMNUJKJGGXSDX_FIREBASE_PROJECT_ID }}
+  ACTIONS_RUNNER_DEBUG: true # Enable runner diagnostic logging
+  ACTIONS_STEP_DEBUG: true # Enable step debug logging
 
 jobs:
   build-and-deploy:
