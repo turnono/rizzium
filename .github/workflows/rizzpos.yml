@@ -67,14 +67,12 @@ jobs:
 
       # Authenticate with service account
       - name: Authenticate to Google Cloud
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: google-github-actions/auth@v1
         with:
           credentials_json: ${{ secrets.RIZZPOS_GCP_SA_KEY }}
 
       # Deploy only on push to main
       - name: Deploy to Firebase
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           echo "Deploying to Firebase..."
           npx nx deploy ${{ env.APP_NAME }}-firebase
