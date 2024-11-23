@@ -75,4 +75,4 @@ jobs:
       - name: Deploy to Firebase
         run: |
           echo "Deploying to Firebase..."
-          npx nx deploy ${{ env.APP_NAME }}-firebase
+          npx nx deploy ${{ env.APP_NAME }}-firebase --verbose
