@@ -65,16 +65,14 @@ jobs:
           echo "Building all Firebase functions..."
           npx nx run-many --target=build --projects=tag:firebase:dep:${{ env.APP_NAME }}-firebase --verbose
 
-      # Authenticate with service account
+      # Authenticate with service account - now runs on PR
       - name: Authenticate to Google Cloud
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: google-github-actions/auth@v1
         with:
           credentials_json: ${{ secrets.HMNUJKJGGXSDX_GCP_SA_KEY }}
 
-      # Deploy only on push to main
+      # Deploy on PR to main
       - name: Deploy to Firebase
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           echo "Deploying to Firebase..."
           npx nx deploy ${{ env.APP_NAME }}-firebase
