@@ -76,5 +76,29 @@ jobs:
       # Deploy
       - name: Deploy to Firebase
         run: |
-          echo "Deploying to Firebase..."
-          npx nx deploy ${{ env.APP_NAME }}-firebase
+          echo "Checking GCP credentials file..."
+          if [ -f "$GOOGLE_APPLICATION_CREDENTIALS" ]; then
+            echo "GCP credentials file exists"
+            ls -l $GOOGLE_APPLICATION_CREDENTIALS
+            # Print service account email (safely)
+            jq -r '.client_email' $GOOGLE_APPLICATION_CREDENTIALS
+          else
+            echo "GCP credentials file missing!"
+          fi
+
+          echo "Testing Firebase CLI access..."
+          firebase projects:list
+
+          echo "Checking environment variables..."
+          echo "Project ID: $HMNUJKJGGXSDX_FIREBASE_PROJECT_ID"
+          echo "APP_NAME: $APP_NAME"
+
+          echo "Running deployment with verbose logging..."
+          npx nx deploy $APP_NAME-firebase --verbose
+        env:
+          APP_NAME: ${{ env.APP_NAME }}
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/gcp.json
+          HMNUJKJGGXSDX_FIREBASE_PROJECT_ID: ${{ secrets.HMNUJKJGGXSDX_FIREBASE_PROJECT_ID }}
+          HMNUJKJGGXSDX_GCP_SA_KEY: ${{ secrets.HMNUJKJGGXSDX_GCP_SA_KEY }}
+          DEBUG: '*'
+          FIREBASE_DEBUG: true
