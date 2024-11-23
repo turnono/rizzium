@@ -80,15 +80,22 @@ jobs:
           FIREBASE_DEBUG: true
         run: |
           echo "Starting deployment with debug info..."
-          echo "Project ID: $FIREBASE_PROJECT_ID"
 
-          # Verify Firebase CLI
+          # Print environment info
+          echo "Firebase CLI version:"
           firebase --version
 
-          # List Firebase projects to verify auth
-          echo "Verifying Firebase authentication..."
+          # Test Firebase authentication
+          echo "Testing Firebase authentication..."
           firebase projects:list
 
-          # Run deployment with verbose flag
-          echo "Running nx deploy..."
-          npx nx deploy ${{ env.APP_NAME }}-firebase --verbose
+          # Run deployment with maximum verbosity
+          echo "Running deployment..."
+          npx nx deploy ${{ env.APP_NAME }}-firebase --verbose 2>&1 | tee deploy.log
+
+          # If deployment fails, show the last few lines of the log
+          if [ $? -ne 0 ]; then
+            echo "Deployment failed. Last 50 lines of deploy.log:"
+            tail -n 50 deploy.log
+            exit 1
+          fi
