@@ -745,6 +745,8 @@ on:
 env:
   APP_NAME: ${APP_NAME}
   FIREBASE_PROJECT_ID: \${{ secrets.${UPPERCASE_APP_NAME}_FIREBASE_PROJECT_ID }}
+  ACTIONS_RUNNER_DEBUG: true # Enable runner diagnostic logging
+  ACTIONS_STEP_DEBUG: true # Enable step debug logging
 
 jobs:
   build-and-deploy:
@@ -798,21 +800,33 @@ jobs:
 
       # Authenticate with service account
       - name: Authenticate to Google Cloud
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: google-github-actions/auth@v1
         with:
           credentials_json: \${{ secrets.${UPPERCASE_APP_NAME}_GCP_SA_KEY }}
 
-      # Deploy only on push to main
+      # Deploy
       - name: Deploy to Firebase
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          echo "Deploying to Firebase..."
-          npx nx deploy \${{ env.APP_NAME }}-firebase
+          echo "Starting deployment with debug info..."
+
+          # Print Firebase debug info
+          firebase --version
+          firebase projects:list
+
+          # Run deployment with maximum verbosity and debug flags
+          FIREBASE_DEBUG=true DEBUG="@firebase/*" npx nx deploy \${{ env.APP_NAME }}-firebase --verbose
+
+          # If deployment fails, check Firebase debug log
+          if [ \$? -ne 0 ]; then
+            echo "Deployment failed. Firebase debug log:"
+            cat firebase-debug.log
+            exit 1
+          fi
+        env:
+          DEBUG: '*'
 EOF
 
 echo "Created GitHub Actions workflow file at $WORKFLOW_FILE"
 echo "IMPORTANT: Make sure to add these secrets to your GitHub repository:"
 echo "  - FIREBASE_PROJECT_ID: Your Firebase project ID"
 echo "  - GCP_SA_KEY: Your Google Cloud service account key JSON. (check bottom of README.md for more details)"
-

@@ -14,6 +14,8 @@ on:
 env:
   APP_NAME: rizzpos
   FIREBASE_PROJECT_ID: ${{ secrets.RIZZPOS_FIREBASE_PROJECT_ID }}
+  ACTIONS_RUNNER_DEBUG: true # Enable runner diagnostic logging
+  ACTIONS_STEP_DEBUG: true # Enable step debug logging
 
 jobs:
   build-and-deploy:
@@ -71,8 +73,23 @@ jobs:
         with:
           credentials_json: ${{ secrets.RIZZPOS_GCP_SA_KEY }}
 
-      # Deploy only on push to main
+      # Deploy
       - name: Deploy to Firebase
         run: |
-          echo "Deploying to Firebase..."
-          npx nx deploy ${{ env.APP_NAME }}-firebase
+          echo "Starting deployment with debug info..."
+
+          # Print Firebase debug info
+          firebase --version
+          firebase projects:list
+
+          # Run deployment with maximum verbosity and debug flags
+          FIREBASE_DEBUG=true DEBUG="@firebase/*" npx nx deploy ${{ env.APP_NAME }}-firebase --verbose
+
+          # If deployment fails, check Firebase debug log
+          if [ $? -ne 0 ]; then
+            echo "Deployment failed. Firebase debug log:"
+            cat firebase-debug.log
+            exit 1
+          fi
+        env:
+          DEBUG: '*'
