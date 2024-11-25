@@ -56,7 +56,7 @@ jobs:
 
       # Build Angular app - NX will handle all dependencies
       - name: Build Angular app
-        run: npx nx reset &&npx nx build ${{ env.APP_NAME }} --prod
+        run: npx nx reset && npx nx build ${{ env.APP_NAME }} --prod --verbose
 
       # Build Firebase components - NX will handle all dependencies
       - name: Build Firebase
