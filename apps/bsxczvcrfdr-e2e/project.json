@@ -1,0 +1,10 @@
+{
+  "name": "bsxczvcrfdr-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/bsxczvcrfdr-e2e/src",
+  "tags": [],
+  "implicitDependencies": ["bsxczvcrfdr"],
+  "// targets": "to see all targets run: nx show project bsxczvcrfdr-e2e --web",
+  "targets": {}
+}

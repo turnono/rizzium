@@ -1,0 +1,50 @@
+{
+  "name": "bsxczvcrfdr-functions-user",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/bsxczvcrfdr/functions/user/src",
+  "projectType": "application",
+  "tags": ["firebase:function", "firebase:name:bsxczvcrfdr-functions-user", "firebase:dep:bsxczvcrfdr-firebase"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/bsxczvcrfdr/functions/user",
+        "main": "apps/bsxczvcrfdr/functions/user/src/main.ts",
+        "tsConfig": "apps/bsxczvcrfdr/functions/user/tsconfig.app.json",
+        "assets": [
+          "apps/bsxczvcrfdr/functions/user/src/assets",
+          {
+            "glob": "**/*",
+            "input": "apps/bsxczvcrfdr/firebase/environment",
+            "output": "."
+          }
+        ],
+        "generatePackageJson": true,
+        "platform": "node",
+        "bundle": true,
+        "thirdParty": false,
+        "dependenciesFieldType": "dependencies",
+        "target": "node16",
+        "format": ["esm"],
+        "esbuildOptions": {
+          "logLevel": "info"
+        }
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/bsxczvcrfdr/functions/user/jest.config.ts"
+      }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nx run bsxczvcrfdr-firebase:deploy --only functions:bsxczvcrfdr-functions-user"
+      },
+      "dependsOn": ["build"]
+    }
+  }
+}

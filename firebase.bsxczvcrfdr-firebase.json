@@ -1,0 +1,63 @@
+{
+  "firestore": {
+    "rules": "apps/bsxczvcrfdr/firebase/firestore.rules",
+    "indexes": "apps/bsxczvcrfdr/firebase/firestore.indexes.json"
+  },
+  "hosting": {
+    "public": "dist/apps/bsxczvcrfdr/angular/browser",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  },
+  "storage": {
+    "rules": "apps/bsxczvcrfdr/firebase/storage.rules"
+  },
+  "functions": [
+    {
+      "source": "dist/apps/bsxczvcrfdr/functions/user",
+      "codebase": "bsxczvcrfdr-functions-user",
+      "runtime": "nodejs18",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ]
+    }
+  ],
+  "emulators": {
+    "auth": {
+      "port": 9099
+    },
+    "functions": {
+      "port": 5003
+    },
+    "firestore": {
+      "port": 8278
+    },
+    "database": {
+      "port": 9323
+    },
+    "hosting": {
+      "port": 5004
+    },
+    "pubsub": {
+      "port": 8178
+    },
+    "storage": {
+      "port": 9199
+    },
+    "eventarc": {
+      "port": 9299
+    },
+    "ui": {
+      "enabled": true
+    },
+    "singleProjectMode": true
+  }
+}
