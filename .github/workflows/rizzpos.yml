@@ -50,13 +50,13 @@ jobs:
         run: npm install -g firebase-tools@13.16.0
 
       - name: Connect to Nx Cloud
-        run: npx nx reset && npx nx connect-to-nx-cloud
+        run: npx nx connect-to-nx-cloud
 
       - uses: nrwl/nx-set-shas@v4
 
       # Build Angular app - NX will handle all dependencies
       - name: Build Angular app
-        run: npx nx build ${{ env.APP_NAME }} --prod
+        run: npx nx reset && npx nx build ${{ env.APP_NAME }} --prod
 
       # Build Firebase components - NX will handle all dependencies
       - name: Build Firebase
