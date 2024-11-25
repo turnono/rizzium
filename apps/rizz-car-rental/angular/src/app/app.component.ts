@@ -1,13 +1,14 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonRouterOutlet, IonApp } from '@ionic/angular/standalone';
+import { RouterModule } from '@angular/router';
+import { IonApp, IonRouterOutlet } from '@ionic/angular/standalone';
 
 @Component({
-  standalone: true,
-  imports: [CommonModule, IonRouterOutlet, IonApp],
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrl: './app.component.scss',
+  styleUrls: ['./app.component.scss'],
+  standalone: true,
+  imports: [CommonModule, RouterModule, IonApp, IonRouterOutlet],
 })
 export class AppComponent {
   title = 'rizz-car-rental';
