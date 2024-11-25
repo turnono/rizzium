@@ -303,12 +303,22 @@ This document outlines the required steps for setting up Firebase service accoun
 The minimum required permissions for successful deployment are:
 
 - Cloud Functions Admin
+- Cloud Datastore Owner
 - Cloud Storage for Firebase Admin
 - Firebase Admin
+- Firebase Admin SDK Administrator Service Agent
 - Firebase Authentication Admin
+- Firebase Extensions API Service Agent
+- Firebase Extensions Publisher - Extensions Admin
 - Firebase Hosting Admin
+- Firebase Realtime Database Admin
+- Firebase Rules Admin
 - Firestore Service Agent
+- Service Account Token Creator
 - Service Account User
+- Service Usage Viewer
+- Storage Admin
+- Storage Object Admin
 
 ## Setup Process
 
