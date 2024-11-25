@@ -81,3 +81,4 @@ async function main() {
 }
 
 main();
+// bsxczvcrfdr caps = BSXCZVCRFDR

@@ -1,10 +1,10 @@
 {
   "firestore": {
-    "rules": "apps/bxzhdrfvdjkrc/firebase/firestore.rules",
-    "indexes": "apps/bxzhdrfvdjkrc/firebase/firestore.indexes.json"
+    "rules": "apps/bsxczvcrfdr/firebase/firestore.rules",
+    "indexes": "apps/bsxczvcrfdr/firebase/firestore.indexes.json"
   },
   "hosting": {
-    "public": "dist/apps/bxzhdrfvdjkrc/angular/browser",
+    "public": "dist/apps/bsxczvcrfdr/angular/browser",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       {
@@ -14,20 +14,14 @@
     ]
   },
   "storage": {
-    "rules": "apps/bxzhdrfvdjkrc/firebase/storage.rules"
+    "rules": "apps/bsxczvcrfdr/firebase/storage.rules"
   },
   "functions": [
     {
-      "source": "dist/apps/bxzhdrfvdjkrc/functions/user",
-      "codebase": "bxzhdrfvdjkrc-functions-user",
+      "source": "dist/apps/bsxczvcrfdr/functions/user",
+      "codebase": "bsxczvcrfdr-functions-user",
       "runtime": "nodejs18",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "*.local"
-      ]
+      "ignore": ["node_modules", ".git", "firebase-debug.log", "firebase-debug.*.log", "*.local"]
     }
   ],
   "emulators": {

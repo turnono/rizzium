@@ -1,19 +1,19 @@
-name: bxzhdrfvdjkrc CI/CD
+name: bsxczvcrfdr CI/CD
 
 on:
   pull_request:
     branches:
       - main
     paths:
-      - 'apps/bxzhdrfvdjkrc/**' # Only the app
+      - 'apps/bsxczvcrfdr/**' # Only the app
       - 'libs/shared/**' # Shared libraries used by app
-      - 'firebase.bxzhdrfvdjkrc-firebase.json'
-      - '.github/workflows/bxzhdrfvdjkrc.yml'
+      - 'firebase.bsxczvcrfdr-firebase.json'
+      - '.github/workflows/bsxczvcrfdr.yml'
       - 'setup-app.sh'
       - 'package.json'
 env:
-  APP_NAME: bxzhdrfvdjkrc
-  FIREBASE_PROJECT_ID: ${{ secrets.BXZHDRFVDJKRC_FIREBASE_PROJECT_ID }}
+  APP_NAME: bsxczvcrfdr
+  FIREBASE_PROJECT_ID: ${{ secrets.BSXCZVCRFDR_FIREBASE_PROJECT_ID }}
   ACTIONS_RUNNER_DEBUG: true # Enable runner diagnostic logging
   ACTIONS_STEP_DEBUG: true # Enable step debug logging
 
@@ -71,7 +71,7 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1
         with:
-          credentials_json: ${{ secrets.BXZHDRFVDJKRC_GCP_SA_KEY }}
+          credentials_json: ${{ secrets.BSXCZVCRFDR_GCP_SA_KEY }}
 
       # Deploy
       - name: Deploy to Firebase
