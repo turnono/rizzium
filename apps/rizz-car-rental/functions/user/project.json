@@ -1,0 +1,54 @@
+{
+  "name": "rizz-car-rental-functions-user",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/rizz-car-rental/functions/user/src",
+  "projectType": "application",
+  "tags": [
+    "firebase:function",
+    "firebase:name:rizz-car-rental-functions-user",
+    "firebase:dep:rizz-car-rental-firebase"
+  ],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/rizz-car-rental/functions/user",
+        "main": "apps/rizz-car-rental/functions/user/src/main.ts",
+        "tsConfig": "apps/rizz-car-rental/functions/user/tsconfig.app.json",
+        "assets": [
+          "apps/rizz-car-rental/functions/user/src/assets",
+          {
+            "glob": "**/*",
+            "input": "apps/rizz-car-rental/firebase/environment",
+            "output": "."
+          }
+        ],
+        "generatePackageJson": true,
+        "platform": "node",
+        "bundle": true,
+        "thirdParty": false,
+        "dependenciesFieldType": "dependencies",
+        "target": "node16",
+        "format": ["esm"],
+        "esbuildOptions": {
+          "logLevel": "info"
+        }
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/rizz-car-rental/functions/user/jest.config.ts"
+      }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nx run rizz-car-rental-firebase:deploy --only functions:rizz-car-rental-functions-user"
+      },
+      "dependsOn": ["build"]
+    }
+  }
+}
