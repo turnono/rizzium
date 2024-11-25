@@ -1,0 +1,82 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(businessId) {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/businesses/$(businessId)).data.ownerId == request.auth.uid;
+    }
+
+    function hasRole(businessId, role) {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/businesses/$(businessId)/businessUsers/$(request.auth.uid)).data.role == role;
+    }
+
+    function isManager(businessId) {
+      return hasRole(businessId, 'manager') || isOwner(businessId);
+    }
+
+    function isCashier(businessId) {
+      return hasRole(businessId, 'cashier') || isManager(businessId);
+    }
+
+    function isEmployee(businessId) {
+      return isCashier(businessId) || isManager(businessId);
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read, write: if request.auth.uid == userId;
+    }
+
+    // Businesses collection
+    match /businesses/{businessId} {
+      allow create: if isSignedIn();
+      allow read: if isEmployee(businessId);
+      allow update, delete: if isOwner(businessId);
+
+      // Business Users subcollection
+      match /businessUsers/{userId} {
+        allow read: if isOwner(businessId) || request.auth.uid == userId;
+        allow create, update, delete: if isOwner(businessId);
+      }
+
+      // Products subcollection (inventory)
+      match /products/{productId} {
+        allow read: if isEmployee(businessId);
+        allow create, update, delete: if isManager(businessId);
+      }
+
+      // Transactions subcollection (sales)
+      match /transactions/{transactionId} {
+        allow read: if isEmployee(businessId);
+        allow create: if isCashier(businessId);
+        allow update, delete: if isManager(businessId);
+      }
+
+      // Customers subcollection
+      match /customers/{customerId} {
+        allow read: if isEmployee(businessId);
+        allow create, update: if isCashier(businessId);
+        allow delete: if isManager(businessId);
+      }
+
+      // Reports subcollection
+      match /reports/{reportId} {
+        allow read: if isManager(businessId);
+        allow create, update, delete: if isOwner(businessId);
+      }
+
+      // Settings subcollection
+      match /settings/{settingId} {
+        allow read: if isEmployee(businessId);
+        allow write: if isOwner(businessId);
+      }
+    }
+  }
+}
