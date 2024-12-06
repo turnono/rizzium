@@ -1,0 +1,162 @@
+{
+  "name": "rizztrade",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "prefix": "app",
+  "sourceRoot": "apps/rizztrade/angular/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@angular-devkit/build-angular:application",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "dist/apps/rizztrade/angular",
+        "index": "apps/rizztrade/angular/src/index.html",
+        "browser": "apps/rizztrade/angular/src/main.ts",
+        "polyfills": [
+          "zone.js"
+        ],
+        "tsConfig": "apps/rizztrade/angular/tsconfig.app.json",
+        "inlineStyleLanguage": "scss",
+    "assets": [
+      "apps/rizztrade/angular/src/favicon.ico",
+      "apps/rizztrade/angular/src/assets",
+      {
+        "glob": "**/*.svg",
+        "input": "node_modules/ionicons/dist/ionicons/svg",
+        "output": "./svg"
+      }
+    ],    "styles": [
+      "apps/rizztrade/angular/src/styles.scss",
+      {
+        "input": "node_modules/@ionic/angular/css/core.css"
+      },
+      {
+        "input": "node_modules/@ionic/angular/css/normalize.css"
+      },
+      {
+        "input": "node_modules/@ionic/angular/css/structure.css"
+      },
+      {
+        "input": "node_modules/@ionic/angular/css/typography.css"
+      },
+      {
+        "input": "node_modules/@ionic/angular/css/display.css"
+      },
+      {
+        "input": "node_modules/@ionic/angular/css/padding.css"
+      },
+      {
+        "input": "node_modules/@ionic/angular/css/float-elements.css"
+      },
+      {
+        "input": "node_modules/@ionic/angular/css/text-alignment.css"
+      },
+      {
+        "input": "node_modules/@ionic/angular/css/text-transformation.css"
+      },
+      {
+        "input": "node_modules/@ionic/angular/css/flex-utils.css"
+      },
+      {
+        "input": "apps/rizztrade/angular/src/theme/variables.css"
+      }
+    ],        "scripts": []
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "500kb",
+              "maximumError": "1mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "2kb",
+              "maximumError": "4kb"
+            }
+          ],
+          "outputHashing": "all"
+        },
+        "development": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "executor": "@angular-devkit/build-angular:dev-server",
+      "configurations": {
+        "production": {
+          "buildTarget": "rizztrade:build:production"
+        },
+        "development": {
+          "buildTarget": "rizztrade:build:development"
+        }
+      },
+      "defaultConfiguration": "development"
+    },
+    "extract-i18n": {
+      "executor": "@angular-devkit/build-angular:extract-i18n",
+      "options": {
+        "buildTarget": "rizztrade:build"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "apps/rizztrade/angular/**/*.ts",
+          "apps/rizztrade/angular/**/*.html"
+        ]
+      }
+    },    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
+      "options": {
+        "jestConfig": "apps/rizztrade/angular/jest.config.ts"
+      }
+    },
+    "serve-static": {
+      "executor": "@nx/web:file-server",
+      "options": {
+        "buildTarget": "rizztrade:build",
+        "port": 4200,
+        "staticFilePath": "dist/apps/rizztrade/angular",
+        "spa": true
+      }
+    },
+    "ionic-cordova-serve": {
+      "executor": "@ionic/angular-toolkit:cordova-serve",
+      "options": {
+        "cordovaBuildTarget": "rizztrade:ionic-cordova-build",
+        "devServerTarget": "rizztrade:serve"
+      },
+      "configurations": {
+        "production": {
+          "cordovaBuildTarget": "rizztrade:ionic-cordova-build:production",
+          "devServerTarget": "rizztrade:serve:production"
+        }
+      }
+    },
+    "ionic-cordova-build": {
+      "executor": "@ionic/angular-toolkit:cordova-build",
+      "options": {
+        "browserTarget": "rizztrade:build"
+      },
+      "configurations": {
+        "production": {
+          "browserTarget": "rizztrade:build:production"
+        }
+      }
+    }
+  }
+}
