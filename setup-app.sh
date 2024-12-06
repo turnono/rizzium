@@ -56,10 +56,10 @@ echo ""
 echo "Visit: https://console.cloud.google.com/apis/library"
 read -p "Press Enter once you have added all required roles and enabled all APIs..."
 
-# Get the project name from user input
-echo "Please enter your project name (lowercase, no spaces):"
+# Get the project name from user input and remove hyphens
+echo "Please enter your project name (lowercase, no spaces or hyphens):"
 read APP_NAME
-APP_NAME=$(echo "$APP_NAME" | tr '[:upper:]' '[:lower:]' | tr -d ' ')
+APP_NAME=$(echo "$APP_NAME" | tr '[:upper:]' '[:lower:]' | tr -d ' -')
 
 if [ -z "$APP_NAME" ]; then
   echo "Failed to get project name from Firebase setup"
@@ -828,5 +828,5 @@ EOF
 
 echo "Created GitHub Actions workflow file at $WORKFLOW_FILE"
 echo "IMPORTANT: Make sure to add these secrets to your GitHub repository:"
-echo "  - FIREBASE_PROJECT_ID: Your Firebase project ID"
-echo "  - GCP_SA_KEY: Your Google Cloud service account key JSON. (check bottom of README.md for more details)"
+echo "  - ${UPPERCASE_APP_NAME}_FIREBASE_PROJECT_ID: Your Firebase project ID"
+echo "  - ${UPPERCASE_APP_NAME}_GCP_SA_KEY: Your Google Cloud service account key JSON"
