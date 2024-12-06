@@ -1,8 +1,6 @@
 {
   "projects": {
-    "rizzpos": "rizzpos",
-    "rizz-car-rental": "rizz-car-rental",
-    "rizz-bnb": "rizz-bnb"
+    "rizzpos": "rizzpos"
   },
   "targets": {},
   "etags": {}
