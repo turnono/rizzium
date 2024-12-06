@@ -1,0 +1,50 @@
+{
+  "name": "rizztrade-functions-user",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/rizztrade/functions/user/src",
+  "projectType": "application",
+  "tags": ["firebase:function", "firebase:name:rizztrade-functions-user", "firebase:dep:rizztrade-firebase"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/rizztrade/functions/user",
+        "main": "apps/rizztrade/functions/user/src/main.ts",
+        "tsConfig": "apps/rizztrade/functions/user/tsconfig.app.json",
+        "assets": [
+          "apps/rizztrade/functions/user/src/assets",
+          {
+            "glob": "**/*",
+            "input": "apps/rizztrade/firebase/environment",
+            "output": "."
+          }
+        ],
+        "generatePackageJson": true,
+        "platform": "node",
+        "bundle": true,
+        "thirdParty": false,
+        "dependenciesFieldType": "dependencies",
+        "target": "node16",
+        "format": ["esm"],
+        "esbuildOptions": {
+          "logLevel": "info"
+        }
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/rizztrade/functions/user/jest.config.ts"
+      }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nx run rizztrade-firebase:deploy --only functions:rizztrade-functions-user"
+      },
+      "dependsOn": ["build"]
+    }
+  }
+}
