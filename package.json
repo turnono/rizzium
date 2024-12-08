@@ -2,7 +2,10 @@
   "name": "@rizzium/source",
   "version": "0.0.1",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "coordinator": "tsx libs/shared/swarm-agents/src/lib/cli/coordinator-cli.ts",
+    "generate:design": "tsx apps/rizztrade/angular/src/scripts/generate-platform-design.ts"
+  },
   "private": true,
   "dependencies": {
     "@angular/animations": "~18.2.0",
@@ -80,6 +83,7 @@
     "ts-node": "10.9.1",
     "tslib": "^2.3.0",
     "typescript": "~5.5.2",
-    "typescript-eslint": "^8.0.0"
+    "typescript-eslint": "^8.0.0",
+    "tsx": "^4.7.1"
   }
 }
