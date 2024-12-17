@@ -1,9 +1,15 @@
-import { Route } from '@angular/router';
-import { NxWelcomeComponent } from './nx-welcome.component';
+import { Routes } from '@angular/router';
+import { AuthGuard } from '@rizzium/shared/guards';
 
-export const appRoutes: Route[] = [
+export const routes: Routes = [
   {
     path: '',
-    component: NxWelcomeComponent,
+    redirectTo: 'learn',
+    pathMatch: 'full',
   },
+  {
+    path: 'learn',
+    loadChildren: () => import('./pages/learn/learn.routes').then((m) => m.learnRoutes),
+  },
+  // ... other existing routes
 ];

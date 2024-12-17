@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120">
+  <defs>
+    <linearGradient id="woodGrain" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#8B4513"/>
+      <stop offset="100%" style="stop-color:#A0522D"/>
+    </linearGradient>
+  </defs>
+  <path d="M40,100 L160,100 L180,120 L20,120 Z" fill="url(#woodGrain)"/>
+  <path d="M60,20 L140,20 L160,100 L40,100 Z" fill="none" stroke="#42a5cf" stroke-width="1"/>
+  <path d="M80,0 L120,0 L140,20 L60,20 Z" fill="none" stroke="#42a5cf" stroke-width="1"/>
+</svg>
