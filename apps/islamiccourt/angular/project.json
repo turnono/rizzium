@@ -1,0 +1,162 @@
+{
+  "name": "islamiccourt",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "prefix": "app",
+  "sourceRoot": "apps/islamiccourt/angular/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@angular-devkit/build-angular:application",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "dist/apps/islamiccourt/angular",
+        "index": "apps/islamiccourt/angular/src/index.html",
+        "browser": "apps/islamiccourt/angular/src/main.ts",
+        "polyfills": [
+          "zone.js"
+        ],
+        "tsConfig": "apps/islamiccourt/angular/tsconfig.app.json",
+        "inlineStyleLanguage": "scss",
+    "assets": [
+      "apps/islamiccourt/angular/src/favicon.ico",
+      "apps/islamiccourt/angular/src/assets",
+      {
+        "glob": "**/*.svg",
+        "input": "node_modules/ionicons/dist/ionicons/svg",
+        "output": "./svg"
+      }
+    ],    "styles": [
+      "apps/islamiccourt/angular/src/styles.scss",
+      {
+        "input": "node_modules/@ionic/angular/css/core.css"
+      },
+      {
+        "input": "node_modules/@ionic/angular/css/normalize.css"
+      },
+      {
+        "input": "node_modules/@ionic/angular/css/structure.css"
+      },
+      {
+        "input": "node_modules/@ionic/angular/css/typography.css"
+      },
+      {
+        "input": "node_modules/@ionic/angular/css/display.css"
+      },
+      {
+        "input": "node_modules/@ionic/angular/css/padding.css"
+      },
+      {
+        "input": "node_modules/@ionic/angular/css/float-elements.css"
+      },
+      {
+        "input": "node_modules/@ionic/angular/css/text-alignment.css"
+      },
+      {
+        "input": "node_modules/@ionic/angular/css/text-transformation.css"
+      },
+      {
+        "input": "node_modules/@ionic/angular/css/flex-utils.css"
+      },
+      {
+        "input": "apps/islamiccourt/angular/src/theme/variables.css"
+      }
+    ],        "scripts": []
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "500kb",
+              "maximumError": "1mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "2kb",
+              "maximumError": "4kb"
+            }
+          ],
+          "outputHashing": "all"
+        },
+        "development": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "executor": "@angular-devkit/build-angular:dev-server",
+      "configurations": {
+        "production": {
+          "buildTarget": "islamiccourt:build:production"
+        },
+        "development": {
+          "buildTarget": "islamiccourt:build:development"
+        }
+      },
+      "defaultConfiguration": "development"
+    },
+    "extract-i18n": {
+      "executor": "@angular-devkit/build-angular:extract-i18n",
+      "options": {
+        "buildTarget": "islamiccourt:build"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "apps/islamiccourt/angular/**/*.ts",
+          "apps/islamiccourt/angular/**/*.html"
+        ]
+      }
+    },    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
+      "options": {
+        "jestConfig": "apps/islamiccourt/angular/jest.config.ts"
+      }
+    },
+    "serve-static": {
+      "executor": "@nx/web:file-server",
+      "options": {
+        "buildTarget": "islamiccourt:build",
+        "port": 4200,
+        "staticFilePath": "dist/apps/islamiccourt/angular",
+        "spa": true
+      }
+    },
+    "ionic-cordova-serve": {
+      "executor": "@ionic/angular-toolkit:cordova-serve",
+      "options": {
+        "cordovaBuildTarget": "islamiccourt:ionic-cordova-build",
+        "devServerTarget": "islamiccourt:serve"
+      },
+      "configurations": {
+        "production": {
+          "cordovaBuildTarget": "islamiccourt:ionic-cordova-build:production",
+          "devServerTarget": "islamiccourt:serve:production"
+        }
+      }
+    },
+    "ionic-cordova-build": {
+      "executor": "@ionic/angular-toolkit:cordova-build",
+      "options": {
+        "browserTarget": "islamiccourt:build"
+      },
+      "configurations": {
+        "production": {
+          "browserTarget": "islamiccourt:build:production"
+        }
+      }
+    }
+  }
+}

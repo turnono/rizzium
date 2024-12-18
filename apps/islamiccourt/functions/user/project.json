@@ -1,0 +1,50 @@
+{
+  "name": "islamiccourt-functions-user",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/islamiccourt/functions/user/src",
+  "projectType": "application",
+  "tags": ["firebase:function", "firebase:name:islamiccourt-functions-user", "firebase:dep:islamiccourt-firebase"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/islamiccourt/functions/user",
+        "main": "apps/islamiccourt/functions/user/src/main.ts",
+        "tsConfig": "apps/islamiccourt/functions/user/tsconfig.app.json",
+        "assets": [
+          "apps/islamiccourt/functions/user/src/assets",
+          {
+            "glob": "**/*",
+            "input": "apps/islamiccourt/firebase/environment",
+            "output": "."
+          }
+        ],
+        "generatePackageJson": true,
+        "platform": "node",
+        "bundle": true,
+        "thirdParty": false,
+        "dependenciesFieldType": "dependencies",
+        "target": "node16",
+        "format": ["esm"],
+        "esbuildOptions": {
+          "logLevel": "info"
+        }
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/islamiccourt/functions/user/jest.config.ts"
+      }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nx run islamiccourt-firebase:deploy --only functions:islamiccourt-functions-user"
+      },
+      "dependsOn": ["build"]
+    }
+  }
+}
