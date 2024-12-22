@@ -27,7 +27,10 @@
     "rxjs": "~7.8.0",
     "uuid": "^10.0.0",
     "zone.js": "~0.14.3",
-    "@ionic/angular": "latest"
+    "@ionic/angular": "latest",
+    "node-fetch": "^3.3.2",
+    "pdfjs-dist": "4.9.155",
+    "openai": "^4.77.0"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "~18.2.0",
