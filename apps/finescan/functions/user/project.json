@@ -1,0 +1,50 @@
+{
+  "name": "finescan-functions-user",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/finescan/functions/user/src",
+  "projectType": "application",
+  "tags": ["firebase:function", "firebase:name:finescan-functions-user", "firebase:dep:finescan-firebase"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/finescan/functions/user",
+        "main": "apps/finescan/functions/user/src/main.ts",
+        "tsConfig": "apps/finescan/functions/user/tsconfig.app.json",
+        "assets": [
+          "apps/finescan/functions/user/src/assets",
+          {
+            "glob": "**/*",
+            "input": "apps/finescan/firebase/environment",
+            "output": "."
+          }
+        ],
+        "generatePackageJson": true,
+        "platform": "node",
+        "bundle": true,
+        "thirdParty": false,
+        "dependenciesFieldType": "dependencies",
+        "target": "node16",
+        "format": ["esm"],
+        "esbuildOptions": {
+          "logLevel": "info"
+        }
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/finescan/functions/user/jest.config.ts"
+      }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nx run finescan-firebase:deploy --only functions:finescan-functions-user"
+      },
+      "dependsOn": ["build"]
+    }
+  }
+}

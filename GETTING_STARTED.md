@@ -114,15 +114,26 @@ Before running setup-app.sh:
 
 ## Setting up Firebase Service Account for GitHub Actions
 
-1. Go to the Firebase Console (https://console.firebase.google.com/)
+1. Go to Google Cloud Console (https://console.cloud.google.com/)
 2. Select your project
-3. Go to Project Settings (gear icon) > Service accounts
-4. Click "Generate New Private Key" button
-5. Save the JSON file securely (DO NOT commit this to git)
+3. Navigate to IAM & Admin > Service Accounts
+4. Click "+ CREATE SERVICE ACCOUNT"
+5. Enter the following details:
+   - Service account name: `github-actions`
+   - Service account ID: `github-actions`
+   - Description: "Service account for GitHub Actions deployments"
+6. Click "CREATE AND CONTINUE"
+7. Add the required roles (listed below)
+8. Click "DONE"
+9. Find the newly created service account in the list
+10. Click the three dots (⋮) > "Manage keys"
+11. Click "ADD KEY" > "Create new key"
+12. Choose JSON format and click "CREATE"
+13. Save the JSON file securely (DO NOT commit this to git)
 
 ### Required IAM Roles
 
-Your service account needs exactly these roles:
+Your `github-actions` service account needs exactly these roles:
 
 - Cloud Functions Admin
 - Cloud Storage for Firebase Admin

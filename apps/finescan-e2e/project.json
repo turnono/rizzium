@@ -1,0 +1,10 @@
+{
+  "name": "finescan-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/finescan-e2e/src",
+  "tags": [],
+  "implicitDependencies": ["finescan"],
+  "// targets": "to see all targets run: nx show project finescan-e2e --web",
+  "targets": {}
+}
