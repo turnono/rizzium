@@ -2,6 +2,8 @@ import { Component, EventEmitter, Input, Output, inject, NgZone } from '@angular
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { Storage, ref, uploadBytesResumable, getDownloadURL } from '@angular/fire/storage';
+import { Firestore, collection, addDoc, Timestamp } from '@angular/fire/firestore';
+import { FirebaseAuthService } from '@rizzium/shared/services';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 const ALLOWED_TYPES = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png'];
@@ -80,6 +82,8 @@ const ALLOWED_TYPES = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png
 export class FileUploadComponent {
   private storage = inject(Storage);
   private ngZone = inject(NgZone);
+  private firestore = inject(Firestore);
+  private authService = inject(FirebaseAuthService);
 
   @Input() path = 'uploads';
   @Input() accept = 'application/pdf,text/plain,image/jpeg,image/png';
@@ -120,10 +124,9 @@ export class FileUploadComponent {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
 
-    this.clearFile(); // Reset all states
+    this.clearFile();
     this.selectedFile = file;
 
-    // Validate file
     const validationError = this.validateFile(file);
     if (validationError) {
       this.errorMessage = validationError;
@@ -136,9 +139,12 @@ export class FileUploadComponent {
     this.uploadComplete = false;
 
     try {
+      const user = await this.authService.getCurrentUser();
+      if (!user) throw new Error('No authenticated user');
+
       const fileExtension = file.name.split('.').pop();
       const uniqueFileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExtension}`;
-      const storageRef = ref(this.storage, `${this.path}/${uniqueFileName}`);
+      const storageRef = ref(this.storage, `users/${user.uid}/${this.path}/${uniqueFileName}`);
       const uploadTask = uploadBytesResumable(storageRef, file);
 
       uploadTask.on(
@@ -182,6 +188,16 @@ export class FileUploadComponent {
           }
         }
       );
+
+      // After successful upload, create an analysis document
+      const analysisRef = collection(this.firestore, `users/${user.uid}/analyses`);
+      await addDoc(analysisRef, {
+        userId: user.uid,
+        fileName: file.name,
+        fileUrl: this.downloadUrl,
+        status: 'uploaded',
+        createdAt: Timestamp.now(),
+      });
     } catch (error) {
       this.errorMessage = 'Upload failed: ' + (error instanceof Error ? error.message : 'Unknown error');
       this.validationError.emit(this.errorMessage);

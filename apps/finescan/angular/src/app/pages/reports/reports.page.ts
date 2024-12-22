@@ -1,8 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AnalysisService } from '@rizzium/shared/services';
-import { Analysis } from '@rizzium/shared/interfaces';
+import { Analysis, AnalysisStatus } from '@rizzium/shared/interfaces';
 import { AnalysisResultsComponent } from '@rizzium/shared/ui/molecules';
 import {
   IonContent,
@@ -17,9 +17,24 @@ import {
   IonIcon,
   IonButton,
   IonSpinner,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardSubtitle,
+  IonAlert,
+  AlertController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { documentTextOutline, timeOutline, alertCircleOutline } from 'ionicons/icons';
+import {
+  documentTextOutline,
+  timeOutline,
+  alertCircleOutline,
+  checkmarkCircleOutline,
+  hourglassOutline,
+} from 'ionicons/icons';
+import { Firestore, Timestamp, updateDoc, doc } from '@angular/fire/firestore';
+import { getFunctions, httpsCallable } from '@angular/fire/functions';
 
 @Component({
   selector: 'app-reports',
@@ -40,7 +55,13 @@ import { documentTextOutline, timeOutline, alertCircleOutline } from 'ionicons/i
     IonIcon,
     IonButton,
     IonSpinner,
+    IonCard,
+    IonCardContent,
+    IonCardHeader,
+    IonCardTitle,
+    IonCardSubtitle,
   ],
+  providers: [AnalysisService],
   template: `
     <ion-header>
       <ion-toolbar>
@@ -73,8 +94,9 @@ import { documentTextOutline, timeOutline, alertCircleOutline } from 'ionicons/i
         <ion-item
           [button]="true"
           [detail]="true"
-          (click)="selectedAnalysis = analysis"
+          (click)="selectAnalysis(analysis)"
           [class.selected]="selectedAnalysis?.id === analysis.id"
+          [attr.data-cy]="'analysis-item-' + analysis.id"
         >
           <ion-icon
             slot="start"
@@ -97,9 +119,35 @@ import { documentTextOutline, timeOutline, alertCircleOutline } from 'ionicons/i
         }
       </ion-list>
 
-      @if (selectedAnalysis) {
-      <ui-analysis-results [analysis]="selectedAnalysis.results" class="ion-margin-top"></ui-analysis-results>
-      } }
+      @if (selectedAnalysis) { @if (selectedAnalysis.status === 'pending' || selectedAnalysis.status === 'uploaded') {
+      <ion-card class="ion-margin-top">
+        <ion-card-content class="ion-text-center">
+          <ion-button (click)="startAnalysis(selectedAnalysis)">
+            {{ selectedAnalysis.status === 'pending' ? 'Start Analysis' : 'Process Document' }}
+          </ion-button>
+        </ion-card-content>
+      </ion-card>
+      } @else if (selectedAnalysis.status === 'processing') {
+      <ion-card class="ion-margin-top">
+        <ion-card-content class="ion-text-center">
+          <ion-spinner></ion-spinner>
+          <p>Analyzing document...</p>
+        </ion-card-content>
+      </ion-card>
+      } @else if (selectedAnalysis.status === 'failed') {
+      <ion-card class="ion-margin-top" color="danger">
+        <ion-card-content class="ion-text-center">
+          <ion-icon name="alert-circle" size="large"></ion-icon>
+          <p>Analysis failed. Please try again.</p>
+          <ion-button (click)="retryAnalysis(selectedAnalysis)"> Retry Analysis </ion-button>
+        </ion-card-content>
+      </ion-card>
+      } @else if (selectedAnalysis.status === 'completed' && selectedAnalysis.results) {
+      <ui-analysis-results
+        [analysis]="getAnalysisResults(selectedAnalysis)"
+        class="ion-margin-top"
+      ></ui-analysis-results>
+      } } }
     </ion-content>
   `,
   styles: [
@@ -147,50 +195,152 @@ import { documentTextOutline, timeOutline, alertCircleOutline } from 'ionicons/i
   ],
 })
 export class ReportsPage implements OnInit {
+  private firestore = inject(Firestore);
+  private alertController = inject(AlertController);
+  private functions = getFunctions();
   analyses: Analysis[] = [];
   selectedAnalysis: Analysis | null = null;
   loading = true;
 
   constructor(private analysisService: AnalysisService) {
-    addIcons({ documentTextOutline, timeOutline, alertCircleOutline });
+    addIcons({ documentTextOutline, timeOutline, alertCircleOutline, checkmarkCircleOutline, hourglassOutline });
   }
 
   ngOnInit() {
-    this.loadAnalyses();
-  }
-
-  private loadAnalyses() {
     this.analysisService.getUserAnalyses().subscribe({
       next: (analyses) => {
         this.analyses = analyses;
         this.loading = false;
+
+        if (this.selectedAnalysis) {
+          const updatedAnalysis = analyses.find((a) => a.id === this.selectedAnalysis?.id);
+          if (updatedAnalysis) {
+            this.selectedAnalysis = updatedAnalysis;
+          }
+        }
       },
       error: (error) => {
         console.error('Error loading analyses:', error);
+        this.analyses = [];
         this.loading = false;
       },
     });
   }
 
-  getStatusIcon(status: string): string {
+  async selectAnalysis(analysis: Analysis) {
+    console.log('selectAnalysis called with:', analysis);
+    this.selectedAnalysis = analysis;
+
+    if (analysis.status === 'pending' || analysis.status === 'uploaded') {
+      console.log('Creating alert for analysis');
+      const alert = await this.alertController.create({
+        header: 'Start Analysis',
+        message: 'Would you like to start analyzing this document?',
+        buttons: [
+          {
+            text: 'Cancel',
+            role: 'cancel',
+            handler: () => {
+              console.log('Analysis cancelled');
+            },
+          },
+          {
+            text: 'Start',
+            handler: () => {
+              console.log('Starting analysis from alert');
+              this.startAnalysis(analysis);
+            },
+          },
+        ],
+      });
+
+      await alert.present();
+    }
+  }
+
+  async startAnalysis(analysis: Analysis) {
+    console.log('startAnalysis called with:', analysis);
+
+    if (!analysis.id || !analysis.userId) {
+      console.error('Missing analysis id or userId:', analysis);
+      return;
+    }
+
+    try {
+      console.log('Getting analysis reference for:', analysis.id);
+      const analysisRef = doc(this.firestore, `users/${analysis.userId}/analyses/${analysis.id}`);
+
+      console.log('Updating status to processing');
+      await updateDoc(analysisRef, {
+        status: 'processing' as AnalysisStatus,
+        updatedAt: Timestamp.now(),
+      });
+
+      this.selectedAnalysis = {
+        ...analysis,
+        status: 'processing',
+      };
+
+      // Call the Cloud Function
+      const analyzeDocument = httpsCallable(this.functions, 'analyzeDocument');
+      await analyzeDocument({
+        documentUrl: analysis.fileUrl,
+        analysisType: 'general', // or get this from user input
+      });
+
+      // The function will update the document status and results
+      // Our real-time subscription will update the UI
+    } catch (error) {
+      console.error('Error starting analysis:', error);
+      const analysisRef = doc(this.firestore, `users/${analysis.userId}/analyses/${analysis.id}`);
+      await updateDoc(analysisRef, {
+        status: 'failed' as AnalysisStatus,
+        updatedAt: Timestamp.now(),
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+
+      this.selectedAnalysis = {
+        ...analysis,
+        status: 'failed',
+      };
+    }
+  }
+
+  async retryAnalysis(analysis: Analysis) {
+    if (analysis.status === 'failed') {
+      await this.startAnalysis(analysis);
+    }
+  }
+
+  getStatusIcon(status: AnalysisStatus): string {
     switch (status) {
       case 'completed':
         return 'checkmark-circle-outline';
       case 'failed':
         return 'alert-circle-outline';
+      case 'processing':
+        return 'hourglass-outline';
+      case 'pending':
+      case 'uploaded':
+        return 'document-outline';
       default:
-        return 'time-outline';
+        return 'document-outline';
     }
   }
 
-  getStatusColor(status: string): string {
+  getStatusColor(status: AnalysisStatus): string {
     switch (status) {
       case 'completed':
         return 'success';
       case 'failed':
         return 'danger';
-      default:
+      case 'processing':
         return 'warning';
+      case 'pending':
+      case 'uploaded':
+        return 'medium';
+      default:
+        return 'medium';
     }
   }
 
@@ -205,5 +355,20 @@ export class ReportsPage implements OnInit {
       default:
         return 'medium';
     }
+  }
+
+  getAnalysisResults(analysis: Analysis) {
+    if (!analysis.results) return null;
+    return {
+      text: analysis.results.text || analysis.fileName,
+      riskLevel: analysis.results.riskLevel,
+      summary: {
+        riskLevel: analysis.results.summary.riskLevel,
+        description: analysis.results.summary.description,
+        recommendations: analysis.results.summary.recommendations,
+      },
+      flags: analysis.results.flags,
+      recommendations: analysis.results.recommendations,
+    };
   }
 }

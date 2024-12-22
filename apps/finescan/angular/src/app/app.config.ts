@@ -7,6 +7,8 @@ import { getFirestore, provideFirestore } from '@angular/fire/firestore';
 import { getAuth, provideAuth } from '@angular/fire/auth';
 import { firebaseConfig } from './firebase-config';
 import { getStorage, provideStorage } from '@angular/fire/storage';
+import { AnalysisService } from '@rizzium/shared/services';
+import { AuthGuard, NotAuthGuard } from '@rizzium/shared/guards';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -20,5 +22,8 @@ export const appConfig: ApplicationConfig = {
     }),
     provideStorage(() => getStorage()),
     provideIonicAngular(),
+    AnalysisService,
+    AuthGuard,
+    NotAuthGuard,
   ],
 };

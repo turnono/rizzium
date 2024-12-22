@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -17,6 +17,7 @@ import {
   IonCardContent,
 } from '@ionic/angular/standalone';
 import { ErrorHandlerService } from '@rizzium/shared/services';
+import { take } from 'rxjs/operators';
 
 @Component({
   selector: 'app-login',
@@ -120,7 +121,7 @@ import { ErrorHandlerService } from '@rizzium/shared/services';
     `,
   ],
 })
-export class LoginPage {
+export class LoginPage implements OnInit {
   authMode: 'login' | 'register' = 'login';
   authForm: FormGroup;
   errorMessage = '';
@@ -133,6 +134,15 @@ export class LoginPage {
     private errorHandler: ErrorHandlerService
   ) {
     this.initForm();
+  }
+
+  ngOnInit() {
+    // Check if user is already logged in
+    this.authService.user$.pipe(take(1)).subscribe((user) => {
+      if (user) {
+        this.router.navigate(['/']);
+      }
+    });
   }
 
   private initForm() {

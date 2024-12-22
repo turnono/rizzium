@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Firestore, collection, query, where, orderBy, getDocs } from '@angular/fire/firestore';
-import { Observable, from } from 'rxjs';
+import { Firestore, collection, query, where, orderBy, getDocs, onSnapshot } from '@angular/fire/firestore';
+import { Observable, from, switchMap } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Analysis } from '@rizzium/shared/interfaces';
 import { FirebaseAuthService } from './firebase-auth.service';
@@ -13,17 +13,35 @@ export class AnalysisService {
 
   getUserAnalyses(): Observable<Analysis[]> {
     return from(this.authService.getCurrentUser()).pipe(
-      map((user) => {
+      switchMap((user) => {
         if (!user) throw new Error('No authenticated user');
-        return user.uid;
-      }),
-      map(async (userId) => {
-        const analysisRef = collection(this.firestore, 'analyses');
-        const q = query(analysisRef, where('userId', '==', userId), orderBy('createdAt', 'desc'));
-        const snapshot = await getDocs(q);
-        return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Analysis));
-      }),
-      from
+
+        const analysisRef = collection(this.firestore, `users/${user.uid}/analyses`);
+        const q = query(analysisRef, orderBy('createdAt', 'desc'));
+
+        return new Observable<Analysis[]>((observer) => {
+          const unsubscribe = onSnapshot(
+            q,
+            (snapshot) => {
+              const analyses = snapshot.docs.map(
+                (doc) =>
+                  ({
+                    id: doc.id,
+                    ...doc.data(),
+                  } as Analysis)
+              );
+              observer.next(analyses);
+            },
+            (error) => {
+              console.error('Error fetching analyses:', error);
+              observer.error(error);
+            }
+          );
+
+          // Return cleanup function
+          return () => unsubscribe();
+        });
+      })
     );
   }
 }

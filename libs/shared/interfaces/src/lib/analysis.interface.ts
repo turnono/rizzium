@@ -1,16 +1,23 @@
 import { Timestamp } from '@angular/fire/firestore';
 
+export type AnalysisStatus = 'uploaded' | 'processing' | 'completed' | 'failed' | 'pending';
+
 export interface Analysis {
   id: string;
   userId: string;
   fileName: string;
   fileUrl: string;
-  status: 'pending' | 'completed' | 'failed';
+  status: AnalysisStatus;
   createdAt: Timestamp;
   completedAt?: Timestamp;
   results?: {
+    text: string;
     riskLevel: 'high' | 'medium' | 'low';
-    summary: string;
+    summary: {
+      riskLevel: 'high' | 'medium' | 'low';
+      description: string;
+      recommendations: string[];
+    };
     flags: {
       start: number;
       end: number;

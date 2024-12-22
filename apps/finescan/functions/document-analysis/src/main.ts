@@ -148,16 +148,34 @@ export const analyzeDocument = functions.https.onCall(async (data, context) => {
 
     // Store results in Firestore
     const firestore = getFirestore();
-    const analysisRef = await firestore.collection('analyses').add({
-      userId: context.auth.uid,
-      fileName: fileName,
-      analysisType: analysisType,
-      text,
-      summary: analysis.summary,
-      status: 'completed',
-      createdAt: Timestamp.now(),
-      expiresAt: Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)), // 30 days
-    });
+    const analysisRef = await firestore
+      .collection('users')
+      .doc(context.auth.uid)
+      .collection('analyses')
+      .add({
+        userId: context.auth.uid,
+        fileName: fileName,
+        analysisType: analysisType,
+        text,
+        results: {
+          // Match the interface structure
+          text,
+          riskLevel: analysis.summary.riskLevel,
+          summary: analysis.summary,
+          flags: analysis.flags.map((flag) => ({
+            start: flag.start,
+            end: flag.end,
+            reason: flag.description,
+            riskLevel: flag.severity,
+          })),
+          recommendations: analysis.summary.recommendations,
+        },
+        status: 'completed',
+        createdAt: Timestamp.now(),
+        completedAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+        expiresAt: Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)), // 30 days
+      });
 
     // Store flags in subcollection
     const batch = firestore.batch();
