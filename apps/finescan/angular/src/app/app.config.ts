@@ -1,27 +1,29 @@
-import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
-import { provideRouter, RouteReuseStrategy } from '@angular/router';
+import { ApplicationConfig } from '@angular/core';
+import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
-import {
-  IonicRouteStrategy,
-  provideIonicAngular,
-} from '@ionic/angular/standalone';
+import { provideIonicAngular } from '@ionic/angular/standalone';
 import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import { getFirestore, provideFirestore } from '@angular/fire/firestore';
 import { getAuth, provideAuth } from '@angular/fire/auth';
-import { getFunctions, provideFunctions } from '@angular/fire/functions';
 import { firebaseConfig } from './firebase-config';
-import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { getStorage, provideStorage } from '@angular/fire/storage';
+import { AnalysisService } from '@rizzium/shared/services';
+import { AuthGuard, NotAuthGuard } from '@rizzium/shared/guards';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(appRoutes),
-    provideAnimationsAsync(),
     provideFirebaseApp(() => initializeApp(firebaseConfig)),
     provideFirestore(() => getFirestore()),
-    provideAuth(() => getAuth()),
-    provideFunctions(() => getFunctions()),
-    { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
+    provideAuth(() => {
+      const auth = getAuth();
+      auth.useDeviceLanguage();
+      return auth;
+    }),
+    provideStorage(() => getStorage()),
     provideIonicAngular(),
+    AnalysisService,
+    AuthGuard,
+    NotAuthGuard,
   ],
 };

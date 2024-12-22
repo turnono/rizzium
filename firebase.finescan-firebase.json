@@ -18,16 +18,16 @@
   },
   "functions": [
     {
+      "codebase": "finescan-functions-document-analysis",
+      "source": "dist/apps/finescan/functions/document-analysis",
+      "runtime": "nodejs18",
+      "ignore": ["*.local"]
+    },
+    {
       "source": "dist/apps/finescan/functions/user",
       "codebase": "finescan-functions-user",
       "runtime": "nodejs18",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "*.local"
-      ]
+      "ignore": ["node_modules", ".git", "firebase-debug.log", "firebase-debug.*.log", "*.local"]
     }
   ],
   "emulators": {

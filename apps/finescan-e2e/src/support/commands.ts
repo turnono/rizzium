@@ -10,26 +10,55 @@
 // https://on.cypress.io/custom-commands
 // ***********************************************
 
-// eslint-disable-next-line @typescript-eslint/no-namespace
 declare namespace Cypress {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface Chainable<Subject> {
-    login(email: string, password: string): void;
+    login(email: string, password: string): Chainable<Subject>;
+    register(email: string, password: string): Chainable<Subject>;
+    verifyFileUpload(fileName: string): Chainable<Subject>;
+    logout(): Chainable<Subject>;
+    toggleAuthMode(): Chainable<Subject>;
   }
 }
 
-// -- This is a parent command --
-Cypress.Commands.add('login', (email, password) => {
-  console.log('Custom command example: Login', email, password);
+// Test user credentials - should be in cypress.env.json in practice
+const TEST_USER = {
+  email: 'test@example.com',
+  password: 'testPassword123',
+};
+
+Cypress.Commands.add('login', (email = TEST_USER.email, password = TEST_USER.password) => {
+  cy.visit('/login');
+  cy.get('app-login').should('not.have.class', 'ion-page-hidden');
+  cy.get('[data-cy=email-input] input').type(email, { force: true });
+  cy.get('[data-cy=password-input] input').type(password, { force: true });
+  cy.get('[data-cy=submit-button]').click();
 });
-//
-// -- This is a child command --
-// Cypress.Commands.add("drag", { prevSubject: 'element'}, (subject, options) => { ... })
-//
-//
-// -- This is a dual command --
-// Cypress.Commands.add("dismiss", { prevSubject: 'optional'}, (subject, options) => { ... })
-//
-//
-// -- This will overwrite an existing command --
-// Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
+
+// Add custom command for file upload verification
+Cypress.Commands.add('verifyFileUpload', (fileName: string) => {
+  cy.get('[data-cy=upload-progress]').should('be.visible');
+  cy.get('[data-cy=success-message]', { timeout: 10000 })
+    .should('be.visible')
+    .and('contain', 'File uploaded successfully');
+});
+
+// Update logout command to handle confirmation
+Cypress.Commands.add('logout', () => {
+  cy.get('[data-cy=logout-button]').click();
+  // Click the confirm button in the alert
+  cy.get('.alert-button').contains('Logout').click();
+  cy.url().should('include', '/login');
+});
+
+Cypress.Commands.add('register', (email: string, password: string) => {
+  cy.visit('/login');
+  cy.get('[data-cy=auth-toggle]').click();
+  cy.get('[data-cy=email-input] input').type(email, { force: true });
+  cy.get('[data-cy=password-input] input').type(password, { force: true });
+  cy.get('[data-cy=confirm-password-input] input').type(password, { force: true });
+  cy.get('[data-cy=submit-button]').click();
+});
+
+Cypress.Commands.add('toggleAuthMode', () => {
+  cy.get('[data-cy=auth-toggle]').click();
+});
