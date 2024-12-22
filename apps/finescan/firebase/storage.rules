@@ -5,8 +5,11 @@ rules_version = '2';
 //    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
 service firebase.storage {
   match /b/{bucket}/o {
-    match /{allPaths=**} {
-      allow read, write: if false;
+    match /finescan-uploads/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+                   && request.resource.size < 5 * 1024 * 1024 // 5MB max file size
+                   && request.resource.contentType.matches('image/.*|application/pdf'); // Only allow images and PDFs
     }
   }
 }

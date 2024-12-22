@@ -6,4 +6,8 @@ export const appRoutes: Route[] = [
     path: '',
     component: NxWelcomeComponent,
   },
+  {
+    path: 'file-upload',
+    loadComponent: () => import('./pages/file-upload/file-upload.page').then((m) => m.FileUploadPage),
+  },
 ];
