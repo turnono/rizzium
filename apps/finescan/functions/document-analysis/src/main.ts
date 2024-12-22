@@ -17,6 +17,8 @@ import fetch from 'node-fetch';
 import * as dotenv from 'dotenv';
 import { resolve } from 'path';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
+import * as pdfParse from 'pdf-parse';
+import * as Tesseract from 'tesseract.js';
 
 // Load environment variables from .env file
 dotenv.config({ path: resolve(__dirname, '../../../.env') });
@@ -37,6 +39,16 @@ const AnalyzeDocumentSchema = z.object({
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+async function extractTextFromPDF(buffer: Buffer): Promise<string> {
+  const data = await pdfParse(buffer);
+  return data.text;
+}
+
+async function extractTextFromImage(buffer: Buffer): Promise<string> {
+  const { data } = await Tesseract.recognize(buffer, 'eng');
+  return data.text;
+}
 
 export const analyzeDocument = functions.https.onCall(async (data, context) => {
   // Authentication check
@@ -100,16 +112,39 @@ export const analyzeDocument = functions.https.onCall(async (data, context) => {
       messages: [
         {
           role: 'system',
-          content: `You are an expert document analyzer specializing in ${analysisType} analysis.`,
+          content: `You are an expert document analyzer specializing in ${analysisType} analysis.
+          Analyze the document and provide a structured response with:
+          1. A risk level (low, medium, high)
+          2. A summary of key findings
+          3. Specific red flags or concerns
+          4. Recommendations
+          Format the response as JSON with the following structure:
+          {
+            "summary": {
+              "riskLevel": "low|medium|high",
+              "description": "overall summary",
+              "recommendations": ["rec1", "rec2"]
+            },
+            "flags": [
+              {
+                "type": "risk type",
+                "severity": "low|medium|high",
+                "description": "description",
+                "start": textStartIndex,
+                "end": textEndIndex
+              }
+            ]
+          }`,
         },
         {
           role: 'user',
-          content: `${prompts[analysisType]}\n\nDocument content:\n${text}`,
+          content: text,
         },
       ],
-      temperature: 0.7,
-      max_tokens: 2000,
+      response_format: { type: 'json_object' },
     });
+
+    const analysis = JSON.parse(completion.choices[0].message.content);
 
     // Store results in Firestore
     const firestore = getFirestore();
@@ -117,21 +152,23 @@ export const analyzeDocument = functions.https.onCall(async (data, context) => {
       userId: context.auth.uid,
       fileName: fileName,
       analysisType: analysisType,
+      text,
+      summary: analysis.summary,
       status: 'completed',
       createdAt: Timestamp.now(),
       expiresAt: Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)), // 30 days
     });
 
-    // Store detailed results in subcollection
-    await analysisRef.collection('results').add({
-      analysis: completion.choices[0].message.content,
-      metadata: {
-        analysisType,
-        documentName: metadata.name,
-        timestamp: new Date().toISOString(),
-      },
-      createdAt: Timestamp.now(),
+    // Store flags in subcollection
+    const batch = firestore.batch();
+    analysis.flags.forEach((flag: any) => {
+      const flagRef = analysisRef.collection('flags').doc();
+      batch.set(flagRef, {
+        ...flag,
+        createdAt: Timestamp.now(),
+      });
     });
+    await batch.commit();
 
     // Schedule file deletion (after 30 days)
     const deleteAfter = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
@@ -149,7 +186,7 @@ export const analyzeDocument = functions.https.onCall(async (data, context) => {
 
     return {
       analysisId: analysisRef.id,
-      status: 'completed',
+      ...analysis,
     };
   } catch (error) {
     console.error('Analysis error:', error);
