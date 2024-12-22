@@ -1,5 +1,5 @@
 import { AppUser, UserRole } from '@rizzium/shared/interfaces';
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
   Auth,
   User,
@@ -12,32 +12,22 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
 } from '@angular/fire/auth';
-import {
-  Firestore,
-  doc,
-  setDoc,
-  getDoc,
-  updateDoc,
-  arrayUnion,
-  Timestamp,
-} from '@angular/fire/firestore';
+import { Firestore, doc, setDoc, getDoc, updateDoc, arrayUnion, Timestamp } from '@angular/fire/firestore';
 import { Observable, BehaviorSubject, from } from 'rxjs';
 import { first, tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
+import { ErrorHandlerService } from './error-handler.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class FirebaseAuthService {
-  private userSubject: BehaviorSubject<User | null> =
-    new BehaviorSubject<User | null>(null);
+  private userSubject: BehaviorSubject<User | null> = new BehaviorSubject<User | null>(null);
   user$: Observable<User | null> = this.userSubject.asObservable();
+  private auth = inject(Auth);
+  private errorHandler = inject(ErrorHandlerService);
 
-  constructor(
-    private auth: Auth,
-    private firestore: Firestore,
-    private router: Router
-  ) {
+  constructor(private firestore: Firestore, private router: Router) {
     onAuthStateChanged(this.auth, (user) => {
       console.log('Auth state changed:', user);
       if (user) {
@@ -50,15 +40,8 @@ export class FirebaseAuthService {
     });
   }
 
-  async createUserWithEmailAndPassword(
-    email: string,
-    password: string
-  ): Promise<UserCredential> {
-    const credential = await createUserWithEmailAndPassword(
-      this.auth,
-      email,
-      password
-    );
+  async createUserWithEmailAndPassword(email: string, password: string): Promise<UserCredential> {
+    const credential = await createUserWithEmailAndPassword(this.auth, email, password);
     await this.initializeUser(credential.user);
     return credential;
   }
@@ -93,16 +76,11 @@ export class FirebaseAuthService {
     );
   }
 
-  private async getUserRole(
-    user: User
-  ): Promise<{ [businessId: string]: UserRole }> {
+  private async getUserRole(user: User): Promise<{ [businessId: string]: UserRole }> {
     const userRef = doc(this.firestore, `users/${user.uid}`);
     const userSnap = await getDoc(userRef);
     if (userSnap.exists()) {
-      return (
-        (userSnap.data()['businesses'] as { [businessId: string]: UserRole }) ||
-        {}
-      );
+      return (userSnap.data()['businesses'] as { [businessId: string]: UserRole }) || {};
     }
     return {};
   }
@@ -117,23 +95,16 @@ export class FirebaseAuthService {
     }
   }
 
-  signInWithEmailAndPassword(
-    email: string,
-    password: string
-  ): Observable<UserCredential> {
+  signInWithEmailAndPassword(email: string, password: string): Observable<UserCredential> {
     return from(signInWithEmailAndPassword(this.auth, email, password)).pipe(
-      tap((userCredential) =>
-        console.log('User signed in:', userCredential.user)
-      )
+      tap((userCredential) => console.log('User signed in:', userCredential.user))
     );
   }
 
   signInWithGoogle(): Observable<UserCredential> {
     const provider = new GoogleAuthProvider();
     return from(signInWithPopup(this.auth, provider)).pipe(
-      tap((userCredential) =>
-        console.log('User signed in with Google:', userCredential.user)
-      )
+      tap((userCredential) => console.log('User signed in with Google:', userCredential.user))
     );
   }
 
@@ -159,10 +130,7 @@ export class FirebaseAuthService {
       [`businesses.${businessId}`]: role || 'customer',
     });
 
-    const businessUserRef = doc(
-      this.firestore,
-      `businesses/${businessId}/businessUsers/${user.uid}`
-    );
+    const businessUserRef = doc(this.firestore, `businesses/${businessId}/businessUsers/${user.uid}`);
     await setDoc(
       businessUserRef,
       {

@@ -1,11 +1,17 @@
 import { Route } from '@angular/router';
 import { LandingComponent } from '@rizzium/shared/ui/molecules';
 import { AuthGuard } from '@rizzium/shared/guards';
+import { NotAuthGuard } from '@rizzium/shared/guards';
 
 export const appRoutes: Route[] = [
   {
     path: '',
     component: LandingComponent,
+  },
+  {
+    path: 'login',
+    loadComponent: () => import('./pages/login/login.page').then((m) => m.LoginPage),
+    canActivate: [NotAuthGuard],
   },
   {
     path: 'file-upload',
@@ -21,9 +27,5 @@ export const appRoutes: Route[] = [
     path: 'settings',
     loadComponent: () => import('./pages/settings/settings.page').then((m) => m.SettingsPage),
     canActivate: [AuthGuard],
-  },
-  {
-    path: 'login',
-    loadComponent: () => import('./pages/login/login.page').then((m) => m.LoginPage),
   },
 ];

@@ -1,8 +1,10 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { addIcons } from 'ionicons';
 import { arrowBackOutline, logOutOutline } from 'ionicons/icons';
+import { FirebaseAuthService } from '@rizzium/shared/services';
+import { map } from 'rxjs/operators';
 
 import {
   IonHeader,
@@ -42,14 +44,27 @@ export class HeaderComponent {
   @Input() showBackButton = true;
   @Output() buttonClicked = new EventEmitter<string>();
   @Input() showLogoutButton = true;
+  @Input() authMode: 'login' | 'register' = 'login';
+  @Output() authModeChange = new EventEmitter<'login' | 'register'>();
+
+  authService = inject(FirebaseAuthService);
+  isAuthenticated$ = this.authService.user$.pipe(map((user) => !!user));
 
   constructor() {
     addIcons({ arrowBackOutline, logOutOutline });
   }
 
-  buttonClick(type: string) {
-    console.log('button clicked', type);
-    // output event
-    this.buttonClicked.emit(type);
+  toggleAuthMode() {
+    this.authMode = this.authMode === 'login' ? 'register' : 'login';
+    this.authModeChange.emit(this.authMode);
+  }
+
+  async logout() {
+    try {
+      await this.authService.signOut();
+      this.buttonClicked.emit('logout');
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
   }
 }

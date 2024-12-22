@@ -6,8 +6,20 @@ import { IonRouterOutlet, IonApp } from '@ionic/angular/standalone';
   standalone: true,
   imports: [CommonModule, IonRouterOutlet, IonApp],
   selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.scss',
+  template: `
+    <ion-app>
+      <h1 data-cy="welcome-message">Welcome to FineScan</h1>
+      <ion-router-outlet></ion-router-outlet>
+    </ion-app>
+  `,
+  styles: [
+    `
+      h1 {
+        text-align: center;
+        margin: 1rem;
+      }
+    `,
+  ],
 })
 export class AppComponent {
   title = 'finescan';

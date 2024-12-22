@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ToastController } from '@ionic/angular';
+import { ToastController } from '@ionic/angular/standalone';
 
 @Injectable({
   providedIn: 'root',
@@ -7,52 +7,30 @@ import { ToastController } from '@ionic/angular';
 export class ErrorHandlerService {
   constructor(private toastController: ToastController) {}
 
-  async handleError(error: any, customMessage: string) {
+  async handleError(error: any, defaultMessage = 'An error occurred') {
     console.error('Error:', error);
 
-    let errorMessage = customMessage;
-    if (error instanceof Error) {
-      errorMessage += `: ${error.message}`;
+    let message = defaultMessage;
+    if (error?.message) {
+      if (error.message.includes('auth/email-already-in-use')) {
+        message = 'This email is already registered';
+      } else if (error.message.includes('auth/wrong-password')) {
+        message = 'Invalid email or password';
+      } else if (error.message.includes('auth/user-not-found')) {
+        message = 'User not found';
+      } else if (error.message.includes('auth/invalid-email')) {
+        message = 'Invalid email format';
+      }
     }
 
-    await this.showToast(errorMessage, 'danger');
-  }
-
-  async showSuccess(message: string) {
-    await this.showToast(message, 'success');
-  }
-
-  async showWarning(message: string) {
-    await this.showToast(message, 'warning');
-  }
-
-  async showInfo(message: string) {
-    await this.showToast(message, 'info');
-  }
-
-  private async showToast(message: string, color: string) {
     const toast = await this.toastController.create({
-      message: message,
+      message,
       duration: 3000,
-      position: 'bottom',
-      color: color,
+      position: 'top',
+      color: 'danger',
+      cssClass: 'error-toast',
     });
-    await toast.present();
-  }
 
-  handleHttpError(error: any): string {
-    if (error.status === 0) {
-      return 'Unable to connect to the server. Please check your internet connection.';
-    } else if (error.status === 401) {
-      return 'You are not authorized to perform this action. Please log in again.';
-    } else if (error.status === 403) {
-      return 'You do not have permission to perform this action.';
-    } else if (error.status === 404) {
-      return 'The requested resource was not found.';
-    } else if (error.status >= 500) {
-      return 'A server error occurred. Please try again later.';
-    } else {
-      return 'An unexpected error occurred. Please try again.';
-    }
+    await toast.present();
   }
 }

@@ -6,7 +6,7 @@ import { map, take } from 'rxjs/operators';
 @Injectable({
   providedIn: 'root',
 })
-export class AuthGuard implements CanActivate {
+export class NotAuthGuard implements CanActivate {
   private authService = inject(FirebaseAuthService);
   private router = inject(Router);
 
@@ -15,11 +15,10 @@ export class AuthGuard implements CanActivate {
       take(1),
       map((user) => {
         if (user) {
-          return true;
-        } else {
-          this.router.navigate(['/login']);
+          this.router.navigate(['/']);
           return false;
         }
+        return true;
       })
     );
   }

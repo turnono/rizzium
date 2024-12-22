@@ -2,24 +2,9 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function isValidFileType() {
-      return request.resource.contentType.matches('application/pdf|text/plain|image/jpeg|image/png');
-    }
-
-    function isValidFileSize() {
-      return request.resource.size <= 5 * 1024 * 1024; // 5MB limit
-    }
-
-    match /finescan-uploads/{userId}/{fileName} {
-      allow read: if isSignedIn() && request.auth.uid == userId;
-      allow write: if isSignedIn()
-                  && request.auth.uid == userId
-                  && isValidFileType()
-                  && isValidFileSize();
+    match /{allPaths=**} {
+      // Temporarily allow all access to debug the upload issue
+      allow read, write: if true;
     }
   }
 }

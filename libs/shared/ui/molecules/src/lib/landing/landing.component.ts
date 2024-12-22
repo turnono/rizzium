@@ -15,6 +15,7 @@ import {
   IonCardContent,
   IonCardSubtitle,
   IonButtons,
+  AlertController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -63,6 +64,9 @@ import { Subscription } from 'rxjs';
           </ion-button>
           <ion-button [routerLink]="['/settings']">
             <ion-icon slot="icon-only" name="settings"></ion-icon>
+          </ion-button>
+          <ion-button *ngIf="isLoggedIn" (click)="confirmLogout()" data-cy="logout-button">
+            <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
           </ion-button>
           <ion-button (click)="handleAuth()">
             <ion-icon slot="icon-only" [name]="isLoggedIn ? 'log-out' : 'log-in'"></ion-icon>
@@ -201,6 +205,61 @@ import { Subscription } from 'rxjs';
           gap: 1rem;
         }
       }
+
+      /* Custom Alert Styles */
+      ::ng-deep .alert-logout {
+        --width: 300px;
+        --max-width: 90%;
+        --background: var(--ion-color-light);
+
+        .alert-wrapper {
+          border-radius: 16px;
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .alert-head {
+          padding: 16px;
+          text-align: center;
+
+          .alert-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--ion-color-dark);
+          }
+        }
+
+        .alert-message {
+          padding: 16px;
+          color: var(--ion-color-medium);
+          font-size: 1rem;
+          text-align: center;
+        }
+
+        .alert-button-group {
+          padding: 8px;
+          justify-content: space-evenly;
+
+          button {
+            flex: 1;
+            margin: 0 8px;
+            height: 44px;
+            font-size: 1rem;
+            font-weight: 500;
+            text-transform: none;
+            border-radius: 8px;
+
+            &.alert-button-cancel {
+              --background: var(--ion-color-medium-tint);
+              --color: var(--ion-color-medium-contrast);
+            }
+
+            &.alert-button-confirm {
+              --background: var(--ion-color-danger);
+              --color: var(--ion-color-danger-contrast);
+            }
+          }
+        }
+      }
     `,
   ],
 })
@@ -208,7 +267,11 @@ export class LandingComponent implements OnDestroy {
   isLoggedIn = false;
   private authSubscription: Subscription;
 
-  constructor(private router: Router, private authService: FirebaseAuthService) {
+  constructor(
+    private router: Router,
+    private authService: FirebaseAuthService,
+    private alertController: AlertController
+  ) {
     addIcons({
       documentTextOutline,
       listOutline,
@@ -234,6 +297,39 @@ export class LandingComponent implements OnDestroy {
       this.router.navigate(['/']);
     } else {
       this.router.navigate(['/login']);
+    }
+  }
+
+  async confirmLogout() {
+    const alert = await this.alertController.create({
+      header: 'Confirm Logout',
+      message: 'Are you sure you want to logout?',
+      cssClass: 'alert-logout',
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+          cssClass: 'alert-button-cancel',
+        },
+        {
+          text: 'Logout',
+          cssClass: 'alert-button-confirm',
+          handler: () => {
+            this.logout();
+          },
+        },
+      ],
+    });
+
+    await alert.present();
+  }
+
+  async logout() {
+    try {
+      await this.authService.signOut();
+      this.router.navigate(['/login']);
+    } catch (error) {
+      console.error('Error during logout:', error);
     }
   }
 
