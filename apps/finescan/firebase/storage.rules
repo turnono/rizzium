@@ -1,15 +1,38 @@
 rules_version = '2';
 
-// Craft rules based on data in your Firestore database
-// allow write: if firestore.get(
-//    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
 service firebase.storage {
   match /b/{bucket}/o {
-    match /finescan-uploads/{allPaths=**} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null
-                   && request.resource.size < 5 * 1024 * 1024 // 5MB max file size
-                   && request.resource.contentType.matches('image/.*|application/pdf'); // Only allow images and PDFs
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidFileType() {
+      return request.resource.contentType.matches('application/pdf|image/.*');
+    }
+
+    function isValidFileSize() {
+      return request.resource.size <= 10 * 1024 * 1024; // 10MB limit
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // User-specific uploads folder
+    match /finescan-uploads/{userId}/{fileName} {
+      allow read: if isSignedIn() && isOwner(userId);
+      allow create: if isSignedIn() &&
+                      isOwner(userId) &&
+                      isValidFileType() &&
+                      isValidFileSize();
+      allow delete: if isSignedIn() && isOwner(userId);
+    }
+
+    // Processed results folder
+    match /finescan-results/{userId}/{fileName} {
+      allow read: if isSignedIn() && isOwner(userId);
+      allow write: if false; // Only written by Cloud Functions
     }
   }
 }

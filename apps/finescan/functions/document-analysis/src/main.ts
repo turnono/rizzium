@@ -16,6 +16,7 @@ import { z } from 'zod';
 import fetch from 'node-fetch';
 import * as dotenv from 'dotenv';
 import { resolve } from 'path';
+import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 
 // Load environment variables from .env file
 dotenv.config({ path: resolve(__dirname, '../../../.env') });
@@ -47,18 +48,19 @@ export const analyzeDocument = functions.https.onCall(async (data, context) => {
     // Validate input
     const { documentUrl, analysisType } = AnalyzeDocumentSchema.parse(data);
 
-    // Extract file ID from the URL
-    const fileId = documentUrl.split('/').pop();
-    if (!fileId) {
+    // Extract file info from URL
+    const userId = context.auth.uid;
+    const fileName = documentUrl.split('/').pop();
+    if (!fileName) {
       throw new functions.https.HttpsError('invalid-argument', 'Invalid document URL');
     }
 
     // Get the file from Firebase Storage
     const storage = getStorage();
     const bucket = storage.bucket();
-    const file = bucket.file(`finescan-uploads/${fileId}`);
+    const file = bucket.file(`finescan-uploads/${userId}/${fileName}`);
 
-    // Check if file exists and user has access
+    // Check if file exists
     const [exists] = await file.exists();
     if (!exists) {
       throw new functions.https.HttpsError('not-found', 'Document not found');
@@ -109,26 +111,79 @@ export const analyzeDocument = functions.https.onCall(async (data, context) => {
       max_tokens: 2000,
     });
 
-    // Return the analysis
-    return {
+    // Store results in Firestore
+    const firestore = getFirestore();
+    const analysisRef = await firestore.collection('analyses').add({
+      userId: context.auth.uid,
+      fileName: fileName,
+      analysisType: analysisType,
+      status: 'completed',
+      createdAt: Timestamp.now(),
+      expiresAt: Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)), // 30 days
+    });
+
+    // Store detailed results in subcollection
+    await analysisRef.collection('results').add({
       analysis: completion.choices[0].message.content,
       metadata: {
         analysisType,
         documentName: metadata.name,
         timestamp: new Date().toISOString(),
       },
+      createdAt: Timestamp.now(),
+    });
+
+    // Schedule file deletion (after 30 days)
+    const deleteAfter = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
+    setTimeout(async () => {
+      try {
+        await file.delete();
+        await analysisRef.update({
+          status: 'archived',
+          fileDeleted: true,
+        });
+      } catch (error) {
+        console.error('Error deleting file:', error);
+      }
+    }, deleteAfter);
+
+    return {
+      analysisId: analysisRef.id,
+      status: 'completed',
     };
   } catch (error) {
-    console.error('Document analysis error:', error);
+    console.error('Analysis error:', error);
+    throw new functions.https.HttpsError('internal', 'Analysis failed');
+  }
+});
 
-    if (error instanceof z.ZodError) {
-      throw new functions.https.HttpsError('invalid-argument', 'Invalid input parameters', error.errors);
+// Add a Firestore trigger to clean up expired analyses
+export const cleanupExpiredAnalyses = functions.pubsub.schedule('every 24 hours').onRun(async (context) => {
+  const firestore = getFirestore();
+  const storage = getStorage();
+  const bucket = storage.bucket();
+
+  const now = Timestamp.now();
+  const expiredAnalyses = await firestore
+    .collection('analyses')
+    .where('expiresAt', '<=', now)
+    .where('status', '==', 'completed')
+    .get();
+
+  for (const doc of expiredAnalyses.docs) {
+    const data = doc.data();
+    try {
+      // Delete the original file
+      const file = bucket.file(`finescan-uploads/${data.userId}/${data.fileName}`);
+      await file.delete().catch(() => {}); // Ignore if file already deleted
+
+      // Update analysis status
+      await doc.ref.update({
+        status: 'archived',
+        fileDeleted: true,
+      });
+    } catch (error) {
+      console.error(`Error cleaning up analysis ${doc.id}:`, error);
     }
-
-    if (error instanceof functions.https.HttpsError) {
-      throw error;
-    }
-
-    throw new functions.https.HttpsError('internal', 'An error occurred while analyzing the document');
   }
 });
