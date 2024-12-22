@@ -372,3 +372,41 @@ Common issues and solutions:
 2. Create validation scripts for service account permissions
 3. Implement service account key rotation
 4. Develop automated API enablement process
+
+I'll update just the command section in both files.
+
+In README.md, under the "Creating a New App" section:
+
+````markdown
+### Creating Firebase Functions
+
+```bash
+# Create a Firebase function
+nx g @simondotm/nx-firebase:function <function-name> --app=<app-name>-firebase --directory=apps/<app-name>/functions
+
+# Example
+nx g @simondotm/nx-firebase:function document-analysis --app=finescan-firebase --directory=apps/finescan/functions
+```
+````
+
+````
+
+And in GETTING_STARTED.md, update the "Manual Setup" section:
+
+```markdown
+### Manual Setup (if needed)
+
+```bash
+# Create Angular app
+nx g @nx/angular:app {app-name} --directory=apps/{app-name}
+
+# Add Firebase
+nx g @simondotm/nx-firebase:app firebase --directory=apps/{app-name} --project={app-name}
+
+# Add Firebase function
+nx g @simondotm/nx-firebase:function {function-name} --app={app-name}-firebase --directory=apps/{app-name}/functions
+````
+
+```
+
+```
