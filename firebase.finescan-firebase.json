@@ -20,7 +20,7 @@
     {
       "codebase": "finescan-functions-document-analysis",
       "source": "dist/apps/finescan/functions/document-analysis",
-      "runtime": "nodejs16",
+      "runtime": "nodejs18",
       "ignore": ["*.local"]
     },
     {
