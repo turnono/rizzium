@@ -19,7 +19,18 @@ import {
   IonProgressBar,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { cloudUploadOutline, checkmarkCircleOutline } from 'ionicons/icons';
+import {
+  cloudUploadOutline,
+  checkmarkCircleOutline,
+  shieldCheckmarkOutline,
+  lockClosedOutline,
+  serverOutline,
+  timeOutline,
+  arrowForwardOutline,
+  helpCircleOutline,
+  informationCircleOutline,
+} from 'ionicons/icons';
+import { AlertController } from '@ionic/angular';
 
 @Component({
   selector: 'app-file-upload',
@@ -49,6 +60,34 @@ import { cloudUploadOutline, checkmarkCircleOutline } from 'ionicons/icons';
     </ion-header>
 
     <ion-content class="ion-padding">
+      <!-- Security Notice Card -->
+      <ion-card class="security-notice">
+        <ion-card-content>
+          <div class="security-header">
+            <ion-icon name="shield-checkmark" color="success"></ion-icon>
+            <h2>Your Privacy & Security</h2>
+          </div>
+          <div class="security-points">
+            <div class="security-point">
+              <ion-icon name="lock-closed-outline" color="medium"></ion-icon>
+              <span>End-to-end encryption for all documents</span>
+            </div>
+            <div class="security-point">
+              <ion-icon name="server-outline" color="medium"></ion-icon>
+              <span>Secure cloud storage with Firebase</span>
+            </div>
+            <div class="security-point">
+              <ion-icon name="time-outline" color="medium"></ion-icon>
+              <span>Automatic deletion after 30 days</span>
+            </div>
+          </div>
+          <ion-button fill="clear" size="small" (click)="showPrivacyDetails()">
+            Learn More About Security
+            <ion-icon name="arrow-forward-outline" slot="end"></ion-icon>
+          </ion-button>
+        </ion-card-content>
+      </ion-card>
+
       <ion-card>
         <ion-card-header>
           <ion-card-title>Upload Document</ion-card-title>
@@ -80,6 +119,16 @@ import { cloudUploadOutline, checkmarkCircleOutline } from 'ionicons/icons';
           }
         </ion-card-content>
       </ion-card>
+
+      <div class="help-section">
+        <ion-icon name="help-circle-outline"></ion-icon>
+        <span>Need help uploading?</span>
+      </div>
+
+      <div class="info-section">
+        <ion-icon name="information-circle-outline"></ion-icon>
+        <span>File upload guidelines</span>
+      </div>
     </ion-content>
   `,
   styles: [
@@ -182,6 +231,46 @@ import { cloudUploadOutline, checkmarkCircleOutline } from 'ionicons/icons';
           }
         }
       }
+
+      .security-notice {
+        margin-bottom: 16px;
+        border-left: 4px solid var(--ion-color-success);
+
+        .security-header {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 16px;
+
+          ion-icon {
+            font-size: 24px;
+          }
+
+          h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 500;
+          }
+        }
+
+        .security-points {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          margin-bottom: 16px;
+        }
+
+        .security-point {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 14px;
+
+          ion-icon {
+            font-size: 18px;
+          }
+        }
+      }
     `,
   ],
 })
@@ -192,8 +281,18 @@ export class FileUploadPage {
   isUploading = false;
   uploadProgress = 0;
 
-  constructor(private storage: Storage, private router: Router) {
-    addIcons({ cloudUploadOutline, checkmarkCircleOutline });
+  constructor(private storage: Storage, private router: Router, private alertController: AlertController) {
+    addIcons({
+      cloudUploadOutline,
+      checkmarkCircleOutline,
+      shieldCheckmarkOutline,
+      lockClosedOutline,
+      serverOutline,
+      timeOutline,
+      arrowForwardOutline,
+      helpCircleOutline,
+      informationCircleOutline,
+    });
   }
 
   onDragOver(event: DragEvent) {
@@ -242,5 +341,33 @@ export class FileUploadPage {
     if (this.fileUploadComponent) {
       this.fileUploadComponent.openFileDialog(); // Assuming this method exists in FileUploadComponent
     }
+  }
+
+  async showPrivacyDetails() {
+    const alert = await this.alertController.create({
+      header: 'Security & Privacy Details',
+      message: `
+        <div class="privacy-details">
+          <h3>How We Protect Your Data</h3>
+          <ul>
+            <li>Documents are encrypted during upload and storage</li>
+            <li>Access is restricted to your account only</li>
+            <li>Data is stored in secure Firebase servers</li>
+            <li>Automatic deletion after 30 days</li>
+          </ul>
+
+          <h3>Your Rights</h3>
+          <ul>
+            <li>Request data deletion at any time</li>
+            <li>Download your documents</li>
+            <li>View access logs</li>
+          </ul>
+        </div>
+      `,
+      cssClass: 'privacy-alert',
+      buttons: ['Got It'],
+    });
+
+    await alert.present();
   }
 }

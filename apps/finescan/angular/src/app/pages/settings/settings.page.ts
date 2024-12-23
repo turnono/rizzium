@@ -19,6 +19,9 @@ import {
   IonCardTitle,
   IonCardContent,
   IonNote,
+  IonToast,
+  IonBadge,
+  AlertController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -31,6 +34,20 @@ import {
   imageOutline,
   flashOutline,
   documentTextOutline,
+  colorPalette,
+  speedometer,
+  informationCircleOutline,
+  checkmarkCircleOutline,
+  checkmark,
+  alertCircleOutline,
+  warning,
+  shieldCheckmarkOutline,
+  eyeOffOutline,
+  timeOutline,
+  arrowForwardOutline,
+  helpCircleOutline,
+  lockClosedOutline,
+  serverOutline,
 } from 'ionicons/icons';
 import { DataSaverService } from '@rizzium/shared/services';
 
@@ -57,137 +74,185 @@ import { DataSaverService } from '@rizzium/shared/services';
     IonCardTitle,
     IonCardContent,
     IonNote,
+    IonToast,
+    IonBadge,
   ],
   template: `
     <ion-header>
       <ion-toolbar>
-        <ion-title>Settings</ion-title>
+        <ion-title role="heading" aria-level="1">Settings</ion-title>
       </ion-toolbar>
     </ion-header>
 
     <ion-content class="ion-padding">
-      <ion-card>
-        <ion-card-header>
-          <ion-card-title>Appearance</ion-card-title>
-        </ion-card-header>
-        <ion-card-content>
-          <ion-list>
-            <ion-item>
-              <ion-icon name="moon-outline" slot="start"></ion-icon>
-              <ion-label>Dark Mode</ion-label>
-              <ion-toggle [(ngModel)]="settings.darkMode" (ionChange)="updateSettings()"></ion-toggle>
-            </ion-item>
+      @if (settingsSaved) {
+      <ion-toast
+        message="Settings saved successfully"
+        duration="2000"
+        color="success"
+        position="top"
+        [isOpen]="true"
+        role="alert"
+        aria-live="polite"
+      ></ion-toast>
+      }
 
-            <ion-item>
-              <ion-icon name="color-palette-outline" slot="start"></ion-icon>
-              <ion-label>Theme Color</ion-label>
-              <ion-select [(ngModel)]="settings.theme" (ionChange)="updateSettings()">
-                <ion-select-option value="default">Default</ion-select-option>
-                <ion-select-option value="purple">Purple</ion-select-option>
-                <ion-select-option value="green">Green</ion-select-option>
-              </ion-select>
-            </ion-item>
-          </ion-list>
-        </ion-card-content>
-      </ion-card>
+      <div class="settings-section" role="region" aria-label="Appearance Settings">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title role="heading" aria-level="2">
+              <ion-icon name="color-palette" aria-hidden="true"></ion-icon>
+              Appearance
+              <ion-badge color="primary" class="new-feature">New</ion-badge>
+            </ion-card-title>
+          </ion-card-header>
 
-      <ion-card>
-        <ion-card-header>
-          <ion-card-title>Notifications</ion-card-title>
-        </ion-card-header>
-        <ion-card-content>
-          <ion-list>
-            <ion-item>
-              <ion-icon name="notifications-outline" slot="start"></ion-icon>
-              <ion-label>Push Notifications</ion-label>
-              <ion-toggle [(ngModel)]="settings.notifications" (ionChange)="updateSettings()"></ion-toggle>
-            </ion-item>
+          <ion-card-content>
+            <ion-list role="list">
+              <ion-item role="listitem">
+                <ion-icon name="moon-outline" slot="start" aria-hidden="true"></ion-icon>
+                <ion-label id="dark-mode-label">
+                  Dark Mode
+                  <p class="setting-description">Reduce eye strain in low light</p>
+                </ion-label>
+                <ion-toggle
+                  [(ngModel)]="settings.darkMode"
+                  (ionChange)="updateSettings()"
+                  [attr.aria-labelledby]="'dark-mode-label'"
+                  [attr.aria-label]="'Dark Mode'"
+                ></ion-toggle>
+              </ion-item>
 
-            <ion-item>
-              <ion-icon name="download-outline" slot="start"></ion-icon>
-              <ion-label>Auto-download Reports</ion-label>
-              <ion-toggle [(ngModel)]="settings.autoDownload" (ionChange)="updateSettings()"></ion-toggle>
-            </ion-item>
-          </ion-list>
-        </ion-card-content>
-      </ion-card>
+              <ion-item role="listitem">
+                <ion-icon name="color-palette-outline" slot="start" aria-hidden="true"></ion-icon>
+                <ion-label id="theme-label">
+                  Theme Color
+                  <p class="setting-description">Choose your preferred color scheme</p>
+                </ion-label>
+                <ion-select
+                  [(ngModel)]="settings.theme"
+                  (ionChange)="updateSettings()"
+                  [attr.aria-labelledby]="'theme-label'"
+                  interface="popover"
+                >
+                  <ion-select-option value="default">Default</ion-select-option>
+                  <ion-select-option value="purple">Purple</ion-select-option>
+                  <ion-select-option value="green">Green</ion-select-option>
+                </ion-select>
+              </ion-item>
+            </ion-list>
+          </ion-card-content>
+        </ion-card>
+      </div>
 
-      <ion-card>
-        <ion-card-header>
-          <ion-card-title>Language & Region</ion-card-title>
-        </ion-card-header>
-        <ion-card-content>
-          <ion-list>
-            <ion-item>
-              <ion-icon name="language-outline" slot="start"></ion-icon>
-              <ion-label>Language</ion-label>
-              <ion-select [(ngModel)]="settings.language" (ionChange)="updateSettings()">
-                <ion-select-option value="en">English</ion-select-option>
-                <ion-select-option value="es">Español</ion-select-option>
-                <ion-select-option value="fr">Français</ion-select-option>
-              </ion-select>
-            </ion-item>
-          </ion-list>
-        </ion-card-content>
-      </ion-card>
+      <div class="settings-section" role="region" aria-label="Data Saver Settings">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title role="heading" aria-level="2">
+              <ion-icon name="save-outline" aria-hidden="true"></ion-icon>
+              Data Saver
+            </ion-card-title>
+          </ion-card-header>
 
-      <ion-card>
-        <ion-card-header>
-          <ion-card-title>Data Saving</ion-card-title>
-        </ion-card-header>
-        <ion-card-content>
-          <ion-list>
-            <ion-item>
-              <ion-icon name="save-outline" slot="start"></ion-icon>
-              <ion-label>Data Saver Mode</ion-label>
-              <ion-toggle [(ngModel)]="dataSaverSettings.enabled" (ionChange)="updateDataSaverSettings()"></ion-toggle>
-            </ion-item>
+          <ion-card-content>
+            <ion-list role="list">
+              <div class="data-saver-section" [class.active]="dataSaverSettings.enabled">
+                <ion-item class="data-saver-toggle" role="listitem">
+                  <ion-icon name="save-outline" slot="start" aria-hidden="true"></ion-icon>
+                  <ion-label id="data-saver-label">
+                    Data Saver Mode
+                    <p class="setting-description">Reduce data usage and improve performance</p>
+                  </ion-label>
+                  <ion-toggle
+                    [(ngModel)]="dataSaverSettings.enabled"
+                    (ionChange)="updateDataSaverSettings()"
+                    [attr.aria-labelledby]="'data-saver-label'"
+                    [attr.aria-label]="'Data Saver Mode'"
+                  ></ion-toggle>
+                </ion-item>
 
-            <ion-item>
-              <ion-icon name="image-outline" slot="start"></ion-icon>
-              <ion-label>Image Quality</ion-label>
-              <ion-select
-                [(ngModel)]="dataSaverSettings.imageQuality"
-                (ionChange)="updateDataSaverSettings()"
-                [disabled]="!dataSaverSettings.enabled"
-              >
-                <ion-select-option value="100">High (100%)</ion-select-option>
-                <ion-select-option value="75">Medium (75%)</ion-select-option>
-                <ion-select-option value="50">Low (50%)</ion-select-option>
-              </ion-select>
-            </ion-item>
+                @if (dataSaverSettings.enabled) {
+                <div class="data-saver-info" role="status" aria-live="polite">
+                  <ion-icon name="speedometer" aria-hidden="true"></ion-icon>
+                  <div class="info-content">
+                    <h4>Data Saver is Active</h4>
+                    <p>Optimizing performance and reducing data usage</p>
+                  </div>
+                </div>
+                }
+              </div>
+            </ion-list>
+          </ion-card-content>
+        </ion-card>
+      </div>
 
-            <ion-item>
-              <ion-icon name="flash-outline" slot="start"></ion-icon>
-              <ion-label>Disable Animations</ion-label>
-              <ion-toggle
-                [(ngModel)]="dataSaverSettings.disableAnimations"
-                (ionChange)="updateDataSaverSettings()"
-                [disabled]="!dataSaverSettings.enabled"
-              ></ion-toggle>
-            </ion-item>
+      <div class="settings-section" role="region" aria-label="Privacy & Security Settings">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title role="heading" aria-level="2">
+              <ion-icon name="shield-checkmark" aria-hidden="true"></ion-icon>
+              Privacy & Security
+            </ion-card-title>
+          </ion-card-header>
 
-            <ion-item>
-              <ion-icon name="document-text-outline" slot="start"></ion-icon>
-              <ion-label>Text-Only Mode</ion-label>
-              <ion-toggle
-                [(ngModel)]="dataSaverSettings.textOnlyMode"
-                (ionChange)="updateDataSaverSettings()"
-                [disabled]="!dataSaverSettings.enabled"
-              ></ion-toggle>
-            </ion-item>
-          </ion-list>
+          <ion-card-content>
+            <ion-list role="list">
+              <ion-item role="listitem">
+                <ion-icon name="time-outline" slot="start" aria-hidden="true"></ion-icon>
+                <ion-label id="retention-label">
+                  Data Retention
+                  <p class="setting-description">Automatically delete documents after</p>
+                </ion-label>
+                <ion-select
+                  [(ngModel)]="settings.dataRetention"
+                  (ionChange)="updateSettings()"
+                  [attr.aria-labelledby]="'retention-label'"
+                  interface="popover"
+                >
+                  <ion-select-option value="7">7 days</ion-select-option>
+                  <ion-select-option value="30">30 days</ion-select-option>
+                  <ion-select-option value="90">90 days</ion-select-option>
+                </ion-select>
+              </ion-item>
 
-          @if (dataSaverSettings.enabled) {
-          <div class="data-saver-info">
-            <ion-note>
-              Data saver mode reduces bandwidth usage by optimizing images and disabling certain features. This may
-              affect the visual quality of the application.
-            </ion-note>
-          </div>
-          }
-        </ion-card-content>
-      </ion-card>
+              <ion-item role="listitem">
+                <ion-icon name="eye-off-outline" slot="start" aria-hidden="true"></ion-icon>
+                <ion-label id="privacy-mode-label">
+                  Enhanced Privacy Mode
+                  <p class="setting-description">Additional encryption and privacy features</p>
+                </ion-label>
+                <ion-toggle
+                  [(ngModel)]="settings.enhancedPrivacy"
+                  (ionChange)="updateSettings()"
+                  [attr.aria-labelledby]="'privacy-mode-label'"
+                ></ion-toggle>
+              </ion-item>
+
+              <div class="privacy-info" role="note">
+                <ion-icon name="information-circle" aria-hidden="true"></ion-icon>
+                <div class="info-content">
+                  <h4>Your Privacy is Protected</h4>
+                  <p>All documents are encrypted and stored securely. We never share your data with third parties.</p>
+                  <ion-button fill="clear" size="small" (click)="showPrivacyPolicy()">
+                    View Privacy Policy
+                    <ion-icon name="arrow-forward" slot="end"></ion-icon>
+                  </ion-button>
+                </div>
+              </div>
+            </ion-list>
+          </ion-card-content>
+        </ion-card>
+      </div>
+
+      <div class="help-section">
+        <ion-icon name="help-circle-outline"></ion-icon>
+        <span>Need help with settings?</span>
+      </div>
+
+      <div class="info-section">
+        <ion-icon name="information-circle-outline"></ion-icon>
+        <span>Important privacy information</span>
+      </div>
     </ion-content>
   `,
   styles: [
@@ -265,11 +330,172 @@ import { DataSaverService } from '@rizzium/shared/services';
           }
         }
       }
+
+      .setting-item {
+        margin-bottom: 16px;
+      }
+
+      .setting-description {
+        font-size: 12px;
+        color: var(--ion-color-medium);
+        margin-top: 4px;
+      }
+
+      .setting-help {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 16px;
+        font-size: 12px;
+        color: var(--ion-color-medium);
+
+        ion-icon {
+          font-size: 16px;
+        }
+      }
+
+      .new-feature {
+        font-size: 10px;
+        padding: 4px 8px;
+        margin-left: 8px;
+        vertical-align: middle;
+      }
+
+      .data-saver-section {
+        &.active {
+          .data-saver-toggle {
+            --background: rgba(var(--ion-color-success-rgb), 0.1);
+          }
+        }
+      }
+
+      .data-saver-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 8px 16px;
+        padding: 12px;
+        background: rgba(var(--ion-color-success-rgb), 0.1);
+        border-radius: 8px;
+
+        ion-icon {
+          font-size: 24px;
+          color: var(--ion-color-success);
+        }
+
+        .info-content {
+          h4 {
+            margin: 0;
+            font-size: 14px;
+            color: var(--ion-color-success);
+          }
+
+          p {
+            margin: 4px 0 0;
+            font-size: 12px;
+            color: var(--ion-color-medium);
+          }
+        }
+      }
+
+      // Accessibility-focused styles
+      :host {
+        --min-touch-target: 44px;
+        --focus-outline-color: var(--ion-color-primary);
+      }
+
+      // High contrast mode
+      @media (prefers-contrast: more) {
+        ion-card {
+          border: 2px solid var(--ion-color-dark);
+        }
+
+        .setting-description {
+          color: var(--ion-color-dark);
+        }
+
+        ion-item {
+          --background: var(--ion-color-light);
+          --border-color: var(--ion-color-dark);
+        }
+      }
+
+      // Larger text support
+      @media (prefers-reduced-motion: no-preference) {
+        ion-label {
+          font-size: 1.1rem;
+        }
+
+        .setting-description {
+          font-size: 0.9rem;
+        }
+      }
+
+      // Focus indicators
+      ion-item:focus-within {
+        outline: 2px solid var(--focus-outline-color);
+        outline-offset: -2px;
+      }
+
+      // Touch targets
+      ion-item {
+        min-height: var(--min-touch-target);
+      }
+
+      ion-toggle {
+        padding: calc(var(--min-touch-target) - 24px);
+        margin: calc((var(--min-touch-target) - 24px) * -1);
+      }
+
+      // Color contrast helpers
+      .setting-description {
+        color: var(--ion-color-dark);
+        font-weight: 500;
+      }
+
+      .new-feature {
+        background: var(--ion-color-primary-shade);
+        color: var(--ion-color-light);
+      }
+
+      .privacy-info {
+        margin: 16px;
+        padding: 12px;
+        background: rgba(var(--ion-color-success-rgb), 0.1);
+        border-radius: 8px;
+        display: flex;
+        gap: 12px;
+
+        ion-icon {
+          font-size: 24px;
+          color: var(--ion-color-success);
+        }
+
+        .info-content {
+          h4 {
+            margin: 0;
+            font-size: 14px;
+            color: var(--ion-color-success);
+          }
+
+          p {
+            margin: 4px 0;
+            font-size: 12px;
+            color: var(--ion-color-medium);
+          }
+
+          ion-button {
+            margin: 8px 0 0;
+            font-size: 12px;
+          }
+        }
+      }
     `,
   ],
 })
 export class SettingsPage {
   private dataSaverService = inject(DataSaverService);
+  private alertController = inject(AlertController);
 
   settings = {
     darkMode: false,
@@ -277,6 +503,8 @@ export class SettingsPage {
     autoDownload: false,
     theme: 'default',
     language: 'en',
+    dataRetention: '30',
+    enhancedPrivacy: false,
   };
 
   dataSaverSettings = {
@@ -285,6 +513,8 @@ export class SettingsPage {
     disableAnimations: false,
     textOnlyMode: false,
   };
+
+  settingsSaved = false;
 
   constructor() {
     addIcons({
@@ -297,6 +527,20 @@ export class SettingsPage {
       imageOutline,
       flashOutline,
       documentTextOutline,
+      colorPalette,
+      speedometer,
+      informationCircleOutline,
+      checkmarkCircleOutline,
+      checkmark,
+      alertCircleOutline,
+      warning,
+      shieldCheckmarkOutline,
+      eyeOffOutline,
+      timeOutline,
+      arrowForwardOutline,
+      helpCircleOutline,
+      lockClosedOutline,
+      serverOutline,
     });
     this.loadSettings();
     this.dataSaverService.settings$.subscribe((settings) => {
@@ -313,8 +557,11 @@ export class SettingsPage {
 
   updateSettings() {
     localStorage.setItem('finescan-settings', JSON.stringify(this.settings));
-    // Apply settings changes (theme, language, etc.)
     this.applySettings();
+    this.settingsSaved = true;
+    setTimeout(() => {
+      this.settingsSaved = false;
+    }, 2000);
   }
 
   private applySettings() {
@@ -331,5 +578,30 @@ export class SettingsPage {
 
   updateDataSaverSettings() {
     this.dataSaverService.updateSettings(this.dataSaverSettings);
+  }
+
+  async showPrivacyPolicy() {
+    const alert = await this.alertController.create({
+      header: 'Privacy Policy',
+      message: `
+        <div class="privacy-policy">
+          <h3>Data Collection</h3>
+          <p>We collect only essential data needed for document analysis.</p>
+
+          <h3>Data Storage</h3>
+          <p>Documents are encrypted and stored in secure Firebase servers.</p>
+
+          <h3>Data Deletion</h3>
+          <p>You can delete your data at any time. Documents are automatically deleted based on your retention settings.</p>
+
+          <h3>Your Control</h3>
+          <p>You have full control over your data and can export or delete it at any time.</p>
+        </div>
+      `,
+      cssClass: 'privacy-policy-alert',
+      buttons: ['Close'],
+    });
+
+    await alert.present();
   }
 }
