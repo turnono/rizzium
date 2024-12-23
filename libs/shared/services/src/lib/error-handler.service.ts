@@ -47,7 +47,7 @@ export class ErrorHandlerService {
       } else if (error?.message) {
         message = error.message;
       }
-    }
+
 
     this.showError(message);
   }
