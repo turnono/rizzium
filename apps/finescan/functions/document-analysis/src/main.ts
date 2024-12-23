@@ -11,16 +11,9 @@ import { https } from 'firebase-functions';
 import { initializeApp } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-import * as path from 'path';
 
 // Initialize Firebase Admin
 initializeApp();
-
-// Get __dirname equivalent in ESM
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 export const analyzeDocument = https.onCall(async (data, context) => {
   // Ensure user is authenticated
@@ -47,8 +40,6 @@ export const analyzeDocument = https.onCall(async (data, context) => {
     // Perform analysis (mock implementation)
     const analysisResults = await performAnalysis(text, analysisType);
 
-    // Update the analysis document in Firestore
-    const fileName = path.basename(filePath);
     await getFirestore()
       .collection(`users/${context.auth.uid}/analyses`)
       .where('fileUrl', '==', documentUrl)
