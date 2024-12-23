@@ -55,124 +55,74 @@ import { logoFacebook, logoTwitter, logoLinkedin, logoInstagram } from 'ionicons
       ion-footer {
         --ion-toolbar-background: var(--ion-color-dark);
         --ion-toolbar-color: var(--ion-color-light);
-        position: relative;
-        background: var(--ion-color-dark);
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
-      ion-toolbar {
-        --min-height: auto;
-        --padding-top: 0;
-        --padding-bottom: 0;
-        --background: var(--ion-color-dark);
-        --color: var(--ion-color-light);
-        --border-color: rgba(255, 255, 255, 0.1);
       }
 
       .footer-content {
-        padding: 16px;
+        padding: 12px 8px;
         display: flex;
-        flex-direction: row;
+        flex-direction: column;
         align-items: center;
-        justify-content: space-between;
-        gap: 24px;
-        max-width: 1200px;
-        margin: 0 auto;
-        color: var(--ion-color-light);
+        gap: 12px;
       }
 
       .footer-links {
         display: flex;
-        gap: 24px;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 16px;
 
         a {
           color: var(--ion-color-light);
           text-decoration: none;
-          font-size: 14px;
+          font-size: 12px;
           opacity: 0.7;
-          transition: opacity 0.2s ease;
-          white-space: nowrap;
-
-          &:hover {
-            opacity: 1;
-          }
+          padding: 4px;
         }
       }
 
       .social-links {
         display: flex;
         gap: 16px;
-        justify-content: center;
 
         a {
           color: var(--ion-color-light);
-          text-decoration: none;
           opacity: 0.7;
-          transition: all 0.2s ease;
-          display: flex;
-          align-items: center;
-          justify-content: center;
           padding: 8px;
           border-radius: 50%;
           background: rgba(255, 255, 255, 0.05);
 
           ion-icon {
-            font-size: 20px;
+            font-size: 18px;
           }
 
-          &:hover {
+          &:active {
             opacity: 1;
-            transform: translateY(-2px);
             background: rgba(255, 255, 255, 0.1);
-          }
-
-          &[aria-label='Facebook']:hover {
-            color: #1877f2;
-            background: rgba(24, 119, 242, 0.1);
-          }
-
-          &[aria-label='Twitter']:hover {
-            color: #1da1f2;
-            background: rgba(29, 161, 242, 0.1);
-          }
-
-          &[aria-label='LinkedIn']:hover {
-            color: #0a66c2;
-            background: rgba(10, 102, 194, 0.1);
-          }
-
-          &[aria-label='Instagram']:hover {
-            color: #e4405f;
-            background: rgba(228, 64, 95, 0.1);
           }
         }
       }
 
       .copyright {
-        font-size: 14px;
+        font-size: 12px;
         opacity: 0.7;
-        white-space: nowrap;
+        text-align: center;
       }
 
-      @media (max-width: 768px) {
+      @media (min-width: 768px) {
         .footer-content {
-          flex-direction: column;
-          gap: 16px;
-          text-align: center;
+          flex-direction: row;
+          justify-content: space-between;
           padding: 16px;
+          max-width: 1200px;
+          margin: 0 auto;
         }
 
-        .footer-links {
-          flex-direction: column;
-          gap: 12px;
+        .footer-links a {
+          font-size: 14px;
         }
 
-        .social-links {
-          gap: 16px;
-        }
-
-        .copyright {
-          font-size: 12px;
+        .social-links a ion-icon {
+          font-size: 20px;
         }
       }
     `,

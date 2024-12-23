@@ -116,88 +116,64 @@ const ALLOWED_TYPES = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png
   styles: [
     `
       .upload-container {
-        padding: 2rem;
-        max-width: 800px;
+        padding: 8px;
+        width: 100%;
+        max-width: 100%;
         margin: 0 auto;
       }
 
       .upload-area {
         border: 2px dashed var(--ion-color-medium);
         border-radius: 12px;
-        min-height: 300px;
+        min-height: 200px;
+        padding: 16px;
         display: flex;
         align-items: center;
         justify-content: center;
-        cursor: pointer;
-        transition: all 0.2s ease;
+        touch-action: none;
         background: rgba(var(--ion-color-light-rgb), 0.05);
-        backdrop-filter: blur(10px);
 
-        &:hover,
-        &.is-dragging {
-          border-color: var(--ion-color-primary);
+        &:active {
           background: rgba(var(--ion-color-primary-rgb), 0.05);
-        }
-
-        &:focus {
-          outline: none;
-          border-color: var(--ion-color-primary);
-          box-shadow: 0 0 0 2px var(--ion-color-primary);
         }
       }
 
       .upload-content {
         text-align: center;
-        padding: 2rem;
+        padding: 16px;
         width: 100%;
-        max-width: 400px;
 
         ion-icon {
-          font-size: 3rem;
-          margin-bottom: 1rem;
-          color: var(--ion-color-primary);
+          font-size: 2.5rem;
+          margin-bottom: 8px;
         }
 
         h2 {
-          font-size: 1.5rem;
-          font-weight: 500;
-          margin: 0 0 0.5rem;
-          color: var(--ion-color-light);
+          font-size: 1.2rem;
+          margin: 0 0 8px;
         }
 
         h3 {
-          font-size: 1.2rem;
-          margin: 0 0 0.5rem;
-          color: var(--ion-color-light);
+          font-size: 1rem;
+          margin: 0 0 8px;
         }
 
         p {
-          margin: 0.5rem 0;
-          color: var(--ion-color-medium);
-        }
-
-        &.success {
-          ion-icon {
-            color: var(--ion-color-success);
-          }
-        }
-
-        &.error {
-          ion-icon {
-            color: var(--ion-color-danger);
-          }
+          margin: 4px 0;
+          font-size: 0.9rem;
         }
       }
 
       .file-types {
         display: flex;
-        gap: 0.5rem;
+        flex-wrap: wrap;
+        gap: 8px;
         justify-content: center;
-        margin: 1rem 0;
+        margin: 12px 0;
 
         ion-chip {
-          --background: rgba(var(--ion-color-light-rgb), 0.1);
-          --color: var(--ion-color-light);
+          height: 32px;
+          font-size: 12px;
         }
       }
 
@@ -207,36 +183,31 @@ const ALLOWED_TYPES = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png
       }
 
       ion-progress-bar {
-        margin: 1rem 0;
-        height: 6px;
-        border-radius: 3px;
-        --buffer-background: rgba(var(--ion-color-light-rgb), 0.1);
-        --progress-background: var(--ion-color-primary);
+        margin: 12px 0;
+        height: 4px;
+        border-radius: 2px;
       }
 
-      @media (max-width: 576px) {
+      @media (min-width: 768px) {
         .upload-container {
-          padding: 1rem;
+          padding: 16px;
+          max-width: 600px;
         }
 
         .upload-area {
-          min-height: 250px;
+          min-height: 300px;
         }
 
         .upload-content {
-          padding: 1rem;
+          padding: 24px;
+
+          ion-icon {
+            font-size: 3rem;
+          }
 
           h2 {
-            font-size: 1.2rem;
+            font-size: 1.5rem;
           }
-
-          h3 {
-            font-size: 1rem;
-          }
-        }
-
-        .file-types {
-          flex-wrap: wrap;
         }
       }
     `,

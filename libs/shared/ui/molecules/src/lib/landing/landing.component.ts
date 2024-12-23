@@ -180,25 +180,20 @@ import { map } from 'rxjs/operators';
         height: 100%;
       }
 
+      ion-header ion-toolbar {
+        --padding-start: 8px;
+        --padding-end: 8px;
+      }
+
       .offline-chip {
         margin-left: 8px;
         font-size: 12px;
       }
 
-      .offline-warning {
-        margin-bottom: 16px;
-
-        ion-card-content {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-      }
-
       .main-content {
-        max-width: 600px;
+        max-width: 100%;
         margin: 0 auto;
-        padding: 16px;
+        padding: 8px;
       }
 
       .welcome-card {
@@ -207,79 +202,69 @@ import { map } from 'rxjs/operators';
         background: transparent;
 
         ion-card-title {
-          font-size: 24px;
-          font-weight: bold;
+          font-size: 1.5rem;
+          line-height: 1.2;
           margin-bottom: 8px;
-        }
-
-        ion-card-subtitle {
-          font-size: 16px;
-          opacity: 0.8;
         }
       }
 
       .feature-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 16px;
-        margin: 24px 0;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        margin: 16px 0;
       }
 
       .feature-item {
         text-align: center;
         padding: 16px;
         background: var(--ion-color-light);
-        border-radius: 8px;
+        border-radius: 12px;
+        min-height: 120px;
 
         ion-icon {
-          font-size: 32px;
+          font-size: 28px;
           margin-bottom: 8px;
         }
 
         h3 {
           margin: 8px 0;
-          font-size: 18px;
-          font-weight: 500;
+          font-size: 16px;
         }
 
         p {
           margin: 0;
-          color: var(--ion-color-medium);
           font-size: 14px;
         }
       }
 
       .action-buttons {
-        margin-top: 24px;
+        margin-top: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
 
         ion-button {
-          margin-bottom: 8px;
-          height: 48px;
+          margin: 0;
+          height: 44px;
+          --border-radius: 12px;
           font-size: 16px;
-          --border-radius: 8px;
-        }
-
-        .main-action {
-          --background: var(--ion-color-primary);
-          font-weight: bold;
         }
       }
 
-      @media (max-width: 576px) {
-        .hide-sm {
-          display: none;
-        }
-
+      @media (min-width: 768px) {
         .main-content {
-          padding: 8px;
+          max-width: 600px;
+          padding: 16px;
         }
 
         .feature-grid {
-          grid-template-columns: 1fr;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 16px;
         }
 
-        ion-button {
-          width: 100%;
+        .action-buttons {
+          flex-direction: row;
         }
       }
     `,

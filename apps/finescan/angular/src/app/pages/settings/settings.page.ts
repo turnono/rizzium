@@ -192,38 +192,77 @@ import { DataSaverService } from '@rizzium/shared/services';
   `,
   styles: [
     `
-      ion-card {
-        margin-bottom: 1rem;
+      ion-content {
+        --padding: 8px;
       }
 
-      ion-item {
-        --padding-start: 0;
+      ion-card {
+        margin: 8px 0 16px;
+        border-radius: 12px;
+        box-shadow: none;
+        background: var(--ion-color-light);
 
-        ion-icon {
-          color: var(--ion-color-medium);
-          margin-right: 1rem;
+        ion-card-header {
+          padding: 16px;
+        }
+
+        ion-card-content {
+          padding: 0;
         }
       }
 
-      ion-select {
-        max-width: 45%;
-      }
+      ion-item {
+        --padding-start: 16px;
+        --padding-end: 16px;
+        --min-height: 56px;
 
-      @media (max-width: 576px) {
-        ion-card {
-          margin: 0 0 1rem;
+        ion-icon {
+          font-size: 20px;
+          margin-right: 16px;
+        }
+
+        ion-label {
+          font-size: 14px;
+        }
+
+        ion-select {
+          font-size: 14px;
+          --padding-start: 8px;
+          --padding-end: 8px;
+        }
+
+        ion-toggle {
+          padding-right: 0;
         }
       }
 
       .data-saver-info {
-        margin-top: 16px;
-        padding: 8px;
-        background: var(--ion-color-light);
+        margin: 16px;
+        padding: 12px;
         border-radius: 8px;
+        background: rgba(var(--ion-color-medium-rgb), 0.1);
 
         ion-note {
-          color: var(--ion-color-medium);
-          font-size: 14px;
+          font-size: 12px;
+        }
+      }
+
+      @media (min-width: 768px) {
+        ion-content {
+          --padding: 16px;
+        }
+
+        ion-card {
+          max-width: 600px;
+          margin: 16px auto;
+        }
+
+        ion-item {
+          --min-height: 64px;
+
+          ion-label {
+            font-size: 16px;
+          }
         }
       }
     `,
