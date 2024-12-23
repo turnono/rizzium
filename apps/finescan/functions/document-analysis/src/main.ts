@@ -17,8 +17,9 @@ import * as pdfjsLib from 'pdfjs-dist';
 // Initialize Firebase Admin
 initializeApp();
 
+// Get config and initialize OpenAI
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: functions.config().openai.api_key,
 });
 
 interface AnalysisRequest {
