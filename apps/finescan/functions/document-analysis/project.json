@@ -3,34 +3,55 @@
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/finescan/functions/document-analysis/src",
   "projectType": "application",
-  "tags": ["firebase:function", "firebase:name:finescan-functions-document-analysis", "firebase:dep:finescan-firebase"],
   "targets": {
     "build": {
       "executor": "@nx/esbuild:esbuild",
       "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
       "options": {
+        "platform": "node",
         "outputPath": "dist/apps/finescan/functions/document-analysis",
+        "format": ["esm"],
+        "bundle": true,
         "main": "apps/finescan/functions/document-analysis/src/main.ts",
         "tsConfig": "apps/finescan/functions/document-analysis/tsconfig.app.json",
-        "assets": [
-          "apps/finescan/functions/document-analysis/src/assets",
-          {
-            "glob": "**/*",
-            "input": "apps/finescan/firebase/environment",
-            "output": "."
-          }
-        ],
+        "assets": ["apps/finescan/functions/document-analysis/src/assets"],
         "generatePackageJson": true,
-        "platform": "node",
-        "bundle": true,
-        "thirdParty": false,
-        "dependenciesFieldType": "dependencies",
-        "target": "node16",
-        "format": ["esm"],
         "esbuildOptions": {
-          "logLevel": "info"
+          "sourcemap": true,
+          "outExtension": {
+            ".js": ".js"
+          }
+        }
+      },
+      "configurations": {
+        "development": {},
+        "production": {
+          "esbuildOptions": {
+            "sourcemap": false,
+            "minify": true
+          }
         }
       }
+    },
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "finescan-functions-document-analysis:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "finescan-functions-document-analysis:build:development"
+        },
+        "production": {
+          "buildTarget": "finescan-functions-document-analysis:build:production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
     },
     "test": {
       "executor": "@nx/jest:jest",
@@ -38,13 +59,7 @@
       "options": {
         "jestConfig": "apps/finescan/functions/document-analysis/jest.config.ts"
       }
-    },
-    "deploy": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "nx run finescan-firebase:deploy --only functions:finescan-functions-document-analysis"
-      },
-      "dependsOn": ["build"]
     }
-  }
+  },
+  "tags": []
 }
