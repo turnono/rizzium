@@ -1,5 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AnalysisService } from '@rizzium/shared/services';
 import { Analysis, AnalysisStatus } from '@rizzium/shared/interfaces';
@@ -24,6 +25,10 @@ import {
   IonCardSubtitle,
   IonAlert,
   AlertController,
+  IonSegment,
+  IonSegmentButton,
+  IonSearchbar,
+  IonButtons,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -32,6 +37,8 @@ import {
   alertCircleOutline,
   checkmarkCircleOutline,
   hourglassOutline,
+  searchOutline,
+  filterOutline,
 } from 'ionicons/icons';
 import { Firestore, Timestamp, updateDoc, doc } from '@angular/fire/firestore';
 import { getFunctions, httpsCallable } from '@angular/fire/functions';
@@ -41,6 +48,7 @@ import { getFunctions, httpsCallable } from '@angular/fire/functions';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     RouterLink,
     AnalysisResultsComponent,
     IonContent,
@@ -60,13 +68,41 @@ import { getFunctions, httpsCallable } from '@angular/fire/functions';
     IonCardHeader,
     IonCardTitle,
     IonCardSubtitle,
+    IonSegment,
+    IonSegmentButton,
+    IonSearchbar,
+    IonButtons,
   ],
   providers: [AnalysisService],
   template: `
     <ion-header>
       <ion-toolbar>
-        <ion-title>Analysis History</ion-title>
+        <ion-title>Analysis Reports</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="showFilters = !showFilters">
+            <ion-icon name="filter-outline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
       </ion-toolbar>
+
+      @if (showFilters) {
+      <ion-toolbar>
+        <div class="analysis-filters">
+          <ion-segment [(ngModel)]="statusFilter" (ionChange)="applyFilters()">
+            <ion-segment-button value="all">All</ion-segment-button>
+            <ion-segment-button value="completed">Completed</ion-segment-button>
+            <ion-segment-button value="processing">Processing</ion-segment-button>
+          </ion-segment>
+
+          <ion-searchbar
+            [(ngModel)]="searchTerm"
+            (ionInput)="applyFilters()"
+            placeholder="Search documents..."
+            [debounce]="300"
+          ></ion-searchbar>
+        </div>
+      </ion-toolbar>
+      }
     </ion-header>
 
     <ion-content class="ion-padding">
@@ -191,6 +227,126 @@ import { getFunctions, httpsCallable } from '@angular/fire/functions';
           color: var(--ion-color-medium);
         }
       }
+
+      .analysis-filters {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+
+        ion-segment {
+          flex: 1;
+          min-width: 200px;
+        }
+      }
+
+      .analysis-list {
+        ion-item {
+          --padding-start: 1rem;
+          --inner-padding-end: 1rem;
+          margin-bottom: 0.5rem;
+          border-radius: 8px;
+          --background: var(--ion-color-light);
+
+          &.selected {
+            --background: var(--ion-color-primary-tint);
+          }
+
+          ion-label {
+            h2 {
+              font-weight: 500;
+              display: flex;
+              align-items: center;
+              gap: 0.5rem;
+            }
+
+            p {
+              margin-top: 0.5rem;
+              color: var(--ion-color-medium);
+            }
+          }
+
+          ion-badge {
+            margin-left: auto;
+            font-size: 0.8rem;
+            padding: 4px 8px;
+          }
+        }
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        background: var(--ion-color-light);
+        border-radius: 8px;
+        margin: 1rem;
+
+        ion-icon {
+          font-size: 4rem;
+          color: var(--ion-color-medium);
+          margin-bottom: 1rem;
+        }
+
+        h2 {
+          color: var(--ion-color-dark);
+          margin-bottom: 0.5rem;
+        }
+
+        p {
+          color: var(--ion-color-medium);
+          margin-bottom: 1.5rem;
+        }
+      }
+
+      .analysis-results {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: var(--ion-color-light);
+        border-radius: 8px;
+
+        .risk-level {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          margin-bottom: 1rem;
+
+          ion-badge {
+            font-size: 1rem;
+            padding: 4px 12px;
+          }
+        }
+
+        .flags-section {
+          margin-top: 1rem;
+
+          .flag-item {
+            background: var(--ion-color-warning-tint);
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+
+            h4 {
+              margin: 0;
+              color: var(--ion-color-warning-shade);
+            }
+
+            p {
+              margin: 0.5rem 0 0;
+              font-size: 0.9rem;
+            }
+          }
+        }
+      }
+
+      @media (max-width: 576px) {
+        .analysis-filters {
+          flex-direction: column;
+
+          ion-segment {
+            width: 100%;
+          }
+        }
+      }
     `,
   ],
 })
@@ -201,9 +357,20 @@ export class ReportsPage implements OnInit {
   analyses: Analysis[] = [];
   selectedAnalysis: Analysis | null = null;
   loading = true;
+  showFilters = false;
+  statusFilter = 'all';
+  searchTerm = '';
 
   constructor(private analysisService: AnalysisService) {
-    addIcons({ documentTextOutline, timeOutline, alertCircleOutline, checkmarkCircleOutline, hourglassOutline });
+    addIcons({
+      documentTextOutline,
+      timeOutline,
+      alertCircleOutline,
+      checkmarkCircleOutline,
+      hourglassOutline,
+      searchOutline,
+      filterOutline,
+    });
   }
 
   ngOnInit() {
@@ -370,5 +537,9 @@ export class ReportsPage implements OnInit {
       flags: analysis.results.flags,
       recommendations: analysis.results.recommendations,
     };
+  }
+
+  applyFilters() {
+    // Implement filtering logic here
   }
 }
