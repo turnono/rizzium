@@ -89,6 +89,7 @@ export class FileUploadComponent {
   @Input() accept = 'application/pdf,text/plain,image/jpeg,image/png';
   @Output() urlGenerated = new EventEmitter<string>();
   @Output() validationError = new EventEmitter<string>();
+  @Output() progressChange = new EventEmitter<number>();
 
   isUploading = false;
   uploadProgress = 0;
@@ -151,7 +152,9 @@ export class FileUploadComponent {
         'state_changed',
         (snapshot) => {
           this.ngZone.run(() => {
-            this.uploadProgress = snapshot.bytesTransferred / snapshot.totalBytes;
+            const progress = snapshot.bytesTransferred / snapshot.totalBytes;
+            this.uploadProgress = progress;
+            this.progressChange.emit(progress);
           });
         },
         (error) => {
@@ -204,5 +207,25 @@ export class FileUploadComponent {
       this.isUploading = false;
       this.uploadComplete = false;
     }
+  }
+
+  openFileDialog() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = this.accept;
+    input.multiple = false;
+
+    input.onchange = (event) => {
+      const files = (event.target as HTMLInputElement).files;
+      if (files?.length) {
+        this.handleFileSelection(files[0]);
+      }
+    };
+
+    input.click();
+  }
+
+  private handleFileSelection(file: File) {
+    // Your existing file upload logic
   }
 }
