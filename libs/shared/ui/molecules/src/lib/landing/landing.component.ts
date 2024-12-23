@@ -88,15 +88,16 @@ import { map } from 'rxjs/operators';
   template: `
     <ion-header>
       <ion-toolbar color="primary">
-        <ion-title>
+        <div class="logo-container">
+          <img src="assets/finescan_logo.png" alt="FineScan Logo" class="header-logo" />
           <ion-text>FineScan</ion-text>
-          @if (!isOnline) {
-          <ion-chip color="warning" class="offline-chip">
-            <ion-icon name="cloud-offline"></ion-icon>
-            <ion-label>Offline</ion-label>
-          </ion-chip>
-          }
-        </ion-title>
+        </div>
+        @if (!isOnline) {
+        <ion-chip color="warning" class="offline-chip">
+          <ion-icon name="cloud-offline"></ion-icon>
+          <ion-label>Offline</ion-label>
+        </ion-chip>
+        }
         <ion-buttons slot="end">
           @if (isLoggedIn) {
           <ion-button class="user-button" (click)="showUserMenu($event)">
@@ -267,6 +268,23 @@ import { map } from 'rxjs/operators';
           flex-direction: row;
         }
       }
+
+      .logo-container {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px;
+
+        .header-logo {
+          height: 32px;
+          width: auto;
+        }
+
+        ion-text {
+          font-size: 1.2rem;
+          font-weight: 600;
+        }
+      }
     `,
   ],
 })
@@ -306,7 +324,7 @@ export class LandingComponent implements OnDestroy {
       cloudOfflineOutline,
       flashOutline,
       phonePortraitOutline,
-      'shield-checkmark': shieldCheckmark,
+      shieldCheckmark,
       flash,
       'phone-portrait': phonePortrait,
       'log-in': logIn,
