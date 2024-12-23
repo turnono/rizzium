@@ -16,6 +16,7 @@ import {
   IonCardSubtitle,
   IonButtons,
   AlertController,
+  PopoverController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -29,6 +30,15 @@ import {
   warningOutline,
   shieldCheckmarkOutline,
   analyticsOutline,
+  personCircleOutline,
+  homeSharp,
+  shieldCheckmarkSharp,
+  warningSharp,
+  analyticsSharp,
+  settingsSharp,
+  personCircleSharp,
+  cloudUploadSharp,
+  documentTextSharp,
 } from 'ionicons/icons';
 import { Subscription } from 'rxjs';
 
@@ -59,18 +69,26 @@ import { Subscription } from 'rxjs';
           <ion-button [routerLink]="['/']">
             <ion-icon slot="icon-only" name="home"></ion-icon>
           </ion-button>
+
+          @if (isLoggedIn) {
           <ion-button [routerLink]="['/reports']">
             <ion-icon slot="icon-only" name="analytics"></ion-icon>
           </ion-button>
           <ion-button [routerLink]="['/settings']">
             <ion-icon slot="icon-only" name="settings"></ion-icon>
           </ion-button>
-          <ion-button *ngIf="isLoggedIn" (click)="confirmLogout()" data-cy="logout-button">
-            <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
+
+          <!-- User Profile Button -->
+          <ion-button (click)="showUserMenu($event)" data-cy="user-profile-button">
+            <ion-icon slot="start" name="person-circle"></ion-icon>
+            {{ displayName }}
           </ion-button>
-          <ion-button (click)="handleAuth()">
-            <ion-icon slot="icon-only" [name]="isLoggedIn ? 'log-out' : 'log-in'"></ion-icon>
+          } @else {
+          <ion-button (click)="navigateToLogin()" color="secondary" data-cy="login-button">
+            <ion-icon slot="start" name="log-in"></ion-icon>
+            Sign In
           </ion-button>
+          }
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
@@ -109,6 +127,7 @@ import { Subscription } from 'rxjs';
           </div>
 
           <div class="action-buttons">
+            @if (isLoggedIn) {
             <ion-button expand="block" color="primary" [routerLink]="['/file-upload']" class="ion-margin-bottom">
               <ion-icon slot="start" name="cloud-upload"></ion-icon>
               Analyze Document
@@ -118,6 +137,12 @@ import { Subscription } from 'rxjs';
               <ion-icon slot="start" name="document-text"></ion-icon>
               View Analysis History
             </ion-button>
+            } @else {
+            <ion-button expand="block" color="primary" (click)="navigateToLogin()" class="ion-margin-bottom">
+              <ion-icon slot="start" name="log-in"></ion-icon>
+              Sign In to Start Analyzing
+            </ion-button>
+            }
           </div>
         </ion-card-content>
       </ion-card>
@@ -260,17 +285,34 @@ import { Subscription } from 'rxjs';
           }
         }
       }
+
+      ion-button[data-cy='user-profile-button'] {
+        --padding-start: 0.5rem;
+        --padding-end: 0.5rem;
+
+        ion-icon {
+          font-size: 1.2rem;
+          margin-right: 0.5rem;
+        }
+      }
+
+      .user-menu {
+        --width: 200px;
+        --max-width: 90%;
+      }
     `,
   ],
 })
 export class LandingComponent implements OnDestroy {
   isLoggedIn = false;
+  displayName: string = 'User';
   private authSubscription: Subscription;
 
   constructor(
     private router: Router,
     private authService: FirebaseAuthService,
-    private alertController: AlertController
+    private alertController: AlertController,
+    private popoverController: PopoverController
   ) {
     addIcons({
       documentTextOutline,
@@ -283,21 +325,56 @@ export class LandingComponent implements OnDestroy {
       warningOutline,
       shieldCheckmarkOutline,
       analyticsOutline,
+      personCircleOutline,
+      home: homeSharp,
+      'shield-checkmark': shieldCheckmarkSharp,
+      warning: warningSharp,
+      analytics: analyticsSharp,
+      'log-in': logInOutline,
+      settings: settingsSharp,
+      'person-circle': personCircleSharp,
+      'cloud-upload': cloudUploadSharp,
+      'document-text': documentTextSharp,
     });
 
     // Subscribe to auth state
     this.authSubscription = this.authService.user$.subscribe((user) => {
       this.isLoggedIn = !!user;
+      this.displayName = user?.displayName || 'User';
     });
   }
 
-  async handleAuth() {
-    if (this.isLoggedIn) {
-      await this.authService.signOut();
-      this.router.navigate(['/']);
-    } else {
-      this.router.navigate(['/login']);
-    }
+  async showUserMenu(event: Event) {
+    const alert = await this.alertController.create({
+      header: 'Account',
+      message: `Signed in as ${this.displayName}`,
+      buttons: [
+        {
+          text: 'Settings',
+          handler: () => {
+            this.router.navigate(['/settings']);
+          },
+        },
+        {
+          text: 'Sign Out',
+          role: 'destructive',
+          handler: () => {
+            this.confirmLogout();
+          },
+        },
+        {
+          text: 'Cancel',
+          role: 'cancel',
+        },
+      ],
+      cssClass: 'user-menu',
+    });
+
+    await alert.present();
+  }
+
+  navigateToLogin() {
+    this.router.navigate(['/login']);
   }
 
   async confirmLogout() {
