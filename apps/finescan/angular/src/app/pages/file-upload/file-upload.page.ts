@@ -57,29 +57,6 @@ import { cloudUploadOutline, checkmarkCircleOutline } from 'ionicons/icons';
 
         <ion-card-content>
           <div class="upload-container" [class.uploading]="isUploading">
-            <button
-              class="upload-area"
-              (click)="triggerFileUpload()"
-              (keydown.enter)="triggerFileUpload()"
-              (keydown.space)="triggerFileUpload()"
-              (dragover)="onDragOver($event)"
-              (drop)="onDrop($event)"
-              type="button"
-              role="button"
-              tabindex="0"
-            >
-              <ion-icon name="cloud-upload-outline" size="large"></ion-icon>
-              <h3>Drag and drop or click to upload</h3>
-              <p>Supported formats: PDF, DOC, DOCX, TXT</p>
-
-              @if (isUploading) {
-              <div class="upload-progress">
-                <ion-progress-bar [value]="uploadProgress"></ion-progress-bar>
-                <p>Uploading... {{ (uploadProgress * 100).toFixed(0) }}%</p>
-              </div>
-              }
-            </button>
-
             <ui-file-upload
               #fileUploadComponent
               path="finescan-uploads"
@@ -107,6 +84,15 @@ import { cloudUploadOutline, checkmarkCircleOutline } from 'ionicons/icons';
   `,
   styles: [
     `
+      :host {
+        display: block;
+        height: 100%;
+      }
+
+      ion-content {
+        --padding-bottom: 60px; // Adjusted padding for footer
+      }
+
       .upload-container {
         padding: 1rem;
 

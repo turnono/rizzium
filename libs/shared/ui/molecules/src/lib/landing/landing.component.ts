@@ -1,4 +1,4 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FirebaseAuthService } from '@rizzium/shared/services';
@@ -18,6 +18,9 @@ import {
   IonButtons,
   AlertController,
   PopoverController,
+  IonChip,
+  IonLabel,
+  IonText,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -40,8 +43,24 @@ import {
   personCircleSharp,
   cloudUploadSharp,
   documentTextSharp,
+  cloudOfflineOutline,
+  flashOutline,
+  phonePortraitOutline,
+  shieldCheckmark,
+  flash,
+  phonePortrait,
+  logIn,
+  personOutline,
+  cameraOutline,
+  documentOutline,
+  person,
+  camera,
+  document,
 } from 'ionicons/icons';
 import { Subscription } from 'rxjs';
+import { merge } from 'rxjs';
+import { fromEvent } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'ui-landing',
@@ -62,33 +81,32 @@ import { Subscription } from 'rxjs';
     IonCardContent,
     IonCardSubtitle,
     IonButtons,
+    IonChip,
+    IonLabel,
+    IonText,
   ],
   template: `
     <ion-header>
       <ion-toolbar color="primary">
-        <ion-title>FineScan</ion-title>
+        <ion-title>
+          <ion-text>FineScan</ion-text>
+          @if (!isOnline) {
+          <ion-chip color="warning" class="offline-chip">
+            <ion-icon name="cloud-offline"></ion-icon>
+            <ion-label>Offline</ion-label>
+          </ion-chip>
+          }
+        </ion-title>
         <ion-buttons slot="end">
-          <ion-button [routerLink]="['/']">
-            <ion-icon slot="icon-only" name="home"></ion-icon>
-          </ion-button>
-
           @if (isLoggedIn) {
-          <ion-button [routerLink]="['/reports']">
-            <ion-icon slot="icon-only" name="analytics"></ion-icon>
-          </ion-button>
-          <ion-button [routerLink]="['/settings']">
-            <ion-icon slot="icon-only" name="settings"></ion-icon>
-          </ion-button>
-
-          <!-- User Profile Button -->
-          <ion-button (click)="showUserMenu($event)" data-cy="user-profile-button">
-            <ion-icon slot="start" name="person-circle"></ion-icon>
-            {{ displayName }}
+          <ion-button class="user-button" (click)="showUserMenu($event)">
+            <ion-icon slot="start" name="person"></ion-icon>
+            <ion-label class="hide-sm">{{ displayName }}</ion-label>
           </ion-button>
           } @else {
-          <ion-button (click)="navigateToLogin()" color="secondary" data-cy="login-button">
+          <ion-button class="login-button" (click)="navigateToLogin()">
             <ion-icon slot="start" name="log-in"></ion-icon>
-            Sign In
+            <ion-label>Sign In</ion-label>
           </ion-button>
           }
         </ion-buttons>
@@ -96,60 +114,63 @@ import { Subscription } from 'rxjs';
     </ion-header>
 
     <ion-content class="ion-padding">
-      <ion-card>
-        <ion-card-header>
-          <ion-card-title class="ion-text-center">FineScan AI</ion-card-title>
-          <ion-card-subtitle class="ion-text-center">Your AI-Powered Fine Print Analysis Tool</ion-card-subtitle>
-        </ion-card-header>
+      <!-- Offline Warning -->
+      @if (!isOnline) {
+      <ion-card color="warning" class="offline-warning">
         <ion-card-content>
-          <div class="features">
-            <ion-card class="feature-card">
-              <ion-card-content>
-                <ion-icon name="shield-checkmark" color="success"></ion-icon>
-                <h3>Secure Analysis</h3>
-                <p>Upload documents securely with end-to-end encryption</p>
-              </ion-card-content>
-            </ion-card>
-
-            <ion-card class="feature-card">
-              <ion-card-content>
-                <ion-icon name="warning" color="warning"></ion-icon>
-                <h3>Red Flag Detection</h3>
-                <p>Identify potential issues and concerning clauses</p>
-              </ion-card-content>
-            </ion-card>
-
-            <ion-card class="feature-card">
-              <ion-card-content>
-                <ion-icon name="analytics" color="primary"></ion-icon>
-                <h3>Smart Insights</h3>
-                <p>Get AI-powered analysis and recommendations</p>
-              </ion-card-content>
-            </ion-card>
-          </div>
-
-          <div class="action-buttons">
-            @if (isLoggedIn) {
-            <ion-button expand="block" color="primary" [routerLink]="['/file-upload']" class="ion-margin-bottom">
-              <ion-icon slot="start" name="cloud-upload"></ion-icon>
-              Analyze Document
-            </ion-button>
-
-            <ion-button expand="block" color="secondary" [routerLink]="['/reports']">
-              <ion-icon slot="start" name="document-text"></ion-icon>
-              View Analysis History
-            </ion-button>
-            } @else {
-            <ion-button expand="block" color="primary" (click)="navigateToLogin()" class="ion-margin-bottom">
-              <ion-icon slot="start" name="log-in"></ion-icon>
-              Get Started
-            </ion-button>
-            }
-          </div>
+          <ion-icon name="warning"></ion-icon>
+          <p>You're currently offline. Some features may be limited.</p>
         </ion-card-content>
       </ion-card>
+      }
 
-      <rizzium-footer></rizzium-footer>
+      <div class="main-content">
+        <ion-card class="welcome-card">
+          <ion-card-header>
+            <ion-card-title class="ion-text-center">Document Analysis Made Easy</ion-card-title>
+          </ion-card-header>
+
+          <ion-card-content>
+            <div class="feature-grid">
+              <div class="feature-item">
+                <ion-icon name="shield-checkmark" color="success" size="large"></ion-icon>
+                <h3>Safe & Secure</h3>
+                <p>Your documents are protected</p>
+              </div>
+
+              <div class="feature-item">
+                <ion-icon name="flash" color="warning" size="large"></ion-icon>
+                <h3>Works Offline</h3>
+                <p>Continue working without internet</p>
+              </div>
+
+              <div class="feature-item">
+                <ion-icon name="phone-portrait" color="primary" size="large"></ion-icon>
+                <h3>Mobile Friendly</h3>
+                <p>Works on all devices</p>
+              </div>
+            </div>
+
+            <div class="action-buttons">
+              @if (isLoggedIn) {
+              <ion-button expand="block" size="large" class="main-action" [routerLink]="['/file-upload']">
+                <ion-icon slot="start" name="camera"></ion-icon>
+                Scan Document
+              </ion-button>
+
+              <ion-button expand="block" size="large" fill="outline" [routerLink]="['/reports']">
+                <ion-icon slot="start" name="document"></ion-icon>
+                View Reports
+              </ion-button>
+              } @else {
+              <ion-button expand="block" size="large" class="main-action" (click)="navigateToLogin()">
+                Get Started - It's Free
+              </ion-button>
+              }
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </div>
     </ion-content>
   `,
   styles: [
@@ -159,93 +180,106 @@ import { Subscription } from 'rxjs';
         height: 100%;
       }
 
-      ion-content {
-        --background: #1c1c1c;
+      .offline-chip {
+        margin-left: 8px;
+        font-size: 12px;
       }
 
-      ion-card {
-        margin-top: 2rem;
-        max-width: 1200px;
-        margin-left: auto;
-        margin-right: auto;
-        margin-bottom: 6rem; // More space for fixed footer
+      .offline-warning {
+        margin-bottom: 16px;
+
+        ion-card-content {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
       }
 
-      ion-card-title {
-        font-size: 2.5rem;
-        font-weight: bold;
-        color: var(--ion-color-primary);
-        margin-bottom: 0.5rem;
+      .main-content {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 16px;
       }
 
-      ion-card-subtitle {
-        font-size: 1.2rem;
-        color: var(--ion-color-medium);
-        margin-bottom: 2rem;
+      .welcome-card {
+        margin: 0;
+        box-shadow: none;
+        background: transparent;
+
+        ion-card-title {
+          font-size: 24px;
+          font-weight: bold;
+          margin-bottom: 8px;
+        }
+
+        ion-card-subtitle {
+          font-size: 16px;
+          opacity: 0.8;
+        }
       }
 
-      .features {
+      .feature-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 3rem;
+        gap: 16px;
+        margin: 24px 0;
       }
 
-      .feature-card {
+      .feature-item {
         text-align: center;
-        padding: 1.5rem;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        margin: 0;
+        padding: 16px;
+        background: var(--ion-color-light);
+        border-radius: 8px;
 
         ion-icon {
-          font-size: 3rem;
-          margin-bottom: 1rem;
+          font-size: 32px;
+          margin-bottom: 8px;
         }
 
         h3 {
-          font-size: 1.2rem;
-          font-weight: 600;
-          margin-bottom: 0.5rem;
-          color: var(--ion-color-light);
+          margin: 8px 0;
+          font-size: 18px;
+          font-weight: 500;
         }
 
         p {
+          margin: 0;
           color: var(--ion-color-medium);
-          line-height: 1.4;
-          font-size: 1rem;
+          font-size: 14px;
         }
       }
 
       .action-buttons {
-        max-width: 400px;
-        margin: 2rem auto;
+        margin-top: 24px;
 
         ion-button {
-          margin-bottom: 1rem;
-          --border-radius: 8px;
+          margin-bottom: 8px;
           height: 48px;
-          font-size: 1.1rem;
+          font-size: 16px;
+          --border-radius: 8px;
+        }
+
+        .main-action {
+          --background: var(--ion-color-primary);
+          font-weight: bold;
         }
       }
 
       @media (max-width: 576px) {
-        ion-card-title {
-          font-size: 2rem;
+        .hide-sm {
+          display: none;
         }
 
-        ion-card-subtitle {
-          font-size: 1rem;
+        .main-content {
+          padding: 8px;
         }
 
-        .features {
+        .feature-grid {
           grid-template-columns: 1fr;
-          gap: 1rem;
         }
 
-        ion-card {
-          margin: 1rem;
-          margin-bottom: 6rem; // More space for fixed footer
+        ion-button {
+          width: 100%;
         }
       }
     `,
@@ -254,14 +288,16 @@ import { Subscription } from 'rxjs';
 export class LandingComponent implements OnDestroy {
   isLoggedIn = false;
   displayName = 'User';
+  isOnline = navigator.onLine;
   private authSubscription: Subscription;
+  private networkSubscription: Subscription;
 
   constructor(
     private router: Router,
     private authService: FirebaseAuthService,
-    private alertController: AlertController,
-    private popoverController: PopoverController
+    private alertController: AlertController
   ) {
+    // Register all icons
     addIcons({
       documentTextOutline,
       listOutline,
@@ -274,22 +310,43 @@ export class LandingComponent implements OnDestroy {
       shieldCheckmarkOutline,
       analyticsOutline,
       personCircleOutline,
-      home: homeSharp,
-      'shield-checkmark': shieldCheckmarkSharp,
-      warning: warningSharp,
-      analytics: analyticsSharp,
-      'log-in': logInOutline,
-      settings: settingsSharp,
-      'person-circle': personCircleSharp,
-      'cloud-upload': cloudUploadSharp,
-      'document-text': documentTextSharp,
+      homeSharp,
+      shieldCheckmarkSharp,
+      warningSharp,
+      analyticsSharp,
+      settingsSharp,
+      personCircleSharp,
+      cloudUploadSharp,
+      documentTextSharp,
+      cloudOfflineOutline,
+      flashOutline,
+      phonePortraitOutline,
+      'shield-checkmark': shieldCheckmark,
+      flash,
+      'phone-portrait': phonePortrait,
+      'log-in': logIn,
+      person: personOutline,
+      camera: cameraOutline,
+      document: documentOutline,
     });
 
-    // Subscribe to auth state
+    // Auth subscription
+    this.networkSubscription = merge(
+      fromEvent(window, 'online').pipe(map(() => true)),
+      fromEvent(window, 'offline').pipe(map(() => false))
+    ).subscribe((status) => {
+      this.isOnline = status;
+    });
+
     this.authSubscription = this.authService.user$.subscribe((user) => {
       this.isLoggedIn = !!user;
       this.displayName = user?.displayName || 'User';
     });
+  }
+
+  ngOnDestroy() {
+    this.authSubscription?.unsubscribe();
+    this.networkSubscription?.unsubscribe();
   }
 
   async showUserMenu(event: Event) {
@@ -355,12 +412,6 @@ export class LandingComponent implements OnDestroy {
       this.router.navigate(['/login']);
     } catch (error) {
       console.error('Error during logout:', error);
-    }
-  }
-
-  ngOnDestroy() {
-    if (this.authSubscription) {
-      this.authSubscription.unsubscribe();
     }
   }
 }

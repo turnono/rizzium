@@ -1,9 +1,21 @@
 import { Component, ElementRef, EventEmitter, Input, Output, ViewChild, inject, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule } from '@ionic/angular';
+import {
+  IonButton,
+  IonIcon,
+  IonProgressBar,
+  IonText,
+  IonCard,
+  IonCardContent,
+  IonChip,
+  IonLabel,
+  IonItem,
+} from '@ionic/angular/standalone';
 import { Storage, ref, uploadBytesResumable, getDownloadURL } from '@angular/fire/storage';
 import { Firestore, collection, addDoc, Timestamp } from '@angular/fire/firestore';
 import { FirebaseAuthService } from '@rizzium/shared/services';
+import { addIcons } from 'ionicons';
+import { cloudUploadOutline, documentOutline, closeCircleOutline, checkmarkCircleOutline } from 'ionicons/icons';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 const ALLOWED_TYPES = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png'];
@@ -11,80 +23,220 @@ const ALLOWED_TYPES = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png
 @Component({
   selector: 'ui-file-upload',
   standalone: true,
-  imports: [CommonModule, IonicModule],
+  imports: [
+    CommonModule,
+    IonButton,
+    IonIcon,
+    IonProgressBar,
+    IonText,
+    IonCard,
+    IonCardContent,
+    IonChip,
+    IonLabel,
+    IonItem,
+  ],
   template: `
-    <input #fileInput type="file" [accept]="accept" (change)="onFileSelected($event)" style="display: none" />
-    <div class="file-upload-container" data-cy="file-upload-page">
-      <div class="upload-info">
-        <ion-text color="medium">
-          <p>Maximum file size: 5MB</p>
-          <p>Accepted formats: PDF, Text, JPEG, PNG</p>
-        </ion-text>
-      </div>
+    <div class="upload-container" [class.is-dragging]="isDragging" [class.is-uploading]="isUploading">
+      <input
+        #fileInput
+        type="file"
+        [accept]="accept"
+        (change)="onFileSelected($event)"
+        style="display: none"
+        data-cy="file-input"
+      />
 
-      <button
+      <div
         class="upload-area"
         (click)="triggerFileUpload()"
-        (keydown.enter)="triggerFileUpload()"
-        (keydown.space)="triggerFileUpload()"
         (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave($event)"
         (drop)="onDrop($event)"
-        type="button"
+        [class.is-dragging]="isDragging"
         role="button"
         tabindex="0"
+        (keydown.enter)="triggerFileUpload()"
+        (keydown.space)="triggerFileUpload()"
+        data-cy="upload-area"
       >
-        <ion-icon name="cloud-upload-outline" size="large"></ion-icon>
-        <h3>Drag and drop or click to upload</h3>
-        <p>Supported formats: PDF, DOC, DOCX, TXT</p>
-
-        @if (isUploading) {
-        <div class="upload-progress">
+        @if (!selectedFile && !isUploading) {
+        <div class="upload-content">
+          <ion-icon name="cloud-upload" size="large" class="upload-icon"></ion-icon>
+          <h2 style="color: white">Upload Your Document</h2>
+          <p>Drag and drop your file here or click to browse</p>
+          <div class="file-types">
+            <ion-chip>
+              <ion-icon name="document"></ion-icon>
+              <ion-label>PDF</ion-label>
+            </ion-chip>
+            <ion-chip>
+              <ion-icon name="document"></ion-icon>
+              <ion-label>DOC</ion-label>
+            </ion-chip>
+            <ion-chip>
+              <ion-icon name="document"></ion-icon>
+              <ion-label>TXT</ion-label>
+            </ion-chip>
+          </div>
+          <p class="size-limit">Maximum file size: 5MB</p>
+        </div>
+        } @if (selectedFile && !isUploading && !uploadComplete) {
+        <div class="upload-content">
+          <ion-icon name="document" class="file-icon"></ion-icon>
+          <h3>{{ selectedFile.name }}</h3>
+          <p>{{ (selectedFile.size / 1024 / 1024).toFixed(2) }} MB</p>
+          <ion-button (click)="clearFile($event)" fill="clear" color="medium">
+            <ion-icon name="close-circle" slot="icon-only"></ion-icon>
+          </ion-button>
+        </div>
+        } @if (isUploading) {
+        <div class="upload-content">
           <ion-progress-bar [value]="uploadProgress"></ion-progress-bar>
-          <p>Uploading... {{ (uploadProgress * 100).toFixed(0) }}%</p>
+          <h3>Uploading... {{ (uploadProgress * 100).toFixed(0) }}%</h3>
+          <p>Please keep this window open</p>
+        </div>
+        } @if (uploadComplete) {
+        <div class="upload-content success">
+          <ion-icon name="checkmark-circle" color="success" size="large"></ion-icon>
+          <h3>Upload Complete!</h3>
+          <p>Your document has been uploaded successfully</p>
+        </div>
+        } @if (errorMessage) {
+        <div class="upload-content error">
+          <ion-icon name="alert-circle" color="danger" size="large"></ion-icon>
+          <h3>Upload Failed</h3>
+          <p>{{ errorMessage }}</p>
+          <ion-button fill="clear" (click)="clearFile($event)">Try Again</ion-button>
         </div>
         }
-      </button>
-
-      @if (selectedFile && !uploadComplete) {
-      <div class="file-info">
-        <ion-chip>
-          <ion-icon name="document-outline"></ion-icon>
-          <ion-label>{{ selectedFile.name }}</ion-label>
-          <ion-icon name="close-circle" (click)="clearFile()"></ion-icon>
-        </ion-chip>
       </div>
-      } @if (isUploading) {
-      <div class="upload-progress" data-cy="upload-progress">
-        <ion-progress-bar [value]="uploadProgress"></ion-progress-bar>
-        <ion-text color="medium">Uploading: {{ uploadProgress | percent }}</ion-text>
-      </div>
-      } @if (uploadComplete) {
-      <div data-cy="success-message" class="success-message">
-        <ion-item color="success" lines="none">
-          <ion-icon name="checkmark-circle" slot="start"></ion-icon>
-          <ion-label>File uploaded successfully!</ion-label>
-        </ion-item>
-      </div>
-      }
     </div>
   `,
   styles: [
     `
-      .file-upload-container {
-        padding: 1rem;
+      .upload-container {
+        padding: 2rem;
+        max-width: 800px;
+        margin: 0 auto;
       }
-      .upload-info {
-        margin-bottom: 1rem;
+
+      .upload-area {
+        border: 2px dashed var(--ion-color-medium);
+        border-radius: 12px;
+        min-height: 300px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: rgba(var(--ion-color-light-rgb), 0.05);
+        backdrop-filter: blur(10px);
+
+        &:hover,
+        &.is-dragging {
+          border-color: var(--ion-color-primary);
+          background: rgba(var(--ion-color-primary-rgb), 0.05);
+        }
+
+        &:focus {
+          outline: none;
+          border-color: var(--ion-color-primary);
+          box-shadow: 0 0 0 2px var(--ion-color-primary);
+        }
       }
-      .file-info {
+
+      .upload-content {
+        text-align: center;
+        padding: 2rem;
+        width: 100%;
+        max-width: 400px;
+
+        ion-icon {
+          font-size: 3rem;
+          margin-bottom: 1rem;
+          color: var(--ion-color-primary);
+        }
+
+        h2 {
+          font-size: 1.5rem;
+          font-weight: 500;
+          margin: 0 0 0.5rem;
+          color: var(--ion-color-light);
+        }
+
+        h3 {
+          font-size: 1.2rem;
+          margin: 0 0 0.5rem;
+          color: var(--ion-color-light);
+        }
+
+        p {
+          margin: 0.5rem 0;
+          color: var(--ion-color-medium);
+        }
+
+        &.success {
+          ion-icon {
+            color: var(--ion-color-success);
+          }
+        }
+
+        &.error {
+          ion-icon {
+            color: var(--ion-color-danger);
+          }
+        }
+      }
+
+      .file-types {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
         margin: 1rem 0;
+
+        ion-chip {
+          --background: rgba(var(--ion-color-light-rgb), 0.1);
+          --color: var(--ion-color-light);
+        }
       }
-      .upload-progress {
-        margin: 1rem 0;
+
+      .size-limit {
+        font-size: 0.9rem;
+        opacity: 0.7;
       }
-      .error-message,
-      .success-message {
+
+      ion-progress-bar {
         margin: 1rem 0;
+        height: 6px;
+        border-radius: 3px;
+        --buffer-background: rgba(var(--ion-color-light-rgb), 0.1);
+        --progress-background: var(--ion-color-primary);
+      }
+
+      @media (max-width: 576px) {
+        .upload-container {
+          padding: 1rem;
+        }
+
+        .upload-area {
+          min-height: 250px;
+        }
+
+        .upload-content {
+          padding: 1rem;
+
+          h2 {
+            font-size: 1.2rem;
+          }
+
+          h3 {
+            font-size: 1rem;
+          }
+        }
+
+        .file-types {
+          flex-wrap: wrap;
+        }
       }
     `,
   ],
@@ -97,17 +249,22 @@ export class FileUploadComponent {
   private authService = inject(FirebaseAuthService);
 
   @Input() path = 'uploads';
-  @Input() accept = 'application/pdf,text/plain,image/jpeg,image/png';
+  @Input() accept = '.pdf,.doc,.docx,.txt';
   @Output() urlGenerated = new EventEmitter<string>();
   @Output() validationError = new EventEmitter<string>();
   @Output() progressChange = new EventEmitter<number>();
 
+  isDragging = false;
   isUploading = false;
   uploadProgress = 0;
   uploadComplete = false;
   downloadUrl = '';
   errorMessage = '';
   selectedFile: File | null = null;
+
+  constructor() {
+    addIcons({ cloudUploadOutline, documentOutline, closeCircleOutline, checkmarkCircleOutline });
+  }
 
   validateFile(file: File): string | null {
     // Check file size
@@ -123,13 +280,17 @@ export class FileUploadComponent {
     return null;
   }
 
-  clearFile() {
+  clearFile(event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
     this.selectedFile = null;
     this.errorMessage = '';
     this.downloadUrl = '';
     this.uploadProgress = 0;
     this.isUploading = false;
     this.uploadComplete = false;
+    this.isDragging = false;
   }
 
   async onFileSelected(event: Event) {
@@ -255,6 +416,13 @@ export class FileUploadComponent {
   onDragOver(event: DragEvent) {
     event.preventDefault();
     event.stopPropagation();
+    this.isDragging = true;
+  }
+
+  onDragLeave(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
   }
 
   onDrop(event: DragEvent) {
