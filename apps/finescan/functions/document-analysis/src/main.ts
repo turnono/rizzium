@@ -13,12 +13,14 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import OpenAI from 'openai';
 import * as pdfjsLib from 'pdfjs-dist';
+// TEST
 
 // Initialize Firebase Admin
 initializeApp();
 
+// Get config and initialize OpenAI
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: functions.config().openai.api_key,
 });
 
 interface AnalysisRequest {
