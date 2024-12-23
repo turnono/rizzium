@@ -1,6 +1,5 @@
 import { Component, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule } from '@ionic/angular';
 import { FileUploadComponent } from '@rizzium/shared/ui/molecules';
 import { Storage } from '@angular/fire/storage';
 import { Router } from '@angular/router';
@@ -58,11 +57,16 @@ import { cloudUploadOutline, checkmarkCircleOutline } from 'ionicons/icons';
 
         <ion-card-content>
           <div class="upload-container" [class.uploading]="isUploading">
-            <div
+            <button
               class="upload-area"
               (click)="triggerFileUpload()"
+              (keydown.enter)="triggerFileUpload()"
+              (keydown.space)="triggerFileUpload()"
               (dragover)="onDragOver($event)"
               (drop)="onDrop($event)"
+              type="button"
+              role="button"
+              tabindex="0"
             >
               <ion-icon name="cloud-upload-outline" size="large"></ion-icon>
               <h3>Drag and drop or click to upload</h3>
@@ -74,7 +78,7 @@ import { cloudUploadOutline, checkmarkCircleOutline } from 'ionicons/icons';
                 <p>Uploading... {{ (uploadProgress * 100).toFixed(0) }}%</p>
               </div>
               }
-            </div>
+            </button>
 
             <ui-file-upload
               #fileUploadComponent
@@ -217,7 +221,13 @@ export class FileUploadPage {
 
     const files = event.dataTransfer?.files;
     if (files?.length) {
-      // Handle file selection
+      const file = files[0];
+      const allowedTypes = ['.pdf', '.doc', '.docx', '.txt'];
+      const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
+
+      if (allowedTypes.includes(fileExtension)) {
+        this.fileUploadComponent.uploadFile(file);
+      }
     }
   }
 

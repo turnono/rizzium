@@ -21,19 +21,28 @@ const ALLOWED_TYPES = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png
         </ion-text>
       </div>
 
-      <ion-button (click)="fileInput.click()" [disabled]="isUploading">
-        <ion-icon name="cloud-upload-outline" slot="start"></ion-icon>
-        Select File
-      </ion-button>
+      <button
+        class="upload-area"
+        (click)="triggerFileUpload()"
+        (keydown.enter)="triggerFileUpload()"
+        (keydown.space)="triggerFileUpload()"
+        (dragover)="onDragOver($event)"
+        (drop)="onDrop($event)"
+        type="button"
+        role="button"
+        tabindex="0"
+      >
+        <ion-icon name="cloud-upload-outline" size="large"></ion-icon>
+        <h3>Drag and drop or click to upload</h3>
+        <p>Supported formats: PDF, DOC, DOCX, TXT</p>
 
-      <input
-        #fileInput
-        type="file"
-        (change)="onFileSelected($event)"
-        [accept]="accept"
-        data-cy="file-input"
-        style="display: none"
-      />
+        @if (isUploading) {
+        <div class="upload-progress">
+          <ion-progress-bar [value]="uploadProgress"></ion-progress-bar>
+          <p>Uploading... {{ (uploadProgress * 100).toFixed(0) }}%</p>
+        </div>
+        }
+      </button>
 
       @if (selectedFile && !uploadComplete) {
       <div class="file-info">
@@ -227,5 +236,13 @@ export class FileUploadComponent {
 
   private handleFileSelection(file: File) {
     // Your existing file upload logic
+  }
+
+  uploadFile(file: File) {
+    const input = this.fileInput.nativeElement as HTMLInputElement;
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    input.files = dataTransfer.files;
+    this.onFileSelected({ target: input } as unknown as Event);
   }
 }
