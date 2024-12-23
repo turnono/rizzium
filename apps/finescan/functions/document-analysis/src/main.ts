@@ -17,8 +17,6 @@ import fetch from 'node-fetch';
 import * as dotenv from 'dotenv';
 import { resolve } from 'path';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
-import * as pdfParse from 'pdf-parse';
-import * as Tesseract from 'tesseract.js';
 
 // Load environment variables from .env file
 dotenv.config({ path: resolve(__dirname, '../../../.env') });
@@ -39,16 +37,6 @@ const AnalyzeDocumentSchema = z.object({
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-
-async function extractTextFromPDF(buffer: Buffer): Promise<string> {
-  const data = await pdfParse(buffer);
-  return data.text;
-}
-
-async function extractTextFromImage(buffer: Buffer): Promise<string> {
-  const { data } = await Tesseract.recognize(buffer, 'eng');
-  return data.text;
-}
 
 export const analyzeDocument = functions.https.onCall(async (data, context) => {
   // Authentication check
