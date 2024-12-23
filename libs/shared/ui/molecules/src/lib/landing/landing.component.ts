@@ -2,6 +2,7 @@ import { Component, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FirebaseAuthService } from '@rizzium/shared/services';
+import { FooterComponent } from '@rizzium/shared/ui/organisms';
 import {
   IonHeader,
   IonToolbar,
@@ -48,6 +49,7 @@ import { Subscription } from 'rxjs';
   imports: [
     CommonModule,
     RouterLink,
+    FooterComponent,
     IonHeader,
     IonToolbar,
     IonTitle,
@@ -57,8 +59,8 @@ import { Subscription } from 'rxjs';
     IonCard,
     IonCardHeader,
     IonCardTitle,
-    IonCardSubtitle,
     IonCardContent,
+    IonCardSubtitle,
     IonButtons,
   ],
   template: `
@@ -97,7 +99,7 @@ import { Subscription } from 'rxjs';
       <ion-card>
         <ion-card-header>
           <ion-card-title class="ion-text-center">FineScan AI</ion-card-title>
-          <ion-card-subtitle class="ion-text-center"> Your AI-Powered Fine Print Analysis Tool </ion-card-subtitle>
+          <ion-card-subtitle class="ion-text-center">Your AI-Powered Fine Print Analysis Tool</ion-card-subtitle>
         </ion-card-header>
         <ion-card-content>
           <div class="features">
@@ -140,12 +142,14 @@ import { Subscription } from 'rxjs';
             } @else {
             <ion-button expand="block" color="primary" (click)="navigateToLogin()" class="ion-margin-bottom">
               <ion-icon slot="start" name="log-in"></ion-icon>
-              Sign In to Start Analyzing
+              Get Started
             </ion-button>
             }
           </div>
         </ion-card-content>
       </ion-card>
+
+      <rizzium-footer></rizzium-footer>
     </ion-content>
   `,
   styles: [
@@ -155,11 +159,16 @@ import { Subscription } from 'rxjs';
         height: 100%;
       }
 
+      ion-content {
+        --background: #1c1c1c;
+      }
+
       ion-card {
         margin-top: 2rem;
         max-width: 1200px;
         margin-left: auto;
         margin-right: auto;
+        margin-bottom: 6rem; // More space for fixed footer
       }
 
       ion-card-title {
@@ -185,6 +194,9 @@ import { Subscription } from 'rxjs';
       .feature-card {
         text-align: center;
         padding: 1.5rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        margin: 0;
 
         ion-icon {
           font-size: 3rem;
@@ -195,12 +207,13 @@ import { Subscription } from 'rxjs';
           font-size: 1.2rem;
           font-weight: 600;
           margin-bottom: 0.5rem;
-          color: var(--ion-color-dark);
+          color: var(--ion-color-light);
         }
 
         p {
           color: var(--ion-color-medium);
           line-height: 1.4;
+          font-size: 1rem;
         }
       }
 
@@ -229,83 +242,18 @@ import { Subscription } from 'rxjs';
           grid-template-columns: 1fr;
           gap: 1rem;
         }
-      }
 
-      /* Custom Alert Styles */
-      ::ng-deep .alert-logout {
-        --width: 300px;
-        --max-width: 90%;
-        --background: var(--ion-color-light);
-
-        .alert-wrapper {
-          border-radius: 16px;
-          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+        ion-card {
+          margin: 1rem;
+          margin-bottom: 6rem; // More space for fixed footer
         }
-
-        .alert-head {
-          padding: 16px;
-          text-align: center;
-
-          .alert-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--ion-color-dark);
-          }
-        }
-
-        .alert-message {
-          padding: 16px;
-          color: var(--ion-color-medium);
-          font-size: 1rem;
-          text-align: center;
-        }
-
-        .alert-button-group {
-          padding: 8px;
-          justify-content: space-evenly;
-
-          button {
-            flex: 1;
-            margin: 0 8px;
-            height: 44px;
-            font-size: 1rem;
-            font-weight: 500;
-            text-transform: none;
-            border-radius: 8px;
-
-            &.alert-button-cancel {
-              --background: var(--ion-color-medium-tint);
-              --color: var(--ion-color-medium-contrast);
-            }
-
-            &.alert-button-confirm {
-              --background: var(--ion-color-danger);
-              --color: var(--ion-color-danger-contrast);
-            }
-          }
-        }
-      }
-
-      ion-button[data-cy='user-profile-button'] {
-        --padding-start: 0.5rem;
-        --padding-end: 0.5rem;
-
-        ion-icon {
-          font-size: 1.2rem;
-          margin-right: 0.5rem;
-        }
-      }
-
-      .user-menu {
-        --width: 200px;
-        --max-width: 90%;
       }
     `,
   ],
 })
 export class LandingComponent implements OnDestroy {
   isLoggedIn = false;
-  displayName: string = 'User';
+  displayName = 'User';
   private authSubscription: Subscription;
 
   constructor(

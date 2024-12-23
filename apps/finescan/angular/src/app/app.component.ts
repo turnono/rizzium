@@ -8,15 +8,13 @@ import { IonRouterOutlet, IonApp } from '@ionic/angular/standalone';
   selector: 'app-root',
   template: `
     <ion-app>
-      <h1 data-cy="welcome-message">Welcome to FineScan</h1>
       <ion-router-outlet></ion-router-outlet>
     </ion-app>
   `,
   styles: [
     `
-      h1 {
-        text-align: center;
-        margin: 1rem;
+      ion-app {
+        background-color: #1c1c1c;
       }
     `,
   ],
