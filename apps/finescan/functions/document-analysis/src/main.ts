@@ -7,80 +7,169 @@
  * See a full list of supported triggers at https://firebase.google.com/docs/functions
  */
 
-import { https } from 'firebase-functions';
+import * as functions from 'firebase-functions';
 import { initializeApp } from 'firebase-admin/app';
-import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
+import OpenAI from 'openai';
+import * as pdfjsLib from 'pdfjs-dist';
 
 // Initialize Firebase Admin
 initializeApp();
 
-export const analyzeDocument = https.onCall(async (data, context) => {
-  // Ensure user is authenticated
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+interface AnalysisRequest {
+  documentUrl: string;
+  analysisType: 'general' | 'legal' | 'financial';
+}
+
+export const analyzeDocument = functions.https.onCall(async (data: AnalysisRequest, context) => {
+  // Authentication check
   if (!context.auth) {
-    throw new https.HttpsError('unauthenticated', 'User must be authenticated');
+    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
   }
 
-  const { documentUrl, analysisType } = data;
-
-  if (!documentUrl) {
-    throw new https.HttpsError('invalid-argument', 'Document URL is required');
+  // Input validation
+  if (!data.documentUrl || !data.analysisType) {
+    throw new functions.https.HttpsError('invalid-argument', 'Missing required fields');
   }
 
   try {
-    // Get the file from Storage
-    const bucket = getStorage().bucket();
-    const filePath = decodeURIComponent(documentUrl.split('/o/')[1].split('?')[0]);
-    const file = bucket.file(filePath);
+    // Get document text based on file type
+    const text = await extractTextFromDocument(data.documentUrl);
+    if (!text) {
+      throw new functions.https.HttpsError('internal', 'Failed to extract text from document');
+    }
 
-    // Download the file
-    const [content] = await file.download();
-    const text = content.toString('utf-8');
+    // Get analysis prompt based on type
+    const prompt = getAnalysisPrompt(data.analysisType);
 
-    // Perform analysis (mock implementation)
-    const analysisResults = await performAnalysis(text, analysisType);
+    // Analyze text with GPT-4
+    const analysis = await analyzeTextWithGPT4(text, prompt);
 
-    await getFirestore()
-      .collection(`users/${context.auth.uid}/analyses`)
-      .where('fileUrl', '==', documentUrl)
-      .limit(1)
-      .get()
-      .then(async (querySnapshot) => {
-        if (!querySnapshot.empty) {
-          await querySnapshot.docs[0].ref.update({
-            status: 'completed',
-            results: analysisResults,
-            updatedAt: FieldValue.serverTimestamp(),
-          });
-        }
-      });
+    // Update analysis document in Firestore
+    await updateAnalysisDocument(context.auth.uid, data.documentUrl, analysis);
 
-    return { success: true, results: analysisResults };
+    return { success: true, analysis };
   } catch (error) {
     console.error('Analysis error:', error);
-    throw new https.HttpsError('internal', 'Failed to analyze document');
+    throw new functions.https.HttpsError(
+      'internal',
+      'An error occurred during document analysis',
+      error instanceof Error ? error.message : 'Unknown error'
+    );
   }
 });
 
-async function performAnalysis(text: string, analysisType: string) {
-  // Mock analysis implementation
-  const riskLevel = Math.random() > 0.5 ? 'high' : 'low';
+async function extractTextFromDocument(url: string): Promise<string> {
+  // Get the file path from the Storage URL
+  const filePath = decodeURIComponent(url.split('/o/')[1].split('?')[0]);
 
-  return {
-    text: text.substring(0, 1000), // First 1000 chars
-    riskLevel,
-    summary: {
-      riskLevel,
-      description: `Sample analysis of ${analysisType} document`,
-      recommendations: ['Review carefully', 'Consult with expert'],
-    },
-    flags: [
+  // Get the file from Firebase Storage
+  const bucket = getStorage().bucket();
+  const file = bucket.file(filePath);
+
+  // Download the file contents
+  const [buffer] = await file.download();
+
+  // Process based on file type
+  if (filePath.toLowerCase().endsWith('.pdf')) {
+    return extractTextFromPDF(buffer.buffer);
+  } else {
+    // For text files
+    return buffer.toString('utf-8');
+  }
+}
+
+async function extractTextFromPDF(buffer: ArrayBuffer): Promise<string> {
+  const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+  let text = '';
+
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map((item: any) => item.str).join(' ') + '\n';
+  }
+
+  return text;
+}
+
+function getAnalysisPrompt(type: 'general' | 'legal' | 'financial'): string {
+  const basePrompt = `Analyze the following document and provide:
+1. Overall risk level (high, medium, low)
+2. Summary of key points
+3. Potential red flags or concerning elements
+4. Specific recommendations
+Format the response as a JSON object with the following structure:
+{
+  "riskLevel": "high|medium|low",
+  "summary": {
+    "riskLevel": "high|medium|low",
+    "description": "string",
+    "recommendations": ["string"]
+  },
+  "flags": [
+    {
+      "start": number,
+      "end": number,
+      "reason": "string",
+      "riskLevel": "high|medium|low"
+    }
+  ],
+  "recommendations": ["string"]
+}`;
+
+  switch (type) {
+    case 'legal':
+      return `${basePrompt}\nFocus on legal implications, contractual obligations, and potential liabilities.`;
+    case 'financial':
+      return `${basePrompt}\nFocus on financial terms, obligations, and potential risks to monetary assets.`;
+    default:
+      return basePrompt;
+  }
+}
+
+async function analyzeTextWithGPT4(text: string, prompt: string): Promise<any> {
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4',
+    messages: [
       {
-        type: 'warning',
-        description: 'Potential risk identified',
-        context: 'Section 1.2',
+        role: 'system',
+        content: prompt,
+      },
+      {
+        role: 'user',
+        content: text,
       },
     ],
-    recommendations: ['Perform detailed review', 'Update documentation', 'Schedule follow-up'],
-  };
+    temperature: 0.3,
+    max_tokens: 2000,
+  });
+
+  try {
+    return JSON.parse(response.choices[0].message.content || '{}');
+  } catch (error) {
+    console.error('Error parsing GPT-4 response:', error);
+    throw new Error('Failed to parse analysis results');
+  }
+}
+
+async function updateAnalysisDocument(userId: string, documentUrl: string, analysis: any): Promise<void> {
+  const db = getFirestore();
+  const analysisRef = db.collection(`users/${userId}/analyses`).where('fileUrl', '==', documentUrl);
+
+  const snapshot = await analysisRef.get();
+  if (snapshot.empty) {
+    throw new Error('Analysis document not found');
+  }
+
+  const doc = snapshot.docs[0];
+  await doc.ref.update({
+    status: 'completed',
+    results: analysis,
+    updatedAt: new Date(),
+  });
 }

@@ -1,7 +1,8 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FirebaseAuthService } from '@rizzium/shared/services';
+import { FooterComponent } from '@rizzium/shared/ui/organisms';
 import {
   IonHeader,
   IonToolbar,
@@ -17,6 +18,9 @@ import {
   IonButtons,
   AlertController,
   PopoverController,
+  IonChip,
+  IonLabel,
+  IonText,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -39,8 +43,24 @@ import {
   personCircleSharp,
   cloudUploadSharp,
   documentTextSharp,
+  cloudOfflineOutline,
+  flashOutline,
+  phonePortraitOutline,
+  shieldCheckmark,
+  flash,
+  phonePortrait,
+  logIn,
+  personOutline,
+  cameraOutline,
+  documentOutline,
+  person,
+  camera,
+  document,
 } from 'ionicons/icons';
 import { Subscription } from 'rxjs';
+import { merge } from 'rxjs';
+import { fromEvent } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'ui-landing',
@@ -48,6 +68,7 @@ import { Subscription } from 'rxjs';
   imports: [
     CommonModule,
     RouterLink,
+    FooterComponent,
     IonHeader,
     IonToolbar,
     IonTitle,
@@ -57,36 +78,35 @@ import { Subscription } from 'rxjs';
     IonCard,
     IonCardHeader,
     IonCardTitle,
-    IonCardSubtitle,
     IonCardContent,
+    IonCardSubtitle,
     IonButtons,
+    IonChip,
+    IonLabel,
+    IonText,
   ],
   template: `
     <ion-header>
       <ion-toolbar color="primary">
-        <ion-title>FineScan</ion-title>
+        <ion-title>
+          <ion-text>FineScan</ion-text>
+          @if (!isOnline) {
+          <ion-chip color="warning" class="offline-chip">
+            <ion-icon name="cloud-offline"></ion-icon>
+            <ion-label>Offline</ion-label>
+          </ion-chip>
+          }
+        </ion-title>
         <ion-buttons slot="end">
-          <ion-button [routerLink]="['/']">
-            <ion-icon slot="icon-only" name="home"></ion-icon>
-          </ion-button>
-
           @if (isLoggedIn) {
-          <ion-button [routerLink]="['/reports']">
-            <ion-icon slot="icon-only" name="analytics"></ion-icon>
-          </ion-button>
-          <ion-button [routerLink]="['/settings']">
-            <ion-icon slot="icon-only" name="settings"></ion-icon>
-          </ion-button>
-
-          <!-- User Profile Button -->
-          <ion-button (click)="showUserMenu($event)" data-cy="user-profile-button">
-            <ion-icon slot="start" name="person-circle"></ion-icon>
-            {{ displayName }}
+          <ion-button class="user-button" (click)="showUserMenu($event)">
+            <ion-icon slot="start" name="person"></ion-icon>
+            <ion-label class="hide-sm">{{ displayName }}</ion-label>
           </ion-button>
           } @else {
-          <ion-button (click)="navigateToLogin()" color="secondary" data-cy="login-button">
+          <ion-button class="login-button" (click)="navigateToLogin()">
             <ion-icon slot="start" name="log-in"></ion-icon>
-            Sign In
+            <ion-label>Sign In</ion-label>
           </ion-button>
           }
         </ion-buttons>
@@ -94,58 +114,63 @@ import { Subscription } from 'rxjs';
     </ion-header>
 
     <ion-content class="ion-padding">
-      <ion-card>
-        <ion-card-header>
-          <ion-card-title class="ion-text-center">FineScan AI</ion-card-title>
-          <ion-card-subtitle class="ion-text-center"> Your AI-Powered Fine Print Analysis Tool </ion-card-subtitle>
-        </ion-card-header>
+      <!-- Offline Warning -->
+      @if (!isOnline) {
+      <ion-card color="warning" class="offline-warning">
         <ion-card-content>
-          <div class="features">
-            <ion-card class="feature-card">
-              <ion-card-content>
-                <ion-icon name="shield-checkmark" color="success"></ion-icon>
-                <h3>Secure Analysis</h3>
-                <p>Upload documents securely with end-to-end encryption</p>
-              </ion-card-content>
-            </ion-card>
-
-            <ion-card class="feature-card">
-              <ion-card-content>
-                <ion-icon name="warning" color="warning"></ion-icon>
-                <h3>Red Flag Detection</h3>
-                <p>Identify potential issues and concerning clauses</p>
-              </ion-card-content>
-            </ion-card>
-
-            <ion-card class="feature-card">
-              <ion-card-content>
-                <ion-icon name="analytics" color="primary"></ion-icon>
-                <h3>Smart Insights</h3>
-                <p>Get AI-powered analysis and recommendations</p>
-              </ion-card-content>
-            </ion-card>
-          </div>
-
-          <div class="action-buttons">
-            @if (isLoggedIn) {
-            <ion-button expand="block" color="primary" [routerLink]="['/file-upload']" class="ion-margin-bottom">
-              <ion-icon slot="start" name="cloud-upload"></ion-icon>
-              Analyze Document
-            </ion-button>
-
-            <ion-button expand="block" color="secondary" [routerLink]="['/reports']">
-              <ion-icon slot="start" name="document-text"></ion-icon>
-              View Analysis History
-            </ion-button>
-            } @else {
-            <ion-button expand="block" color="primary" (click)="navigateToLogin()" class="ion-margin-bottom">
-              <ion-icon slot="start" name="log-in"></ion-icon>
-              Sign In to Start Analyzing
-            </ion-button>
-            }
-          </div>
+          <ion-icon name="warning"></ion-icon>
+          <p>You're currently offline. Some features may be limited.</p>
         </ion-card-content>
       </ion-card>
+      }
+
+      <div class="main-content">
+        <ion-card class="welcome-card">
+          <ion-card-header>
+            <ion-card-title class="ion-text-center">Document Analysis Made Easy</ion-card-title>
+          </ion-card-header>
+
+          <ion-card-content>
+            <div class="feature-grid">
+              <div class="feature-item">
+                <ion-icon name="shield-checkmark" color="success" size="large"></ion-icon>
+                <h3>Safe & Secure</h3>
+                <p>Your documents are protected</p>
+              </div>
+
+              <div class="feature-item">
+                <ion-icon name="flash" color="warning" size="large"></ion-icon>
+                <h3>Works Offline</h3>
+                <p>Continue working without internet</p>
+              </div>
+
+              <div class="feature-item">
+                <ion-icon name="phone-portrait" color="primary" size="large"></ion-icon>
+                <h3>Mobile Friendly</h3>
+                <p>Works on all devices</p>
+              </div>
+            </div>
+
+            <div class="action-buttons">
+              @if (isLoggedIn) {
+              <ion-button expand="block" size="large" class="main-action" [routerLink]="['/file-upload']">
+                <ion-icon slot="start" name="camera"></ion-icon>
+                Scan Document
+              </ion-button>
+
+              <ion-button expand="block" size="large" fill="outline" [routerLink]="['/reports']">
+                <ion-icon slot="start" name="document"></ion-icon>
+                View Reports
+              </ion-button>
+              } @else {
+              <ion-button expand="block" size="large" class="main-action" (click)="navigateToLogin()">
+                Get Started - It's Free
+              </ion-button>
+              }
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </div>
     </ion-content>
   `,
   styles: [
@@ -155,165 +180,109 @@ import { Subscription } from 'rxjs';
         height: 100%;
       }
 
-      ion-card {
-        margin-top: 2rem;
-        max-width: 1200px;
-        margin-left: auto;
-        margin-right: auto;
+      ion-header ion-toolbar {
+        --padding-start: 8px;
+        --padding-end: 8px;
       }
 
-      ion-card-title {
-        font-size: 2.5rem;
-        font-weight: bold;
-        color: var(--ion-color-primary);
-        margin-bottom: 0.5rem;
+      .offline-chip {
+        margin-left: 8px;
+        font-size: 12px;
       }
 
-      ion-card-subtitle {
-        font-size: 1.2rem;
-        color: var(--ion-color-medium);
-        margin-bottom: 2rem;
+      .main-content {
+        max-width: 100%;
+        margin: 0 auto;
+        padding: 8px;
       }
 
-      .features {
+      .welcome-card {
+        margin: 0;
+        box-shadow: none;
+        background: transparent;
+
+        ion-card-title {
+          font-size: 1.5rem;
+          line-height: 1.2;
+          margin-bottom: 8px;
+        }
+      }
+
+      .feature-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 3rem;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        margin: 16px 0;
       }
 
-      .feature-card {
+      .feature-item {
         text-align: center;
-        padding: 1.5rem;
+        padding: 16px;
+        background: var(--ion-color-light);
+        border-radius: 12px;
+        min-height: 120px;
 
         ion-icon {
-          font-size: 3rem;
-          margin-bottom: 1rem;
+          font-size: 28px;
+          margin-bottom: 8px;
         }
 
         h3 {
-          font-size: 1.2rem;
-          font-weight: 600;
-          margin-bottom: 0.5rem;
-          color: var(--ion-color-dark);
+          margin: 8px 0;
+          font-size: 16px;
         }
 
         p {
-          color: var(--ion-color-medium);
-          line-height: 1.4;
+          margin: 0;
+          font-size: 14px;
         }
       }
 
       .action-buttons {
-        max-width: 400px;
-        margin: 2rem auto;
+        margin-top: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
 
         ion-button {
-          margin-bottom: 1rem;
-          --border-radius: 8px;
-          height: 48px;
-          font-size: 1.1rem;
+          margin: 0;
+          height: 44px;
+          --border-radius: 12px;
+          font-size: 16px;
         }
       }
 
-      @media (max-width: 576px) {
-        ion-card-title {
-          font-size: 2rem;
-        }
-
-        ion-card-subtitle {
-          font-size: 1rem;
-        }
-
-        .features {
-          grid-template-columns: 1fr;
-          gap: 1rem;
-        }
-      }
-
-      /* Custom Alert Styles */
-      ::ng-deep .alert-logout {
-        --width: 300px;
-        --max-width: 90%;
-        --background: var(--ion-color-light);
-
-        .alert-wrapper {
-          border-radius: 16px;
-          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-        }
-
-        .alert-head {
+      @media (min-width: 768px) {
+        .main-content {
+          max-width: 600px;
           padding: 16px;
-          text-align: center;
-
-          .alert-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--ion-color-dark);
-          }
         }
 
-        .alert-message {
-          padding: 16px;
-          color: var(--ion-color-medium);
-          font-size: 1rem;
-          text-align: center;
+        .feature-grid {
+          grid-template-columns: repeat(3, 1fr);
+          gap: 16px;
         }
 
-        .alert-button-group {
-          padding: 8px;
-          justify-content: space-evenly;
-
-          button {
-            flex: 1;
-            margin: 0 8px;
-            height: 44px;
-            font-size: 1rem;
-            font-weight: 500;
-            text-transform: none;
-            border-radius: 8px;
-
-            &.alert-button-cancel {
-              --background: var(--ion-color-medium-tint);
-              --color: var(--ion-color-medium-contrast);
-            }
-
-            &.alert-button-confirm {
-              --background: var(--ion-color-danger);
-              --color: var(--ion-color-danger-contrast);
-            }
-          }
+        .action-buttons {
+          flex-direction: row;
         }
-      }
-
-      ion-button[data-cy='user-profile-button'] {
-        --padding-start: 0.5rem;
-        --padding-end: 0.5rem;
-
-        ion-icon {
-          font-size: 1.2rem;
-          margin-right: 0.5rem;
-        }
-      }
-
-      .user-menu {
-        --width: 200px;
-        --max-width: 90%;
       }
     `,
   ],
 })
 export class LandingComponent implements OnDestroy {
   isLoggedIn = false;
-  displayName: string = 'User';
+  displayName = 'User';
+  isOnline = navigator.onLine;
   private authSubscription: Subscription;
+  private networkSubscription: Subscription;
 
   constructor(
     private router: Router,
     private authService: FirebaseAuthService,
-    private alertController: AlertController,
-    private popoverController: PopoverController
+    private alertController: AlertController
   ) {
+    // Register all icons
     addIcons({
       documentTextOutline,
       listOutline,
@@ -326,22 +295,43 @@ export class LandingComponent implements OnDestroy {
       shieldCheckmarkOutline,
       analyticsOutline,
       personCircleOutline,
-      home: homeSharp,
-      'shield-checkmark': shieldCheckmarkSharp,
-      warning: warningSharp,
-      analytics: analyticsSharp,
-      'log-in': logInOutline,
-      settings: settingsSharp,
-      'person-circle': personCircleSharp,
-      'cloud-upload': cloudUploadSharp,
-      'document-text': documentTextSharp,
+      homeSharp,
+      shieldCheckmarkSharp,
+      warningSharp,
+      analyticsSharp,
+      settingsSharp,
+      personCircleSharp,
+      cloudUploadSharp,
+      documentTextSharp,
+      cloudOfflineOutline,
+      flashOutline,
+      phonePortraitOutline,
+      'shield-checkmark': shieldCheckmark,
+      flash,
+      'phone-portrait': phonePortrait,
+      'log-in': logIn,
+      person: personOutline,
+      camera: cameraOutline,
+      document: documentOutline,
     });
 
-    // Subscribe to auth state
+    // Auth subscription
+    this.networkSubscription = merge(
+      fromEvent(window, 'online').pipe(map(() => true)),
+      fromEvent(window, 'offline').pipe(map(() => false))
+    ).subscribe((status) => {
+      this.isOnline = status;
+    });
+
     this.authSubscription = this.authService.user$.subscribe((user) => {
       this.isLoggedIn = !!user;
       this.displayName = user?.displayName || 'User';
     });
+  }
+
+  ngOnDestroy() {
+    this.authSubscription?.unsubscribe();
+    this.networkSubscription?.unsubscribe();
   }
 
   async showUserMenu(event: Event) {
@@ -407,12 +397,6 @@ export class LandingComponent implements OnDestroy {
       this.router.navigate(['/login']);
     } catch (error) {
       console.error('Error during logout:', error);
-    }
-  }
-
-  ngOnDestroy() {
-    if (this.authSubscription) {
-      this.authSubscription.unsubscribe();
     }
   }
 }

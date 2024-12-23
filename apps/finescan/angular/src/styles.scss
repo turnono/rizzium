@@ -4,7 +4,6 @@
 // Include the common styles for Angular Material
 @include mat.core();
 
-
 // Ionic styles
 @import '@ionic/angular/css/core.css';
 @import '@ionic/angular/css/normalize.css';
@@ -18,10 +17,54 @@
 @import '@ionic/angular/css/flex-utils.css';
 
 // Global styles
-html, body {
+html,
+body {
   height: 100%;
   margin: 0;
-  font-family: Roboto, "Helvetica Neue", sans-serif;
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
 }
 
 // Add any additional global styles here
+
+// Data Saver Styles
+body.reduce-motion {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+body.text-only-mode {
+  img:not([aria-label='logo']) {
+    display: none !important;
+  }
+
+  .image-preview {
+    display: none !important;
+  }
+
+  .icon-only {
+    display: none !important;
+  }
+
+  ion-icon:not([aria-label]) {
+    display: none !important;
+  }
+}
+
+// Optimize performance
+.data-saver-enabled {
+  ion-content {
+    --ion-background-color: #f4f5f8;
+  }
+
+  ion-item {
+    --background: transparent;
+  }
+
+  ion-card {
+    margin: 8px;
+    box-shadow: none;
+    border: 1px solid var(--ion-color-light);
+  }
+}
