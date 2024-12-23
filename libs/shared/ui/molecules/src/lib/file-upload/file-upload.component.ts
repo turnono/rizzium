@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, inject, NgZone } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, Output, ViewChild, inject, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { Storage, ref, uploadBytesResumable, getDownloadURL } from '@angular/fire/storage';
@@ -13,6 +13,7 @@ const ALLOWED_TYPES = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png
   standalone: true,
   imports: [CommonModule, IonicModule],
   template: `
+    <input #fileInput type="file" [accept]="accept" (change)="onFileSelected($event)" style="display: none" />
     <div class="file-upload-container" data-cy="file-upload-page">
       <div class="upload-info">
         <ion-text color="medium">
@@ -21,19 +22,28 @@ const ALLOWED_TYPES = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png
         </ion-text>
       </div>
 
-      <ion-button (click)="fileInput.click()" [disabled]="isUploading">
-        <ion-icon name="cloud-upload-outline" slot="start"></ion-icon>
-        Select File
-      </ion-button>
+      <button
+        class="upload-area"
+        (click)="triggerFileUpload()"
+        (keydown.enter)="triggerFileUpload()"
+        (keydown.space)="triggerFileUpload()"
+        (dragover)="onDragOver($event)"
+        (drop)="onDrop($event)"
+        type="button"
+        role="button"
+        tabindex="0"
+      >
+        <ion-icon name="cloud-upload-outline" size="large"></ion-icon>
+        <h3>Drag and drop or click to upload</h3>
+        <p>Supported formats: PDF, DOC, DOCX, TXT</p>
 
-      <input
-        #fileInput
-        type="file"
-        (change)="onFileSelected($event)"
-        [accept]="accept"
-        data-cy="file-input"
-        style="display: none"
-      />
+        @if (isUploading) {
+        <div class="upload-progress">
+          <ion-progress-bar [value]="uploadProgress"></ion-progress-bar>
+          <p>Uploading... {{ (uploadProgress * 100).toFixed(0) }}%</p>
+        </div>
+        }
+      </button>
 
       @if (selectedFile && !uploadComplete) {
       <div class="file-info">
@@ -80,6 +90,7 @@ const ALLOWED_TYPES = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png
   ],
 })
 export class FileUploadComponent {
+  @ViewChild('fileInput') fileInput!: ElementRef;
   private storage = inject(Storage);
   private ngZone = inject(NgZone);
   private firestore = inject(Firestore);
@@ -226,6 +237,37 @@ export class FileUploadComponent {
   }
 
   private handleFileSelection(file: File) {
-    // Your existing file upload logic
+    const validationError = this.validateFile(file);
+    if (validationError) {
+      this.errorMessage = validationError;
+      this.validationError.emit(validationError);
+      return;
+    }
+
+    this.selectedFile = file;
+    this.onFileSelected({ target: { files: [file] } } as unknown as Event);
+  }
+
+  uploadFile(file: File) {
+    this.handleFileSelection(file);
+  }
+
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  onDrop(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const files = event.dataTransfer?.files;
+    if (files?.length) {
+      this.handleFileSelection(files[0]);
+    }
+  }
+
+  triggerFileUpload() {
+    this.fileInput.nativeElement.click();
   }
 }
