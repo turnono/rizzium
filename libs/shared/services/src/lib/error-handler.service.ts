@@ -48,7 +48,7 @@ export class ErrorHandlerService {
         message = error.message;
       }
 
-
-    this.showError(message);
+      this.showError(message);
+    }
   }
 }
