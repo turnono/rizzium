@@ -77,7 +77,7 @@ function analyzeText(text: string) {
     {
       pattern: /\b(terminate|termination)\b/gi,
       reason: 'Termination clause detected',
-      riskLevel: 'medium' as const,
+      riskLevel: 'MEDIUM' as const, // TODO: Change to HIGH
     },
   ];
 
