@@ -10,6 +10,9 @@ import {
   IonChip,
   IonLabel,
   IonItem,
+  IonAccordionGroup,
+  IonAccordion,
+  IonList,
 } from '@ionic/angular/standalone';
 import { Storage, ref, uploadBytesResumable, getDownloadURL } from '@angular/fire/storage';
 import { Firestore, collection, addDoc, Timestamp } from '@angular/fire/firestore';
@@ -27,10 +30,21 @@ import {
   timeOutline,
   arrowForwardOutline,
   helpCircleOutline,
+  alertCircle,
+  warning,
+  time,
+  lockClosed,
+  server,
+  shieldCheckmark,
+  arrowForward,
+  checkmark,
+  analyticsOutline,
+  checkmarkCircle,
 } from 'ionicons/icons';
 import { DataSaverService } from '@rizzium/shared/services';
 import { AlertController } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
+import { Router } from '@angular/router';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 const ALLOWED_TYPES = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png'];
@@ -49,6 +63,9 @@ const ALLOWED_TYPES = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png
     IonChip,
     IonLabel,
     IonItem,
+    IonAccordionGroup,
+    IonAccordion,
+    IonList,
   ],
   template: `
     <div
@@ -114,11 +131,13 @@ const ALLOWED_TYPES = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png
             <ion-icon name="information-circle"></ion-icon>
             {{ (selectedFile.size / 1024 / 1024).toFixed(2) }} MB
           </p>
-          <ion-button (click)="startUpload()" expand="block" class="start-upload">
+          <ion-button (click)="startUpload($event)" expand="block" class="start-upload" [disabled]="isUploading">
             <ion-icon name="cloud-upload"></ion-icon>
             Start Upload
           </ion-button>
-          <ion-button (click)="clearFile($event)" fill="clear" color="medium"> Choose Different File </ion-button>
+          <ion-button (click)="clearFile($event)" fill="clear" color="medium" [disabled]="isUploading">
+            Choose Different File
+          </ion-button>
         </div>
         } @if (isUploading) {
         <div class="upload-content uploading" role="status" aria-live="polite">
@@ -136,16 +155,26 @@ const ALLOWED_TYPES = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png
           </p>
         </div>
         } @if (uploadComplete) {
-        <div class="upload-content success" role="status" aria-live="polite">
-          <div class="success-animation" aria-hidden="true">
+        <div class="upload-success" role="status" aria-live="polite">
+          <div class="success-icon">
             <ion-icon name="checkmark-circle" color="success"></ion-icon>
           </div>
-          <h3>Upload Complete!</h3>
-          <p class="status-message">
-            <ion-icon name="checkmark"></ion-icon>
-            Your document has been uploaded successfully
-          </p>
-          <ion-button (click)="clearFile($event)" fill="clear"> Upload Another File </ion-button>
+          <div class="success-content">
+            <h3>Upload Complete!</h3>
+            <p class="file-name">{{ selectedFile?.name }}</p>
+            <div class="success-actions">
+              <ion-button
+                fill="solid"
+                color="primary"
+                (click)="$event.stopPropagation(); $event.preventDefault(); startAnalysis()"
+              >
+                <ion-icon name="analytics-outline" slot="start"></ion-icon>
+                Start Analysis
+              </ion-button>
+              <ion-button fill="outline" (click)="clearFile($event)"> Upload Another </ion-button>
+              <ion-button fill="outline" (click)="viewDocument()"> View Document </ion-button>
+            </div>
+          </div>
         </div>
         } @if (errorMessage) {
         <div class="upload-content error" role="alert" aria-live="assertive">
@@ -156,8 +185,10 @@ const ALLOWED_TYPES = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png
             {{ errorMessage }}
           </p>
           <div class="error-actions">
-            <ion-button (click)="retryUpload()" color="primary"> Try Again </ion-button>
-            <ion-button (click)="clearFile($event)" fill="clear" color="medium"> Choose Different File </ion-button>
+            <ion-button (click)="retryUpload($event)" color="primary" [disabled]="isUploading"> Try Again </ion-button>
+            <ion-button (click)="clearFile($event)" fill="clear" color="medium" [disabled]="isUploading">
+              Choose Different File
+            </ion-button>
           </div>
         </div>
         }
@@ -170,6 +201,54 @@ const ALLOWED_TYPES = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png
         <span>Need help? Click for upload instructions</span>
       </div>
       }
+
+      <!-- Security Notice Accordion -->
+      <ion-accordion-group>
+        <ion-accordion value="security">
+          <ion-item slot="header" color="light">
+            <ion-icon name="shield-checkmark" color="success" slot="start"></ion-icon>
+            <ion-label>
+              Your Privacy & Security
+              <ion-text color="medium">
+                <p class="subtitle">Click to learn more about our security measures</p>
+              </ion-text>
+            </ion-label>
+          </ion-item>
+
+          <div slot="content" class="security-content">
+            <ion-list lines="none">
+              <ion-item>
+                <ion-icon name="lock-closed" slot="start" color="primary"></ion-icon>
+                <ion-label>
+                  <h3>End-to-end Encryption</h3>
+                  <p>All documents are encrypted during transit and storage</p>
+                </ion-label>
+              </ion-item>
+
+              <ion-item>
+                <ion-icon name="server" slot="start" color="primary"></ion-icon>
+                <ion-label>
+                  <h3>Secure Cloud Storage</h3>
+                  <p>Protected by Firebase's enterprise-grade security</p>
+                </ion-label>
+              </ion-item>
+
+              <ion-item>
+                <ion-icon name="time" slot="start" color="primary"></ion-icon>
+                <ion-label>
+                  <h3>Automatic Deletion</h3>
+                  <p>Documents are automatically removed after 30 days</p>
+                </ion-label>
+              </ion-item>
+            </ion-list>
+
+            <ion-button fill="clear" size="small" (click)="showPrivacyDetails()">
+              Learn More About Security
+              <ion-icon name="arrow-forward" slot="end"></ion-icon>
+            </ion-button>
+          </div>
+        </ion-accordion>
+      </ion-accordion-group>
     </div>
   `,
   styles: [
@@ -409,17 +488,157 @@ const ALLOWED_TYPES = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png
         clip: rect(0, 0, 0, 0);
         border: 0;
       }
+
+      .upload-success {
+        background: var(--ion-color-success-tint);
+        border-radius: 16px;
+        padding: 24px;
+        text-align: center;
+        animation: fadeIn 0.3s ease-out;
+      }
+
+      .success-icon {
+        margin-bottom: 16px;
+
+        ion-icon {
+          font-size: 48px;
+          animation: scaleIn 0.3s ease-out;
+        }
+      }
+
+      .success-content {
+        h3 {
+          color: var(--ion-color-success-shade);
+          font-size: 20px;
+          margin: 0 0 8px;
+          font-weight: 600;
+        }
+
+        .file-name {
+          color: var(--ion-color-medium);
+          font-size: 14px;
+          margin: 0 0 20px;
+          word-break: break-word;
+        }
+      }
+
+      .success-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+
+        ion-button {
+          min-width: 140px;
+        }
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes scaleIn {
+        from {
+          transform: scale(0.5);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .success-actions {
+          flex-direction: column;
+
+          ion-button {
+            width: 100%;
+          }
+        }
+      }
+
+      ion-accordion-group {
+        margin-bottom: 16px;
+      }
+
+      ion-accordion {
+        background: var(--ion-color-light);
+        border-radius: 8px;
+        overflow: hidden;
+
+        ion-item {
+          --padding-start: 16px;
+          --inner-padding-end: 16px;
+
+          &::part(native) {
+            border-radius: 8px;
+          }
+        }
+      }
+
+      .subtitle {
+        font-size: 12px;
+        margin-top: 4px;
+      }
+
+      .security-content {
+        padding: 8px 16px 16px;
+
+        ion-list {
+          background: transparent;
+          padding: 0;
+          margin-bottom: 16px;
+
+          ion-item {
+            --background: transparent;
+            --padding-start: 8px;
+            margin-bottom: 8px;
+
+            h3 {
+              font-size: 14px;
+              font-weight: 500;
+              margin: 0;
+            }
+
+            p {
+              font-size: 12px;
+              color: var(--ion-color-medium);
+              margin: 4px 0 0;
+            }
+
+            ion-icon {
+              font-size: 20px;
+              margin-right: 16px;
+            }
+          }
+        }
+
+        ion-button {
+          margin: 0;
+          height: 36px;
+          font-size: 12px;
+        }
+      }
     `,
   ],
 })
 export class FileUploadComponent {
-  @ViewChild('fileInput') fileInput!: ElementRef;
+  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   private storage = inject(Storage);
   private ngZone = inject(NgZone);
   private firestore = inject(Firestore);
   private authService = inject(FirebaseAuthService);
   private dataSaverService = inject(DataSaverService);
   private alertController = inject(AlertController);
+  private router = inject(Router);
 
   @Input() path = 'uploads';
   @Input() accept = '.pdf,.doc,.docx,.txt';
@@ -435,6 +654,7 @@ export class FileUploadComponent {
   errorMessage = '';
   selectedFile: File | null = null;
   needsHelp = false;
+  lastUploadedUrl: string | null = null;
 
   constructor() {
     addIcons({
@@ -449,73 +669,120 @@ export class FileUploadComponent {
       timeOutline,
       arrowForwardOutline,
       helpCircleOutline,
+      alertCircle,
+      warning,
+      time,
+      'lock-closed': lockClosed,
+      server,
+      'shield-checkmark': shieldCheckmark,
+      'arrow-forward': arrowForward,
+      checkmark,
+      'analytics-outline': analyticsOutline,
+      'checkmark-circle': checkmarkCircle,
     });
   }
 
   validateFile(file: File): string | null {
-    // Check file size
-    if (file.size > MAX_FILE_SIZE) {
-      return 'File size exceeds 5MB limit';
-    }
-
-    // Check file type
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      return 'Invalid file type. Only PDF, Text, JPEG, and PNG files are allowed';
-    }
-
+    if (!file) return 'No file selected';
+    if (file.size > MAX_FILE_SIZE) return 'File size exceeds 5MB limit';
+    if (!ALLOWED_TYPES.includes(file.type)) return 'Invalid file type. Please upload PDF, TXT, JPEG, or PNG files only';
     return null;
   }
 
-  clearFile(event?: Event) {
-    if (event) {
-      event.stopPropagation();
-    }
+  clearFile(event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (this.isUploading) return;
+
     this.selectedFile = null;
     this.errorMessage = '';
-    this.downloadUrl = '';
     this.uploadProgress = 0;
-    this.isUploading = false;
     this.uploadComplete = false;
+    this.isUploading = false;
+    this.downloadUrl = '';
     this.isDragging = false;
+    if (this.fileInput?.nativeElement) {
+      this.fileInput.nativeElement.value = '';
+    }
   }
 
   async onFileSelected(event: Event) {
+    console.log('onFileSelected triggered');
     const file = (event.target as HTMLInputElement).files?.[0];
-    if (!file) return;
+    if (!file) {
+      console.log('No file selected');
+      return;
+    }
 
-    this.clearFile();
+    console.log('File selected:', {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+    });
+
+    this.clearFile(event);
+    console.log('Previous file state cleared');
+
     this.selectedFile = file;
+    console.log('New file set as selectedFile');
 
     const validationError = this.validateFile(file);
     if (validationError) {
+      console.log('File validation failed:', validationError);
       this.errorMessage = validationError;
       this.validationError.emit(validationError);
       return;
     }
+    console.log('File validation passed');
 
     this.isUploading = true;
     this.uploadProgress = 0;
     this.uploadComplete = false;
 
     try {
+      console.log('Getting current user...');
       const user = await this.authService.getCurrentUser();
-      if (!user) throw new Error('No authenticated user');
+      if (!user) {
+        console.error('No authenticated user found');
+        throw new Error('No authenticated user');
+      }
+      console.log('User authenticated:', user.uid);
 
       const fileExtension = file.name.split('.').pop();
       const uniqueFileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExtension}`;
-      const storageRef = ref(this.storage, `users/${user.uid}/${this.path}/${uniqueFileName}`);
-      const uploadTask = uploadBytesResumable(storageRef, file);
+      const filePath = `users/${user.uid}/finescan-uploads/${uniqueFileName}`;
+      console.log('Generated file path:', filePath);
+
+      const storageRef = ref(this.storage, filePath);
+      console.log('Storage reference created');
+
+      const metadata = {
+        contentType: file.type,
+        customMetadata: {
+          uploadedBy: user.uid,
+          uploadedAt: new Date().toISOString(),
+        },
+      };
+
+      console.log('Starting upload with metadata:', metadata);
+      const uploadTask = uploadBytesResumable(storageRef, file, metadata);
 
       uploadTask.on(
         'state_changed',
         (snapshot) => {
           this.ngZone.run(() => {
             const progress = snapshot.bytesTransferred / snapshot.totalBytes;
+            console.log(`Upload progress: ${Math.round(progress * 100)}%`);
             this.uploadProgress = progress;
             this.progressChange.emit(progress);
           });
         },
         (error) => {
+          console.error('Upload error:', {
+            code: error.code,
+            message: error.message,
+            fullError: error,
+          });
           this.ngZone.run(() => {
             this.errorMessage = 'Upload failed: ' + error.message;
             this.validationError.emit(this.errorMessage);
@@ -525,10 +792,14 @@ export class FileUploadComponent {
         },
         async () => {
           try {
+            console.log('Upload completed, getting download URL...');
             const url = await getDownloadURL(uploadTask.snapshot.ref);
+            console.log('Download URL obtained:', url);
+
             this.ngZone.run(() => {
               this.downloadUrl = url;
-              this.urlGenerated.emit(this.downloadUrl);
+              this.urlGenerated.emit(url);
+              this.lastUploadedUrl = url;
               this.isUploading = false;
               this.uploadComplete = true;
               this.uploadProgress = 0;
@@ -539,9 +810,26 @@ export class FileUploadComponent {
                 fileInput.value = '';
               }
             });
+
+            console.log('Creating analysis document...');
+            const analysisRef = collection(this.firestore, `users/${user.uid}/analyses`);
+            await addDoc(analysisRef, {
+              userId: user.uid,
+              fileName: file.name,
+              fileUrl: url,
+              status: 'uploaded',
+              createdAt: Timestamp.now(),
+              metadata: {
+                contentType: file.type,
+                size: file.size,
+                uploadedAt: new Date().toISOString(),
+              },
+            });
+            console.log('Analysis document created successfully');
           } catch (error) {
+            console.error('Post-upload error:', error);
             this.ngZone.run(() => {
-              this.errorMessage = 'Failed to get download URL';
+              this.errorMessage = 'Failed to complete upload process';
               this.validationError.emit(this.errorMessage);
               this.isUploading = false;
               this.uploadComplete = false;
@@ -549,20 +837,11 @@ export class FileUploadComponent {
           }
         }
       );
-
-      // After successful upload, create an analysis document
-      const analysisRef = collection(this.firestore, `users/${user.uid}/analyses`);
-      await addDoc(analysisRef, {
-        userId: user.uid,
-        fileName: file.name,
-        fileUrl: this.downloadUrl,
-        status: 'uploaded',
-        createdAt: Timestamp.now(),
-      });
     } catch (error) {
+      console.error('Upload setup error:', error);
+      this.isUploading = false;
       this.errorMessage = 'Upload failed: ' + (error instanceof Error ? error.message : 'Unknown error');
       this.validationError.emit(this.errorMessage);
-      this.isUploading = false;
       this.uploadComplete = false;
     }
   }
@@ -650,22 +929,38 @@ export class FileUploadComponent {
     });
   }
 
-  startUpload() {
-    if (this.selectedFile) {
+  startUpload(event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (this.selectedFile && !this.isUploading) {
       this.uploadFile(this.selectedFile);
     }
   }
 
   async uploadFile(file: File) {
+    // First, let's check authentication explicitly
     const user = await firstValueFrom(this.authService.user$);
+    console.log('Authentication Check:', {
+      isAuthenticated: !!user,
+      userId: user?.uid,
+      email: user?.email,
+    });
+
     if (!user) {
+      console.error('No authenticated user found');
       this.errorMessage = 'Please sign in to upload files';
       this.validationError.emit(this.errorMessage);
       return;
     }
 
+    if (this.isUploading) {
+      console.log('Upload already in progress');
+      return;
+    }
+
     const validationError = this.validateFile(file);
     if (validationError) {
+      console.error('File validation failed:', validationError);
       this.errorMessage = validationError;
       this.validationError.emit(validationError);
       return;
@@ -676,20 +971,55 @@ export class FileUploadComponent {
       this.uploadProgress = 0;
       this.errorMessage = '';
 
-      const filePath = `${this.path}/${user.uid}/${Date.now()}_${file.name}`;
+      const timestamp = Date.now();
+      const sanitizedName = this.sanitizeFileName(file.name);
+      const filePath = `users/${user.uid}/finescan-uploads/${timestamp}_${sanitizedName}`;
+
+      // Log all relevant information
+      console.log('Starting upload:', {
+        filePath,
+        fileInfo: {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+        },
+        user: {
+          uid: user.uid,
+          email: user.email,
+        },
+        timestamp,
+      });
+
       const storageRef = ref(this.storage, filePath);
-      const uploadTask = uploadBytesResumable(storageRef, file);
+      console.log('Storage reference created:', storageRef.fullPath);
+
+      const metadata = {
+        contentType: file.type,
+        customMetadata: {
+          uploadedBy: user.uid,
+          uploadedAt: new Date().toISOString(),
+        },
+      };
+
+      console.log('Starting upload with metadata:', metadata);
+      const uploadTask = uploadBytesResumable(storageRef, file, metadata);
 
       uploadTask.on(
         'state_changed',
         (snapshot) => {
+          const progress = snapshot.bytesTransferred / snapshot.totalBytes;
+          console.log(`Upload progress: ${Math.round(progress * 100)}%`);
           this.ngZone.run(() => {
-            const progress = snapshot.bytesTransferred / snapshot.totalBytes;
             this.uploadProgress = progress;
             this.progressChange.emit(progress);
           });
         },
         (error) => {
+          console.error('Upload failed:', {
+            errorCode: error.code,
+            errorMessage: error.message,
+            fullError: error,
+          });
           this.ngZone.run(() => {
             this.errorMessage = 'Upload failed: ' + error.message;
             this.validationError.emit(this.errorMessage);
@@ -699,27 +1029,38 @@ export class FileUploadComponent {
         },
         async () => {
           try {
+            console.log('Upload completed, getting download URL...');
             const url = await getDownloadURL(uploadTask.snapshot.ref);
+            console.log('Download URL obtained:', url);
+
             this.ngZone.run(() => {
               this.downloadUrl = url;
-              this.urlGenerated.emit(this.downloadUrl);
+              this.urlGenerated.emit(url);
+              this.lastUploadedUrl = url;
               this.isUploading = false;
               this.uploadComplete = true;
               this.uploadProgress = 0;
             });
 
-            // Create analysis document
+            console.log('Creating analysis document...');
             const analysisRef = collection(this.firestore, `users/${user.uid}/analyses`);
             await addDoc(analysisRef, {
               userId: user.uid,
               fileName: file.name,
-              fileUrl: this.downloadUrl,
+              fileUrl: url,
               status: 'uploaded',
               createdAt: Timestamp.now(),
+              metadata: {
+                contentType: file.type,
+                size: file.size,
+                uploadedAt: new Date().toISOString(),
+              },
             });
+            console.log('Analysis document created successfully');
           } catch (error) {
+            console.error('Post-upload processing failed:', error);
             this.ngZone.run(() => {
-              this.errorMessage = 'Failed to get download URL';
+              this.errorMessage = 'Failed to complete upload process';
               this.validationError.emit(this.errorMessage);
               this.isUploading = false;
               this.uploadComplete = false;
@@ -728,11 +1069,25 @@ export class FileUploadComponent {
         }
       );
     } catch (error) {
+      console.error('Upload setup failed:', error);
+      this.isUploading = false;
       this.errorMessage = 'Upload failed: ' + (error instanceof Error ? error.message : 'Unknown error');
       this.validationError.emit(this.errorMessage);
-      this.isUploading = false;
       this.uploadComplete = false;
     }
+  }
+
+  private sanitizeFileName(fileName: string): string {
+    // Only keep alphanumeric characters, dots, and underscores
+    const cleanName = fileName
+      .toLowerCase()
+      .replace(/[^a-z0-9.]/g, '_')
+      .replace(/_{2,}/g, '_')
+      .replace(/^_+|_+$/g, '');
+
+    // Ensure the extension is preserved
+    const extension = fileName.split('.').pop()?.toLowerCase() || '';
+    return `${cleanName}.${extension}`;
   }
 
   onDragOver(event: DragEvent) {
@@ -778,10 +1133,58 @@ export class FileUploadComponent {
     await alert.present();
   }
 
-  retryUpload() {
-    if (this.selectedFile) {
+  retryUpload(event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (this.selectedFile && !this.isUploading) {
       this.errorMessage = '';
       this.uploadFile(this.selectedFile);
+    }
+  }
+
+  startAnalysis() {
+    if (this.downloadUrl) {
+      this.router.navigate(['/reports']);
+    }
+  }
+
+  async showPrivacyDetails() {
+    const alert = await this.alertController.create({
+      header: 'Privacy & Security Details',
+      message: `
+        <div class="privacy-details">
+          <h3>Document Security</h3>
+          <ul>
+            <li>End-to-end encryption for all uploads</li>
+            <li>Secure cloud storage with Firebase</li>
+            <li>Automatic deletion after 30 days</li>
+          </ul>
+
+          <h3>Data Protection</h3>
+          <ul>
+            <li>Your documents are only accessible to you</li>
+            <li>No third-party access to your data</li>
+            <li>Regular security audits and updates</li>
+          </ul>
+
+          <h3>Your Rights</h3>
+          <ul>
+            <li>Request data deletion at any time</li>
+            <li>Download your documents</li>
+            <li>Access detailed audit logs</li>
+          </ul>
+        </div>
+      `,
+      cssClass: 'privacy-alert',
+      buttons: ['Got It'],
+    });
+
+    await alert.present();
+  }
+
+  viewDocument() {
+    if (this.lastUploadedUrl) {
+      window.open(this.lastUploadedUrl, '_blank');
     }
   }
 }

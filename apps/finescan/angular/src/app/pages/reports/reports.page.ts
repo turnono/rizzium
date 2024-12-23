@@ -29,6 +29,8 @@ import {
   IonSegmentButton,
   IonSearchbar,
   IonButtons,
+  IonBackButton,
+  IonToast,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -39,6 +41,8 @@ import {
   hourglassOutline,
   searchOutline,
   filterOutline,
+  arrowForward,
+  informationCircle,
 } from 'ionicons/icons';
 import { Firestore, Timestamp, updateDoc, doc } from '@angular/fire/firestore';
 import { getFunctions, httpsCallable } from '@angular/fire/functions';
@@ -72,11 +76,16 @@ import { getFunctions, httpsCallable } from '@angular/fire/functions';
     IonSegmentButton,
     IonSearchbar,
     IonButtons,
+    IonBackButton,
+    IonToast,
   ],
   providers: [AnalysisService],
   template: `
     <ion-header>
       <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-back-button defaultHref="/"></ion-back-button>
+        </ion-buttons>
         <ion-title>Analysis Reports</ion-title>
         <ion-buttons slot="end">
           <ion-button (click)="showFilters = !showFilters">
@@ -171,13 +180,13 @@ import { getFunctions, httpsCallable } from '@angular/fire/functions';
         </ion-card-content>
       </ion-card>
       } @else if (selectedAnalysis.status === 'failed') {
-      <ion-card class="ion-margin-top" color="danger">
-        <ion-card-content class="ion-text-center">
-          <ion-icon name="alert-circle" size="large"></ion-icon>
-          <p>Analysis failed. Please try again.</p>
-          <ion-button (click)="retryAnalysis(selectedAnalysis)"> Retry Analysis </ion-button>
-        </ion-card-content>
-      </ion-card>
+      <ion-toast
+        [isOpen]="true"
+        message="Analysis failed. Please try again."
+        color="danger"
+        position="bottom"
+        [icon]="'alert-circle-outline'"
+      ></ion-toast>
       } @else if (selectedAnalysis.status === 'completed' && selectedAnalysis.results) {
       <ui-analysis-results
         [analysis]="getAnalysisResults(selectedAnalysis)"
@@ -370,6 +379,8 @@ export class ReportsPage implements OnInit {
       hourglassOutline,
       searchOutline,
       filterOutline,
+      arrowForward,
+      informationCircle,
     });
   }
 

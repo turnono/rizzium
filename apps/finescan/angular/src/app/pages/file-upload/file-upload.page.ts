@@ -17,6 +17,8 @@ import {
   IonText,
   IonIcon,
   IonProgressBar,
+  IonBackButton,
+  IonButtons,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -29,6 +31,8 @@ import {
   arrowForwardOutline,
   helpCircleOutline,
   informationCircleOutline,
+  arrowForward,
+  informationCircle,
 } from 'ionicons/icons';
 import { AlertController } from '@ionic/angular';
 
@@ -51,43 +55,20 @@ import { AlertController } from '@ionic/angular';
     IonText,
     IonIcon,
     IonProgressBar,
+    IonBackButton,
+    IonButtons,
   ],
   template: `
     <ion-header>
       <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-back-button defaultHref="/"></ion-back-button>
+        </ion-buttons>
         <ion-title>Document Upload</ion-title>
       </ion-toolbar>
     </ion-header>
 
     <ion-content class="ion-padding">
-      <!-- Security Notice Card -->
-      <ion-card class="security-notice">
-        <ion-card-content>
-          <div class="security-header">
-            <ion-icon name="shield-checkmark" color="success"></ion-icon>
-            <h2>Your Privacy & Security</h2>
-          </div>
-          <div class="security-points">
-            <div class="security-point">
-              <ion-icon name="lock-closed-outline" color="medium"></ion-icon>
-              <span>End-to-end encryption for all documents</span>
-            </div>
-            <div class="security-point">
-              <ion-icon name="server-outline" color="medium"></ion-icon>
-              <span>Secure cloud storage with Firebase</span>
-            </div>
-            <div class="security-point">
-              <ion-icon name="time-outline" color="medium"></ion-icon>
-              <span>Automatic deletion after 30 days</span>
-            </div>
-          </div>
-          <ion-button fill="clear" size="small" (click)="showPrivacyDetails()">
-            Learn More About Security
-            <ion-icon name="arrow-forward-outline" slot="end"></ion-icon>
-          </ion-button>
-        </ion-card-content>
-      </ion-card>
-
       <ion-card>
         <ion-card-header>
           <ion-card-title>Upload Document</ion-card-title>
@@ -104,31 +85,8 @@ import { AlertController } from '@ionic/angular';
               (urlGenerated)="onUrlGenerated($event)"
             ></ui-file-upload>
           </div>
-
-          @if (lastUploadedUrl) {
-          <div class="upload-success">
-            <ion-icon name="checkmark-circle-outline" color="success" size="large"></ion-icon>
-            <ion-text color="success">
-              <h4>Document uploaded successfully!</h4>
-            </ion-text>
-            <div class="action-buttons">
-              <ion-button fill="outline" (click)="viewDocument()"> View Document </ion-button>
-              <ion-button (click)="startAnalysis()"> Start Analysis </ion-button>
-            </div>
-          </div>
-          }
         </ion-card-content>
       </ion-card>
-
-      <div class="help-section">
-        <ion-icon name="help-circle-outline"></ion-icon>
-        <span>Need help uploading?</span>
-      </div>
-
-      <div class="info-section">
-        <ion-icon name="information-circle-outline"></ion-icon>
-        <span>File upload guidelines</span>
-      </div>
     </ion-content>
   `,
   styles: [
@@ -292,6 +250,8 @@ export class FileUploadPage {
       arrowForwardOutline,
       helpCircleOutline,
       informationCircleOutline,
+      arrowForward,
+      informationCircle,
     });
   }
 

@@ -22,6 +22,8 @@ import {
   IonToast,
   IonBadge,
   AlertController,
+  IonBackButton,
+  IonButtons,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -48,6 +50,8 @@ import {
   helpCircleOutline,
   lockClosedOutline,
   serverOutline,
+  arrowForward,
+  informationCircle,
 } from 'ionicons/icons';
 import { DataSaverService } from '@rizzium/shared/services';
 
@@ -76,10 +80,15 @@ import { DataSaverService } from '@rizzium/shared/services';
     IonNote,
     IonToast,
     IonBadge,
+    IonBackButton,
+    IonButtons,
   ],
   template: `
     <ion-header>
       <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-back-button defaultHref="/"></ion-back-button>
+        </ion-buttons>
         <ion-title role="heading" aria-level="1">Settings</ion-title>
       </ion-toolbar>
     </ion-header>
@@ -541,6 +550,8 @@ export class SettingsPage {
       helpCircleOutline,
       lockClosedOutline,
       serverOutline,
+      arrowForward,
+      informationCircle,
     });
     this.loadSettings();
     this.dataSaverService.settings$.subscribe((settings) => {
