@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -18,6 +18,7 @@ import {
   IonCardHeader,
   IonCardTitle,
   IonCardContent,
+  IonNote,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -26,7 +27,12 @@ import {
   languageOutline,
   colorPaletteOutline,
   downloadOutline,
+  saveOutline,
+  imageOutline,
+  flashOutline,
+  documentTextOutline,
 } from 'ionicons/icons';
+import { DataSaverService } from '@rizzium/shared/services';
 
 @Component({
   selector: 'app-settings',
@@ -50,6 +56,7 @@ import {
     IonCardHeader,
     IonCardTitle,
     IonCardContent,
+    IonNote,
   ],
   template: `
     <ion-header>
@@ -123,6 +130,64 @@ import {
           </ion-list>
         </ion-card-content>
       </ion-card>
+
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>Data Saving</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-list>
+            <ion-item>
+              <ion-icon name="save-outline" slot="start"></ion-icon>
+              <ion-label>Data Saver Mode</ion-label>
+              <ion-toggle [(ngModel)]="dataSaverSettings.enabled" (ionChange)="updateDataSaverSettings()"></ion-toggle>
+            </ion-item>
+
+            <ion-item>
+              <ion-icon name="image-outline" slot="start"></ion-icon>
+              <ion-label>Image Quality</ion-label>
+              <ion-select
+                [(ngModel)]="dataSaverSettings.imageQuality"
+                (ionChange)="updateDataSaverSettings()"
+                [disabled]="!dataSaverSettings.enabled"
+              >
+                <ion-select-option value="100">High (100%)</ion-select-option>
+                <ion-select-option value="75">Medium (75%)</ion-select-option>
+                <ion-select-option value="50">Low (50%)</ion-select-option>
+              </ion-select>
+            </ion-item>
+
+            <ion-item>
+              <ion-icon name="flash-outline" slot="start"></ion-icon>
+              <ion-label>Disable Animations</ion-label>
+              <ion-toggle
+                [(ngModel)]="dataSaverSettings.disableAnimations"
+                (ionChange)="updateDataSaverSettings()"
+                [disabled]="!dataSaverSettings.enabled"
+              ></ion-toggle>
+            </ion-item>
+
+            <ion-item>
+              <ion-icon name="document-text-outline" slot="start"></ion-icon>
+              <ion-label>Text-Only Mode</ion-label>
+              <ion-toggle
+                [(ngModel)]="dataSaverSettings.textOnlyMode"
+                (ionChange)="updateDataSaverSettings()"
+                [disabled]="!dataSaverSettings.enabled"
+              ></ion-toggle>
+            </ion-item>
+          </ion-list>
+
+          @if (dataSaverSettings.enabled) {
+          <div class="data-saver-info">
+            <ion-note>
+              Data saver mode reduces bandwidth usage by optimizing images and disabling certain features. This may
+              affect the visual quality of the application.
+            </ion-note>
+          </div>
+          }
+        </ion-card-content>
+      </ion-card>
     </ion-content>
   `,
   styles: [
@@ -149,16 +214,37 @@ import {
           margin: 0 0 1rem;
         }
       }
+
+      .data-saver-info {
+        margin-top: 16px;
+        padding: 8px;
+        background: var(--ion-color-light);
+        border-radius: 8px;
+
+        ion-note {
+          color: var(--ion-color-medium);
+          font-size: 14px;
+        }
+      }
     `,
   ],
 })
 export class SettingsPage {
+  private dataSaverService = inject(DataSaverService);
+
   settings = {
     darkMode: false,
     notifications: true,
     autoDownload: false,
     theme: 'default',
     language: 'en',
+  };
+
+  dataSaverSettings = {
+    enabled: false,
+    imageQuality: 100,
+    disableAnimations: false,
+    textOnlyMode: false,
   };
 
   constructor() {
@@ -168,8 +254,15 @@ export class SettingsPage {
       languageOutline,
       colorPaletteOutline,
       downloadOutline,
+      saveOutline,
+      imageOutline,
+      flashOutline,
+      documentTextOutline,
     });
     this.loadSettings();
+    this.dataSaverService.settings$.subscribe((settings) => {
+      this.dataSaverSettings = settings;
+    });
   }
 
   loadSettings() {
@@ -195,5 +288,9 @@ export class SettingsPage {
 
     // Apply language
     // Implement language change logic here
+  }
+
+  updateDataSaverSettings() {
+    this.dataSaverService.updateSettings(this.dataSaverSettings);
   }
 }

@@ -16,6 +16,7 @@ import { Firestore, collection, addDoc, Timestamp } from '@angular/fire/firestor
 import { FirebaseAuthService } from '@rizzium/shared/services';
 import { addIcons } from 'ionicons';
 import { cloudUploadOutline, documentOutline, closeCircleOutline, checkmarkCircleOutline } from 'ionicons/icons';
+import { DataSaverService } from '@rizzium/shared/services';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 const ALLOWED_TYPES = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png'];
@@ -247,6 +248,7 @@ export class FileUploadComponent {
   private ngZone = inject(NgZone);
   private firestore = inject(Firestore);
   private authService = inject(FirebaseAuthService);
+  private dataSaverService = inject(DataSaverService);
 
   @Input() path = 'uploads';
   @Input() accept = '.pdf,.doc,.docx,.txt';
@@ -397,7 +399,7 @@ export class FileUploadComponent {
     input.click();
   }
 
-  private handleFileSelection(file: File) {
+  private async handleFileSelection(file: File) {
     const validationError = this.validateFile(file);
     if (validationError) {
       this.errorMessage = validationError;
@@ -405,8 +407,63 @@ export class FileUploadComponent {
       return;
     }
 
-    this.selectedFile = file;
-    this.onFileSelected({ target: { files: [file] } } as unknown as Event);
+    // If it's an image and data saver is enabled, optimize it
+    if (file.type.startsWith('image/') && this.dataSaverService.isEnabled()) {
+      try {
+        const optimizedFile = await this.optimizeImage(file);
+        this.selectedFile = optimizedFile;
+        this.onFileSelected({ target: { files: [optimizedFile] } } as unknown as Event);
+      } catch (error) {
+        console.error('Image optimization failed:', error);
+        // Fallback to original file
+        this.selectedFile = file;
+        this.onFileSelected({ target: { files: [file] } } as unknown as Event);
+      }
+    } else {
+      this.selectedFile = file;
+      this.onFileSelected({ target: { files: [file] } } as unknown as Event);
+    }
+  }
+
+  private async optimizeImage(file: File): Promise<File> {
+    return new Promise((resolve, reject) => {
+      const quality = this.dataSaverService.getImageQuality() / 100;
+      const reader = new FileReader();
+
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('Could not get canvas context'));
+            return;
+          }
+
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) {
+                reject(new Error('Could not create blob'));
+                return;
+              }
+              const optimizedFile = new File([blob], file.name, {
+                type: file.type,
+                lastModified: Date.now(),
+              });
+              resolve(optimizedFile);
+            },
+            file.type,
+            quality
+          );
+        };
+        img.src = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
   }
 
   uploadFile(file: File) {
