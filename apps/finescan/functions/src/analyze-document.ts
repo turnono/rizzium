@@ -1,84 +1,119 @@
+import * as functions from 'firebase-functions';
+import * as admin from 'firebase-admin';
 import * as pdfParse from 'pdf-parse';
-import { https } from 'firebase-functions';
-import { initializeApp } from 'firebase-admin/app';
-import { getStorage } from 'firebase-admin/storage';
-import { getFirestore } from 'firebase-admin/firestore';
+import fetch from 'node-fetch';
 
-initializeApp();
+interface DocumentFlag {
+  start: number;
+  end: number;
+  reason: string;
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH';
+  matchedText: string;
+}
 
-export const analyzeDocument = https.onCall(async (data, context) => {
+export const analyzeDocument = functions.https.onCall(async (data, context) => {
+  // Verify authentication
   if (!context.auth) {
-    throw new https.HttpsError('unauthenticated', 'Must be authenticated to analyze documents');
+    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
   }
 
-  const { documentUrl, analysisType } = data;
+  const { documentUrl } = data;
+
   if (!documentUrl) {
-    throw new https.HttpsError('invalid-argument', 'Document URL is required');
+    throw new functions.https.HttpsError('invalid-argument', 'Document URL is required');
   }
 
   try {
-    // Get file from Storage
-    const storage = getStorage();
-    const bucket = storage.bucket();
-    const file = bucket.file(documentUrl);
-    const [fileBuffer] = await file.download();
+    // Download the document
+    const response = await fetch(documentUrl);
+    const buffer = await response.buffer();
 
-    // Parse PDF
-    const pdfData = await pdfParse(fileBuffer, {
-      // Remove any test file references
-      max: 0, // No page limit
-    });
-
-    // Extract text content
-    const text = pdfData.text;
+    // Parse the document based on type
+    let text = '';
+    if (documentUrl.toLowerCase().endsWith('.pdf')) {
+      const pdfData = await pdfParse(buffer);
+      text = pdfData.text;
+    } else {
+      // For text files, just convert buffer to string
+      text = buffer.toString('utf-8');
+    }
 
     // Perform analysis (simplified example)
-    const analysis = {
-      riskLevel: determineRiskLevel(text),
-      summary: generateSummary(text),
-      flags: identifyFlags(text),
-      recommendations: generateRecommendations(text),
-    };
+    const analysis = analyzeText(text);
 
-    // Update Firestore
-    const db = getFirestore();
-    const analysisRef = db.doc(`users/${context.auth.uid}/analyses/${documentUrl}`);
+    // Update the analysis document in Firestore
+    const db = admin.firestore();
+    const analysisRef = db.collection(`users/${context.auth.uid}/analyses`).doc();
+
     await analysisRef.update({
       status: 'completed',
       results: analysis,
-      updatedAt: new Date(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    return analysis;
+    return { success: true, analysisId: analysisRef.id };
   } catch (error) {
-    console.error('Document analysis failed:', error);
-    throw new https.HttpsError('internal', 'Failed to analyze document');
+    console.error('Document analysis error:', error);
+    throw new functions.https.HttpsError('internal', 'Failed to analyze document');
   }
 });
 
-function determineRiskLevel(text: string): 'high' | 'medium' | 'low' {
-  // Implement risk level determination logic
-  return 'medium';
-}
+function analyzeText(text: string) {
+  // Simple analysis example - you can expand this with more sophisticated analysis
+  const flags: DocumentFlag[] = [];
 
-function generateSummary(text: string) {
-  return {
-    riskLevel: 'medium' as const,
-    description: 'Document analysis summary...',
-    recommendations: ['Recommendation 1', 'Recommendation 2'],
-  };
-}
-
-function identifyFlags(text: string) {
-  return [
+  // Example patterns to check
+  const patterns = [
     {
-      type: 'warning',
-      description: 'Potential risk identified...',
-      context: 'Relevant text excerpt...',
+      pattern: /\b(waive|waiver|waiving)\b/gi,
+      reason: 'Rights waiver clause detected',
+      riskLevel: 'HIGH' as const,
+    },
+    {
+      pattern: /\b(liability|indemnify|indemnification)\b/gi,
+      reason: 'Liability or indemnification clause detected',
+      riskLevel: 'MEDIUM' as const,
+    },
+    {
+      pattern: /\b(terminate|termination)\b/gi,
+      reason: 'Termination clause detected',
+      riskLevel: 'MEDIUM' as const, // TODO: Change to HIGH
     },
   ];
-}
 
-function generateRecommendations(text: string) {
-  return ['Consider reviewing section X...', 'Consult with legal counsel regarding Y...'];
+  // Find matches for each pattern
+  patterns.forEach(({ pattern, reason, riskLevel }) => {
+    let match;
+    while ((match = pattern.exec(text)) !== null) {
+      flags.push({
+        start: match.index,
+        end: match.index + match[0].length,
+        reason,
+        riskLevel: riskLevel as 'LOW' | 'MEDIUM' | 'HIGH',
+        matchedText: match[0],
+      });
+    }
+  });
+
+  // Determine overall risk level
+  const riskLevel = flags.some((f) => f.riskLevel === 'HIGH')
+    ? 'HIGH'
+    : flags.some((f) => f.riskLevel === 'MEDIUM')
+    ? 'MEDIUM'
+    : 'LOW';
+
+  return {
+    text,
+    flags,
+    riskLevel,
+    summary: {
+      riskLevel,
+      description: `Analysis found ${flags.length} potential issues.`,
+      recommendations: [
+        'Review all flagged sections carefully',
+        'Consider legal consultation for high-risk items',
+        'Document any agreed changes or clarifications',
+      ],
+    },
+  };
 }
