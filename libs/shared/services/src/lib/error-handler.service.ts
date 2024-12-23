@@ -37,15 +37,17 @@ export class ErrorHandlerService {
     await toast.present();
   }
 
-  handleError(error: any) {
+  handleError(error: any, customMessage?: string) {
     console.error('An error occurred:', error);
-    let message = 'An unexpected error occurred';
+    let message = customMessage || 'An unexpected error occurred';
 
-    if (typeof error === 'string') {
-      message = error;
-    } else if (error?.message) {
-      message = error.message;
-    }
+    if (!customMessage) {
+      if (typeof error === 'string') {
+        message = error;
+      } else if (error?.message) {
+        message = error.message;
+      }
+
 
     this.showError(message);
   }
