@@ -54,6 +54,7 @@ import {
   informationCircle,
 } from 'ionicons/icons';
 import { DataSaverService } from '@rizzium/shared/services';
+import { FooterComponent } from '@rizzium/shared/ui/organisms';
 
 @Component({
   selector: 'app-settings',
@@ -82,6 +83,7 @@ import { DataSaverService } from '@rizzium/shared/services';
     IonBadge,
     IonBackButton,
     IonButtons,
+    FooterComponent,
   ],
   template: `
     <ion-header>
@@ -263,6 +265,7 @@ import { DataSaverService } from '@rizzium/shared/services';
         <span>Important privacy information</span>
       </div>
     </ion-content>
+    <rizzium-footer [appName]="'finescan'"></rizzium-footer>
   `,
   styles: [
     `

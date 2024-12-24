@@ -1,26 +1,27 @@
-<ion-footer collapse="fade" class="ion-no-border">
+<ion-footer>
   <ion-toolbar color="clear">
     <div class="footer-content">
       <div class="footer-links">
-        <a routerLink="/privacy">Privacy Policy</a>
-        <a routerLink="/terms">Terms of Service</a>
-        <a routerLink="/contact">Contact Us</a>
+        <a href="/privacy">Privacy Policy</a>
+        <a href="/terms">Terms of Service</a>
+        <a href="/contact">Contact Us</a>
       </div>
       <div class="social-links">
-        <a href="https://facebook.com/finescan" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+        <a [href]="'https://facebook.com/' + appName" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
           <ion-icon name="logo-facebook"></ion-icon>
         </a>
-        <a href="https://twitter.com/finescan" target="_blank" rel="noopener noreferrer" aria-label="Twitter">
+        <a [href]="'https://twitter.com/' + appName" target="_blank" rel="noopener noreferrer" aria-label="Twitter">
           <ion-icon name="logo-twitter"></ion-icon>
         </a>
-        <a href="https://linkedin.com/company/finescan" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+        <a [href]="'https://linkedin.com/company/' + appName" target="_blank" rel="noopener noreferrer"
+          aria-label="LinkedIn">
           <ion-icon name="logo-linkedin"></ion-icon>
         </a>
-        <a href="https://instagram.com/finescan" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+        <a [href]="'https://instagram.com/' + appName" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
           <ion-icon name="logo-instagram"></ion-icon>
         </a>
       </div>
-      <div class="copyright">© {{ currentYear }} FineScan. All rights reserved.</div>
+      <div class="copyright">© {{ currentYear }} {{ appName | titlecase }}. All rights reserved.</div>
     </div>
   </ion-toolbar>
 </ion-footer>

@@ -18,6 +18,7 @@ import {
 } from '@ionic/angular/standalone';
 import { ErrorHandlerService } from '@rizzium/shared/services';
 import { take } from 'rxjs/operators';
+import { FooterComponent } from '@rizzium/shared/ui/organisms';
 
 @Component({
   selector: 'app-login',
@@ -36,6 +37,7 @@ import { take } from 'rxjs/operators';
     IonCardHeader,
     IonCardTitle,
     IonCardContent,
+    FooterComponent,
   ],
   template: `
     <rizzium-header
@@ -96,6 +98,7 @@ import { take } from 'rxjs/operators';
         </ion-card-content>
       </ion-card>
     </ion-content>
+    <rizzium-footer [appName]="'finescan'"></rizzium-footer>
   `,
   styles: [
     `

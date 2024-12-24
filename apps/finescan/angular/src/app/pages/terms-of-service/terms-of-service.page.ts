@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonContent, IonHeader, IonToolbar, IonTitle, IonBackButton, IonButtons } from '@ionic/angular/standalone';
-
+import { FooterComponent } from '@rizzium/shared/ui/organisms';
 @Component({
   selector: 'app-terms-of-service',
   standalone: true,
-  imports: [CommonModule, IonContent, IonHeader, IonToolbar, IonTitle, IonBackButton, IonButtons],
+  imports: [CommonModule, IonContent, IonHeader, IonToolbar, IonTitle, IonBackButton, IonButtons, FooterComponent],
   template: `
     <ion-header>
       <ion-toolbar>
@@ -19,6 +19,7 @@ import { IonContent, IonHeader, IonToolbar, IonTitle, IonBackButton, IonButtons 
       <h1>Terms of Service</h1>
       <p>Your terms of service content goes here...</p>
     </ion-content>
+    <rizzium-footer [appName]="'finescan'"></rizzium-footer>
   `,
   styles: [
     `

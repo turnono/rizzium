@@ -1,6 +1,7 @@
 import { Component, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FileUploadComponent } from '@rizzium/shared/ui/molecules';
+import { FooterComponent } from '@rizzium/shared/ui/organisms';
 import { Storage } from '@angular/fire/storage';
 import { Router } from '@angular/router';
 import {
@@ -57,6 +58,7 @@ import { AlertController } from '@ionic/angular';
     IonProgressBar,
     IonBackButton,
     IonButtons,
+    FooterComponent,
   ],
   template: `
     <ion-header>
@@ -95,6 +97,7 @@ import { AlertController } from '@ionic/angular';
           </div>
         </ion-card-content>
       </ion-card>
+      <rizzium-footer [appName]="'finescan'"></rizzium-footer>
     </ion-content>
   `,
   styles: [

@@ -1,16 +1,14 @@
 import { Route } from '@angular/router';
-import { LandingComponent } from '@rizzium/shared/ui/molecules';
-import { AuthGuard, NotAuthGuard } from '@rizzium/shared/guards';
+import { AuthGuard } from '@rizzium/shared/guards';
 
 export const appRoutes: Route[] = [
   {
     path: '',
-    component: LandingComponent,
+    loadComponent: () => import('./pages/home/home.page').then((m) => m.HomePageComponent),
   },
   {
     path: 'login',
     loadComponent: () => import('./pages/login/login.page').then((m) => m.LoginPage),
-    canActivate: [NotAuthGuard],
   },
   {
     path: 'file-upload',
@@ -23,13 +21,8 @@ export const appRoutes: Route[] = [
     canActivate: [AuthGuard],
   },
   {
-    path: 'settings',
-    loadComponent: () => import('./pages/settings/settings.page').then((m) => m.SettingsPage),
-    canActivate: [AuthGuard],
-  },
-  {
     path: 'privacy',
-    loadComponent: () => import('./pages/privacy-policy/privacy-policy.page').then((m) => m.PrivacyPolicyPage),
+    loadComponent: () => import('./pages/privacy-policy/privacy-policy.page').then((m) => m.PrivacyPolicyPageComponent),
   },
   {
     path: 'terms',
@@ -38,5 +31,10 @@ export const appRoutes: Route[] = [
   {
     path: 'contact',
     loadComponent: () => import('./pages/contact-us/contact-us.page').then((m) => m.ContactUsPage),
+  },
+  // Add other routes as needed
+  {
+    path: '**',
+    redirectTo: '',
   },
 ];

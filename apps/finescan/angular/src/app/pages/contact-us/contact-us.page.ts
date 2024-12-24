@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonContent, IonHeader, IonToolbar, IonTitle, IonBackButton, IonButtons } from '@ionic/angular/standalone';
-
+import { FooterComponent } from '@rizzium/shared/ui/organisms';
 @Component({
   selector: 'app-contact-us',
   standalone: true,
-  imports: [CommonModule, IonContent, IonHeader, IonToolbar, IonTitle, IonBackButton, IonButtons],
+  imports: [CommonModule, IonContent, IonHeader, IonToolbar, IonTitle, IonBackButton, IonButtons, FooterComponent],
   template: `
     <ion-header>
       <ion-toolbar>
@@ -19,6 +19,7 @@ import { IonContent, IonHeader, IonToolbar, IonTitle, IonBackButton, IonButtons 
       <h1>Contact Us</h1>
       <p>Your contact information goes here...</p>
     </ion-content>
+    <rizzium-footer [appName]="'finescan'"></rizzium-footer>
   `,
   styles: [
     `

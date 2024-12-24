@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { AnalysisService, FirebaseAuthService } from '@rizzium/shared/services';
 import { Analysis, AnalysisStatus } from '@rizzium/shared/interfaces';
 import { AnalysisResultsComponent } from '@rizzium/shared/ui/molecules';
+import { FooterComponent } from '@rizzium/shared/ui/organisms';
 import { ModalController } from '@ionic/angular/standalone';
 import { AnalysisModalComponent } from '@rizzium/shared/ui/molecules';
 
@@ -125,6 +126,7 @@ interface AnalysisResult {
     IonRow,
     IonCol,
     AnalysisModalComponent,
+    FooterComponent,
   ],
   template: `
     <ion-header>
@@ -217,6 +219,7 @@ interface AnalysisResult {
         </ion-row>
       </ion-grid>
     </ion-content>
+    <rizzium-footer [appName]="'finescan'"></rizzium-footer>
   `,
   styles: [
     `
