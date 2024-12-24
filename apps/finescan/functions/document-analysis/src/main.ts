@@ -204,19 +204,17 @@ async function analyzeImageWithGPT4(imageUrl: string, type: 'general' | 'legal' 
   }
 
   const response = await openai.chat.completions.create({
-    model: 'gpt-4-vision-preview', // Updated to use the vision model
+    model: 'gpt-3.5-turbo',
     messages: [
-      {
-        role: 'system',
-        content: getAnalysisPrompt(type),
-      },
       {
         role: 'user',
         content: [
+          { type: 'text', text: 'Please analyze this document:' },
           {
             type: 'image_url',
             image_url: {
               url: base64Image,
+              detail: 'high',
             },
           },
         ],
