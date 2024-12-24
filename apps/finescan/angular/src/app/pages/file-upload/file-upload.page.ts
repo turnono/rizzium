@@ -73,16 +73,18 @@ import { AlertController } from '@ionic/angular';
     <ion-content class="ion-padding">
       <ion-card>
         <ion-card-header>
-          <ion-card-title color="clear">Upload Document</ion-card-title>
-          <ion-card-subtitle color="clear">Take a photo or select an image of your document</ion-card-subtitle>
+          <ion-card-title color="clear" class="ion-text-center">Upload Document</ion-card-title>
+          <ion-card-subtitle color="clear" class="ion-text-center">
+            Take a photo or select an image of your document
+          </ion-card-subtitle>
         </ion-card-header>
 
-        <ion-card-content>
+        <ion-card-content class="ion-no-padding">
           <div class="upload-container" [class.uploading]="isUploading">
             <ui-file-upload
               #fileUploadComponent
               path="finescan-uploads"
-              accept="image/*,.jpg,.jpeg,.png,.gif,.webp"
+              accept="image/*,.jpg,.jpeg,.png,.webp"
               (progressChange)="onUploadProgress($event)"
               (urlGenerated)="onUrlGenerated($event)"
             ></ui-file-upload>
@@ -91,7 +93,7 @@ import { AlertController } from '@ionic/angular';
           <div class="upload-info">
             <ion-icon name="information-circle-outline"></ion-icon>
             <p>
-              Supported formats: JPG, PNG, GIF, WEBP<br />
+              Supported formats: JPG, PNG, WEBP<br />
               For best results, ensure the document is well-lit and clearly visible
             </p>
           </div>
@@ -250,6 +252,10 @@ import { AlertController } from '@ionic/angular';
         align-items: flex-start;
         gap: 12px;
 
+        display: flex;
+        flex-wrap: nowrap;
+        justify-content: center;
+
         ion-icon {
           font-size: 20px;
           color: var(--ion-color-primary);
@@ -301,7 +307,7 @@ export class FileUploadPage {
     const files = event.dataTransfer?.files;
     if (files?.length) {
       const file = files[0];
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
 
       if (allowedTypes.includes(file.type)) {
         this.fileUploadComponent.uploadFile(file);
@@ -369,7 +375,7 @@ export class FileUploadPage {
   async showUnsupportedFormatAlert() {
     const alert = await this.alertController.create({
       header: 'Unsupported Format',
-      message: 'Please upload an image file (JPG, PNG, GIF, or WEBP)',
+      message: 'Please upload an image file (JPG, PNG, or WEBP)',
       buttons: ['OK'],
     });
 

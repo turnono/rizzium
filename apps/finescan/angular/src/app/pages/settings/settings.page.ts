@@ -55,6 +55,9 @@ import {
 } from 'ionicons/icons';
 import { DataSaverService } from '@rizzium/shared/services';
 import { FooterComponent } from '@rizzium/shared/ui/organisms';
+import { Firestore, doc, setDoc } from '@angular/fire/firestore';
+import { firstValueFrom } from 'rxjs';
+import { FirebaseAuthService } from '@rizzium/shared/services';
 
 @Component({
   selector: 'app-settings',
@@ -508,6 +511,7 @@ import { FooterComponent } from '@rizzium/shared/ui/organisms';
 export class SettingsPage {
   private dataSaverService = inject(DataSaverService);
   private alertController = inject(AlertController);
+  private authService = inject(FirebaseAuthService);
 
   settings = {
     darkMode: false,
@@ -569,13 +573,27 @@ export class SettingsPage {
     }
   }
 
-  updateSettings() {
+  async updateSettings() {
     localStorage.setItem('finescan-settings', JSON.stringify(this.settings));
     this.applySettings();
     this.settingsSaved = true;
     setTimeout(() => {
       this.settingsSaved = false;
     }, 2000);
+
+    // Store retention setting in Firestore
+    const user = await firstValueFrom(this.authService.user$);
+    if (user) {
+      const firestore = inject(Firestore);
+      await setDoc(
+        doc(firestore, `users/${user.uid}/settings/preferences`),
+        {
+          dataRetention: this.settings.dataRetention,
+          // ... other settings
+        },
+        { merge: true }
+      );
+    }
   }
 
   private applySettings() {

@@ -13,6 +13,7 @@ import {
   IonAccordionGroup,
   IonAccordion,
   IonList,
+  Platform,
 } from '@ionic/angular/standalone';
 import { Storage, ref, uploadBytesResumable, getDownloadURL } from '@angular/fire/storage';
 import { Firestore, collection, addDoc, Timestamp } from '@angular/fire/firestore';
@@ -103,7 +104,11 @@ const ALLOWED_TYPES = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png
         <div class="upload-content" role="status">
           <ion-icon name="cloud-upload" size="large" class="upload-icon" aria-hidden="true"></ion-icon>
           <h2 class="visually-accessible" color="clear">Upload Your Document</h2>
+          @if (isMobile) {
+          <p>Tap here to upload</p>
+          } @if (!isMobile) {
           <p>Tap here or drag a file to upload</p>
+          }
           <div class="file-types" role="list" aria-label="Accepted file types">
             <ion-chip>
               <ion-icon name="document" aria-hidden="true" size="small"></ion-icon>
@@ -195,10 +200,10 @@ const ALLOWED_TYPES = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png
       }
 
       <!-- Security Notice Accordion -->
-      <ion-accordion-group>
+      <ion-accordion-group class="ion-no-padding ion-no-margin">
         <ion-accordion value="security">
           <ion-item slot="header" color="light">
-            <ion-icon name="shield-checkmark" color="success" slot="start"></ion-icon>
+            <ion-icon name="shield-checkmark" color="success" slot="start" class="ion-no-padding"></ion-icon>
             <ion-label>
               Your Privacy & Security
               <ion-text color="medium">
@@ -246,7 +251,7 @@ const ALLOWED_TYPES = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png
   styles: [
     `
       .upload-container {
-        padding: 8px;
+        // padding: 8px;
         width: 100%;
         max-width: 100%;
         margin: 0 auto;
@@ -273,10 +278,10 @@ const ALLOWED_TYPES = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png
         padding: 16px;
         width: 100%;
 
-        ion-icon {
-          font-size: 2.5rem;
-          margin-bottom: 8px;
-        }
+        // ion-icon {
+        //   font-size: 2.5rem;
+        //   margin-bottom: 8px;
+        // }
 
         h2 {
           font-size: 1.2rem;
@@ -631,6 +636,7 @@ export class FileUploadComponent {
   private dataSaverService = inject(DataSaverService);
   private alertController = inject(AlertController);
   private router = inject(Router);
+  private platform = inject(Platform);
 
   @Input() path = 'uploads';
   @Input() accept = '.pdf,.doc,.docx,.txt';
@@ -672,6 +678,10 @@ export class FileUploadComponent {
       'analytics-outline': analyticsOutline,
       'checkmark-circle': checkmarkCircle,
     });
+  }
+
+  get isMobile(): boolean {
+    return this.platform.is('mobile') || this.platform.is('android') || this.platform.is('ios');
   }
 
   validateFile(file: File): string | null {
