@@ -1,0 +1,50 @@
+{
+  "name": "finescan-functions-cleanup",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/finescan/functions/cleanup/src",
+  "projectType": "application",
+  "tags": ["firebase:function", "firebase:name:finescan-functions-cleanup", "firebase:dep:finescan-firebase"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/finescan/functions/cleanup",
+        "main": "apps/finescan/functions/cleanup/src/main.ts",
+        "tsConfig": "apps/finescan/functions/cleanup/tsconfig.app.json",
+        "assets": [
+          "apps/finescan/functions/cleanup/src/assets",
+          {
+            "glob": "**/*",
+            "input": "apps/finescan/firebase/environment",
+            "output": "."
+          }
+        ],
+        "generatePackageJson": true,
+        "platform": "node",
+        "bundle": true,
+        "thirdParty": false,
+        "dependenciesFieldType": "dependencies",
+        "target": "node16",
+        "format": ["esm"],
+        "esbuildOptions": {
+          "logLevel": "info"
+        }
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/finescan/functions/cleanup/jest.config.ts"
+      }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nx run finescan-firebase:deploy --only functions:finescan-functions-cleanup"
+      },
+      "dependsOn": ["build"]
+    }
+  }
+}

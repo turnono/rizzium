@@ -18,6 +18,12 @@
   },
   "functions": [
     {
+      "codebase": "finescan-functions-cleanup",
+      "source": "dist/apps/finescan/functions/cleanup",
+      "runtime": "nodejs18",
+      "ignore": ["*.local"]
+    },
+    {
       "source": "dist/apps/finescan/functions/document-analysis",
       "codebase": "finescan-functions-document-analysis",
       "runtime": "nodejs18",

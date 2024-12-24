@@ -588,7 +588,7 @@ export class SettingsPage {
       await setDoc(
         doc(firestore, `users/${user.uid}/settings/preferences`),
         {
-          dataRetention: this.settings.dataRetention,
+          dataRetention: parseInt(this.settings.dataRetention, 10),
           // ... other settings
         },
         { merge: true }
@@ -616,19 +616,17 @@ export class SettingsPage {
     const alert = await this.alertController.create({
       header: 'Privacy Policy',
       message: `
-        <div class="privacy-policy">
-          <h3>Data Collection</h3>
-          <p>We collect only essential data needed for document analysis.</p>
+        Data Collection:
+        We collect only essential data needed for document analysis.
 
-          <h3>Data Storage</h3>
-          <p>Documents are encrypted and stored in secure Firebase servers.</p>
+        Data Storage:
+        Documents are encrypted and stored in secure Firebase servers.
 
-          <h3>Data Deletion</h3>
-          <p>You can delete your data at any time. Documents are automatically deleted based on your retention settings.</p>
+        Data Deletion:
+        You can delete your data at any time. Documents are automatically deleted based on your retention settings.
 
-          <h3>Your Control</h3>
-          <p>You have full control over your data and can export or delete it at any time.</p>
-        </div>
+        Your Control:
+        You have full control over your data and can export or delete it at any time.
       `,
       cssClass: 'privacy-policy-alert',
       buttons: ['Close'],

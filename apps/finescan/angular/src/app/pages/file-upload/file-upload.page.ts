@@ -348,22 +348,17 @@ export class FileUploadPage {
     const alert = await this.alertController.create({
       header: 'Security & Privacy Details',
       message: `
-        <div class="privacy-details">
-          <h3>How We Protect Your Data</h3>
-          <ul>
-            <li>Documents are encrypted during upload and storage</li>
-            <li>Access is restricted to your account only</li>
-            <li>Data is stored in secure Firebase servers</li>
-            <li>Automatic deletion after 30 days</li>
-          </ul>
+        How We Protect Your Data:
+        • Documents are encrypted during upload and storage
+        • Access is restricted to your account only
+        • Data is stored in secure Firebase servers
+        • Automatic deletion after 30 days
 
-          <h3>Your Rights</h3>
-          <ul>
-            <li>Request data deletion at any time</li>
-            <li>Download your documents</li>
-            <li>View access logs</li>
-          </ul>
-        </div>
+
+        Your Rights:
+        • Request data deletion at any time
+        • Download your documents
+        • View access logs
       `,
       cssClass: 'privacy-alert',
       buttons: ['Got It'],

@@ -1154,28 +1154,20 @@ export class FileUploadComponent {
     const alert = await this.alertController.create({
       header: 'Privacy & Security Details',
       message: `
-        <div class="privacy-details">
-          <h3>Document Security</h3>
-          <ul>
-            <li>End-to-end encryption for all uploads</li>
-            <li>Secure cloud storage with Firebase</li>
-            <li>Automatic deletion after 30 days</li>
-          </ul>
+        Document Security:
+        • End-to-end encryption for all uploads
+        • Secure cloud storage with Firebase
+        • Automatic deletion after 30 days
 
-          <h3>Data Protection</h3>
-          <ul>
-            <li>Your documents are only accessible to you</li>
-            <li>No third-party access to your data</li>
-            <li>Regular security audits and updates</li>
-          </ul>
+        Data Protection:
+        • Your documents are only accessible to you
+        • No third-party access to your data
+        • Regular security audits and updates
 
-          <h3>Your Rights</h3>
-          <ul>
-            <li>Request data deletion at any time</li>
-            <li>Download your documents</li>
-            <li>Access detailed audit logs</li>
-          </ul>
-        </div>
+        Your Rights:
+        • Request data deletion at any time
+        • Download your documents
+        • Access detailed audit logs
       `,
       cssClass: 'privacy-alert',
       buttons: ['Got It'],
