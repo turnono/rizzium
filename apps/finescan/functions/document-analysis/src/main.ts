@@ -204,58 +204,46 @@ async function analyzeImageWithGPT4(imageUrl: string, type: 'general' | 'legal' 
   }
 
   const response = await openai.chat.completions.create({
-    model: 'gpt-3.5-turbo',
+    model: 'gpt-4o-mini',
     messages: [
+      {
+        role: 'system',
+        content: [
+          {
+            type: 'text',
+            text: getAnalysisPrompt(type),
+          },
+        ],
+      },
       {
         role: 'user',
         content: [
-          { type: 'text', text: 'Please analyze this document:' },
           {
             type: 'image_url',
             image_url: {
               url: base64Image,
-              detail: 'high',
             },
           },
         ],
       },
     ],
-    max_tokens: 1500,
+    temperature: 1,
+    max_tokens: 2048,
+    top_p: 1,
+    frequency_penalty: 0,
+    presence_penalty: 0,
+    response_format: {
+      type: 'json_object',
+    },
   });
 
   try {
-    // Format the response as JSON
-    const formattedResponse = {
-      riskLevel: 'medium', // Default value
-      summary: {
-        riskLevel: 'medium',
-        description: '',
-        recommendations: [],
-      },
-      flags: [],
-      recommendations: [],
+    // Parse the JSON response
+    const analysis = JSON.parse(response.choices[0].message.content);
+    return {
+      ...analysis,
       rawAnalysis: response.choices[0].message.content,
     };
-
-    // Parse the GPT response and try to extract structured information
-    const content = response.choices[0].message.content || '';
-
-    // Basic parsing of risk levels (you can enhance this based on your needs)
-    if (content.toLowerCase().includes('high risk')) {
-      formattedResponse.riskLevel = 'high';
-    } else if (content.toLowerCase().includes('low risk')) {
-      formattedResponse.riskLevel = 'low';
-    }
-
-    formattedResponse.summary.description = content;
-
-    // Extract recommendations (lines starting with "Recommendation:" or numbered lists)
-    const recommendations = content.match(/(?:Recommendation:|^\d+\.\s).+/gm) || [];
-    formattedResponse.recommendations = recommendations.map((r) =>
-      r.replace(/^(?:Recommendation:|\d+\.\s)/, '').trim()
-    );
-
-    return formattedResponse;
   } catch (error) {
     console.error('Error parsing GPT-4 response:', error);
     throw new Error('Failed to parse analysis results');
