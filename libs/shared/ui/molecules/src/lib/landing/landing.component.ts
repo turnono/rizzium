@@ -330,6 +330,7 @@ export class LandingComponent implements OnDestroy {
       'log-in': logIn,
       person: personOutline,
       camera: cameraOutline,
+      'document-outline': documentOutline,
       document: documentOutline,
     });
 
