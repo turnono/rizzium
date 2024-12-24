@@ -140,9 +140,9 @@ import { map } from 'rxjs/operators';
               </div>
 
               <div class="feature-item">
-                <ion-icon name="flash" color="warning" size="large"></ion-icon>
-                <h3>Works Offline</h3>
-                <p>Continue working without internet</p>
+                <ion-icon name="analytics-outline" color="warning" size="large"></ion-icon>
+                <h3>Instant Analysis</h3>
+                <p>Get results in seconds</p>
               </div>
 
               <div class="feature-item">
