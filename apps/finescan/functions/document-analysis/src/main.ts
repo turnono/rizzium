@@ -32,8 +32,11 @@ export const analyzeDocument = functions.https.onCall(async (data: AnalysisReque
   }
 
   // Input validation
-  if (!data.imageUrl) {
-    throw new functions.https.HttpsError('invalid-argument', 'Missing image URL');
+  if (!data?.imageUrl) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'Missing image URL. Please provide a valid image URL for analysis.'
+    );
   }
 
   try {

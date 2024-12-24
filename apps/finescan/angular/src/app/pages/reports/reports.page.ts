@@ -2,9 +2,10 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { AnalysisService } from '@rizzium/shared/services';
+import { AnalysisService, FirebaseAuthService } from '@rizzium/shared/services';
 import { Analysis, AnalysisStatus } from '@rizzium/shared/interfaces';
 import { AnalysisResultsComponent } from '@rizzium/shared/ui/molecules';
+import { User } from '@angular/fire/auth';
 import {
   IonContent,
   IonHeader,
@@ -23,7 +24,6 @@ import {
   IonCardHeader,
   IonCardTitle,
   IonCardSubtitle,
-  IonAlert,
   AlertController,
   IonSegment,
   IonSegmentButton,
@@ -46,6 +46,7 @@ import {
 } from 'ionicons/icons';
 import { Firestore, Timestamp, updateDoc, doc } from '@angular/fire/firestore';
 import { getFunctions, httpsCallable } from '@angular/fire/functions';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-reports',
@@ -79,7 +80,6 @@ import { getFunctions, httpsCallable } from '@angular/fire/functions';
     IonBackButton,
     IonToast,
   ],
-  providers: [AnalysisService],
   template: `
     <ion-header>
       <ion-toolbar>
@@ -363,6 +363,8 @@ export class ReportsPage implements OnInit {
   private firestore = inject(Firestore);
   private alertController = inject(AlertController);
   private functions = getFunctions();
+  private authService = inject(FirebaseAuthService);
+
   analyses: Analysis[] = [];
   selectedAnalysis: Analysis | null = null;
   loading = true;
@@ -437,51 +439,54 @@ export class ReportsPage implements OnInit {
   }
 
   async startAnalysis(analysis: Analysis) {
-    console.log('startAnalysis called with:', analysis);
-
-    if (!analysis.id || !analysis.userId) {
-      console.error('Missing analysis id or userId:', analysis);
-      return;
-    }
-
     try {
-      console.log('Getting analysis reference for:', analysis.id);
-      const analysisRef = doc(this.firestore, `users/${analysis.userId}/analyses/${analysis.id}`);
+      if (!analysis.fileUrl) {
+        throw new Error('No file URL available for analysis');
+      }
 
-      console.log('Updating status to processing');
-      await updateDoc(analysisRef, {
-        status: 'processing' as AnalysisStatus,
-        updatedAt: Timestamp.now(),
-      });
+      // Update status to processing
+      await this.updateAnalysisStatus(analysis.id, 'processing');
 
-      this.selectedAnalysis = {
-        ...analysis,
-        status: 'processing',
-      };
-
-      // Call the Cloud Function
       const analyzeDocument = httpsCallable(this.functions, 'analyzeDocument');
-      await analyzeDocument({
-        documentUrl: analysis.fileUrl,
-        analysisType: 'general', // or get this from user input
+
+      // Make sure we're sending the correct data structure
+      const response = await analyzeDocument({
+        imageUrl: analysis.fileUrl,
+        analysisType: 'general',
       });
 
-      // The function will update the document status and results
-      // Our real-time subscription will update the UI
+      // Update the analysis with results
+      await this.updateAnalysisResults(analysis.id, response.data);
     } catch (error) {
       console.error('Error starting analysis:', error);
-      const analysisRef = doc(this.firestore, `users/${analysis.userId}/analyses/${analysis.id}`);
-      await updateDoc(analysisRef, {
-        status: 'failed' as AnalysisStatus,
-        updatedAt: Timestamp.now(),
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-
-      this.selectedAnalysis = {
-        ...analysis,
-        status: 'failed',
-      };
+      // Revert status to pending if analysis fails
+      await this.updateAnalysisStatus(analysis.id, 'pending');
+      throw error;
     }
+  }
+
+  private async updateAnalysisStatus(analysisId: string, status: AnalysisStatus) {
+    const user = await firstValueFrom(this.authService.user$);
+    if (!user) throw new Error('No authenticated user');
+
+    const docRef = doc(this.firestore, `users/${user.uid}/analyses/${analysisId}`);
+    await updateDoc(docRef, {
+      status,
+      updatedAt: Timestamp.now(),
+    });
+  }
+
+  private async updateAnalysisResults(analysisId: string, results: any) {
+    const user = await firstValueFrom(this.authService.user$);
+    if (!user) throw new Error('No authenticated user');
+
+    const docRef = doc(this.firestore, `users/${user.uid}/analyses/${analysisId}`);
+    await updateDoc(docRef, {
+      status: 'completed',
+      results,
+      completedAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    });
   }
 
   async retryAnalysis(analysis: Analysis) {
