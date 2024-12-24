@@ -71,8 +71,8 @@ import { AlertController } from '@ionic/angular';
     <ion-content class="ion-padding">
       <ion-card>
         <ion-card-header>
-          <ion-card-title>Upload Document</ion-card-title>
-          <ion-card-subtitle>Select a document for analysis</ion-card-subtitle>
+          <ion-card-title color="clear">Upload Document</ion-card-title>
+          <ion-card-subtitle color="clear">Select a document for analysis</ion-card-subtitle>
         </ion-card-header>
 
         <ion-card-content>
