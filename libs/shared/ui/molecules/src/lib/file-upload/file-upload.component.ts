@@ -102,7 +102,7 @@ const ALLOWED_TYPES = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png
         @if (!selectedFile && !isUploading) {
         <div class="upload-content" role="status">
           <ion-icon name="cloud-upload" size="large" class="upload-icon" aria-hidden="true"></ion-icon>
-          <h2 class="visually-accessible">Upload Your Document</h2>
+          <h2 class="visually-accessible" color="clear">Upload Your Document</h2>
           <p>Tap here or drag a file to upload</p>
           <div class="file-types" role="list" aria-label="Accepted file types">
             <ion-chip role="listitem">
@@ -427,7 +427,7 @@ const ALLOWED_TYPES = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png
       .visually-accessible {
         font-size: var(--accessible-font-size, 1.2rem);
         font-weight: 500;
-        color: var(--accessible-text-color, var(--ion-color-light));
+        color: var(--accessible-text-color, var(--ion-color-dark));
         margin-bottom: 1rem;
       }
 

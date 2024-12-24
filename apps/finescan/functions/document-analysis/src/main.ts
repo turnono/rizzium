@@ -10,21 +10,18 @@
 import * as functions from 'firebase-functions';
 import { initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
-import { getStorage } from 'firebase-admin/storage';
 import OpenAI from 'openai';
-import * as pdfjsLib from 'pdfjs-dist';
-// TEST
 
 // Initialize Firebase Admin
 initializeApp();
 
-// Get config and initialize OpenAI
+// Initialize OpenAI with your API key
 const openai = new OpenAI({
   apiKey: functions.config().openai.api_key,
 });
 
 interface AnalysisRequest {
-  documentUrl: string;
+  imageUrl: string;
   analysisType: 'general' | 'legal' | 'financial';
 }
 
@@ -35,25 +32,16 @@ export const analyzeDocument = functions.https.onCall(async (data: AnalysisReque
   }
 
   // Input validation
-  if (!data.documentUrl || !data.analysisType) {
-    throw new functions.https.HttpsError('invalid-argument', 'Missing required fields');
+  if (!data.imageUrl) {
+    throw new functions.https.HttpsError('invalid-argument', 'Missing image URL');
   }
 
   try {
-    // Get document text based on file type
-    const text = await extractTextFromDocument(data.documentUrl);
-    if (!text) {
-      throw new functions.https.HttpsError('internal', 'Failed to extract text from document');
-    }
-
-    // Get analysis prompt based on type
-    const prompt = getAnalysisPrompt(data.analysisType);
-
-    // Analyze text with GPT-4
-    const analysis = await analyzeTextWithGPT4(text, prompt);
+    // Analyze image with GPT-4 Vision
+    const analysis = await analyzeImageWithGPT4(data.imageUrl, data.analysisType);
 
     // Update analysis document in Firestore
-    await updateAnalysisDocument(context.auth.uid, data.documentUrl, analysis);
+    await updateAnalysisDocument(context.auth.uid, data.imageUrl, analysis);
 
     return { success: true, analysis };
   } catch (error) {
@@ -66,102 +54,135 @@ export const analyzeDocument = functions.https.onCall(async (data: AnalysisReque
   }
 });
 
-async function extractTextFromDocument(url: string): Promise<string> {
-  // Get the file path from the Storage URL
-  const filePath = decodeURIComponent(url.split('/o/')[1].split('?')[0]);
+export const continueConversation = functions.https.onCall(
+  async (data: { userId: string; message: string }, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+    }
 
-  // Get the file from Firebase Storage
-  const bucket = getStorage().bucket();
-  const file = bucket.file(filePath);
+    const { userId, message } = data;
 
-  // Download the file contents
-  const [buffer] = await file.download();
+    try {
+      // Retrieve previous conversation context from Firestore
+      const db = getFirestore();
+      const conversationRef = db.collection(`users/${userId}/conversations`).doc('current');
+      const conversationDoc = await conversationRef.get();
 
-  // Process based on file type
-  if (filePath.toLowerCase().endsWith('.pdf')) {
-    return extractTextFromPDF(buffer.buffer);
-  } else {
-    // For text files
-    return buffer.toString('utf-8');
+      let messages = [];
+      if (conversationDoc.exists) {
+        messages = conversationDoc.data()?.messages || [];
+      }
+
+      // Add the user's message to the conversation
+      messages.push({ role: 'user', content: message });
+
+      // Call OpenAI API to get a response
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4',
+        messages: messages,
+        max_tokens: 1000,
+      });
+
+      const assistantMessage = response.choices[0].message.content;
+
+      // Add the assistant's response to the conversation
+      messages.push({ role: 'assistant', content: assistantMessage });
+
+      // Update the conversation in Firestore
+      await conversationRef.set({ messages });
+
+      return { success: true, response: assistantMessage };
+    } catch (error) {
+      console.error('Conversation error:', error);
+      throw new functions.https.HttpsError('internal', 'An error occurred during the conversation');
+    }
   }
-}
-
-async function extractTextFromPDF(buffer: ArrayBuffer): Promise<string> {
-  const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
-  let text = '';
-
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
-    text += content.items.map((item: any) => item.str).join(' ') + '\n';
-  }
-
-  return text;
-}
+);
 
 function getAnalysisPrompt(type: 'general' | 'legal' | 'financial'): string {
-  const basePrompt = `Analyze the following document and provide:
+  const basePrompt = `Analyze this document image and provide:
 1. Overall risk level (high, medium, low)
 2. Summary of key points
 3. Potential red flags or concerning elements
 4. Specific recommendations
-Format the response as a JSON object with the following structure:
-{
-  "riskLevel": "high|medium|low",
-  "summary": {
-    "riskLevel": "high|medium|low",
-    "description": "string",
-    "recommendations": ["string"]
-  },
-  "flags": [
-    {
-      "start": number,
-      "end": number,
-      "reason": "string",
-      "riskLevel": "high|medium|low"
-    }
-  ],
-  "recommendations": ["string"]
-}`;
+
+Focus on clearly visible text and important visual elements.`;
 
   switch (type) {
     case 'legal':
-      return `${basePrompt}\nFocus on legal implications, contractual obligations, and potential liabilities.`;
+      return `${basePrompt}\nPay special attention to legal terms, signatures, dates, and contractual elements.`;
     case 'financial':
-      return `${basePrompt}\nFocus on financial terms, obligations, and potential risks to monetary assets.`;
+      return `${basePrompt}\nPay special attention to numbers, amounts, financial terms, and monetary values.`;
     default:
       return basePrompt;
   }
 }
 
-async function analyzeTextWithGPT4(text: string, prompt: string): Promise<any> {
+async function analyzeImageWithGPT4(imageUrl: string, type: 'general' | 'legal' | 'financial'): Promise<any> {
   const response = await openai.chat.completions.create({
     model: 'gpt-4',
     messages: [
       {
         role: 'system',
-        content: prompt,
+        content: getAnalysisPrompt(type),
       },
       {
         role: 'user',
-        content: text,
+        content: [
+          {
+            type: 'image_url',
+            image_url: {
+              url: imageUrl,
+            },
+          },
+        ],
       },
     ],
-    temperature: 0.3,
-    max_tokens: 2000,
+    max_tokens: 1000,
   });
 
   try {
-    return JSON.parse(response.choices[0].message.content || '{}');
+    // Format the response as JSON
+    const formattedResponse = {
+      riskLevel: 'medium', // Default value
+      summary: {
+        riskLevel: 'medium',
+        description: '',
+        recommendations: [],
+      },
+      flags: [],
+      recommendations: [],
+      rawAnalysis: response.choices[0].message.content,
+    };
+
+    // Parse the GPT response and try to extract structured information
+    const content = response.choices[0].message.content || '';
+
+    // Basic parsing of risk levels (you can enhance this based on your needs)
+    if (content.toLowerCase().includes('high risk')) {
+      formattedResponse.riskLevel = 'high';
+    } else if (content.toLowerCase().includes('low risk')) {
+      formattedResponse.riskLevel = 'low';
+    }
+
+    formattedResponse.summary.description = content;
+
+    // Extract recommendations (lines starting with "Recommendation:" or numbered lists)
+    const recommendations = content.match(/(?:Recommendation:|^\d+\.\s).+/gm) || [];
+    formattedResponse.recommendations = recommendations.map((r) =>
+      r.replace(/^(?:Recommendation:|\d+\.\s)/, '').trim()
+    );
+
+    return formattedResponse;
   } catch (error) {
     console.error('Error parsing GPT-4 response:', error);
     throw new Error('Failed to parse analysis results');
   }
 }
 
-async function updateAnalysisDocument(userId: string, documentUrl: string, analysis: any): Promise<void> {
+async function updateAnalysisDocument(userId: string, imageUrl: string, analysis: any): Promise<void> {
   const db = getFirestore();
-  const analysisRef = db.collection(`users/${userId}/analyses`).where('fileUrl', '==', documentUrl);
+  const analysisRef = db.collection(`users/${userId}/analyses`).where('fileUrl', '==', imageUrl);
 
   const snapshot = await analysisRef.get();
   if (snapshot.empty) {

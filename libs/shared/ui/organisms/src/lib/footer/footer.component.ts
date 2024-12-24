@@ -11,7 +11,7 @@ import { logoFacebook, logoTwitter, logoLinkedin, logoInstagram } from 'ionicons
   imports: [CommonModule, RouterLink, IonFooter, IonToolbar, IonIcon],
   template: `
     <ion-footer collapse="fade" class="ion-no-border">
-      <ion-toolbar color="dark">
+      <ion-toolbar color="clear">
         <div class="footer-content">
           <div class="footer-links">
             <a routerLink="/privacy">Privacy Policy</a>
@@ -72,7 +72,7 @@ import { logoFacebook, logoTwitter, logoLinkedin, logoInstagram } from 'ionicons
         gap: 16px;
 
         a {
-          color: var(--ion-color-light);
+          color: var(--ion-color-dark);
           text-decoration: none;
           font-size: 12px;
           opacity: 0.7;
@@ -85,7 +85,7 @@ import { logoFacebook, logoTwitter, logoLinkedin, logoInstagram } from 'ionicons
         gap: 16px;
 
         a {
-          color: var(--ion-color-light);
+          color: var(--ion-color-dark);
           opacity: 0.7;
           padding: 8px;
           border-radius: 50%;
