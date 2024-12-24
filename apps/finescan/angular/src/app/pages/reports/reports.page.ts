@@ -200,13 +200,13 @@ interface AnalysisResponse {
         </ion-card-content>
       </ion-card>
       } @else if (selectedAnalysis.status === 'failed') {
-      <ion-toast
+      <!-- <ion-toast
         [isOpen]="true"
         message="Analysis failed. Please try again."
         color="danger"
         position="bottom"
         [icon]="'alert-circle-outline'"
-      ></ion-toast>
+      ></ion-toast> -->
       } @else if (selectedAnalysis.status === 'completed' && selectedAnalysis.results) {
       <ui-analysis-results
         [analysis]="getAnalysisResults(selectedAnalysis)"

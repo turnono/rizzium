@@ -49,6 +49,24 @@ export const analyzeDocument = functions.https.onCall(async (data: AnalysisReque
     return { success: true, analysis };
   } catch (error) {
     console.error('Analysis error:', error);
+
+    // More specific error handling
+    if (error instanceof Error) {
+      if (error.message.includes('API key')) {
+        throw new functions.https.HttpsError(
+          'permission-denied',
+          'Invalid OpenAI API key. Please check your configuration.',
+          error.message
+        );
+      } else if (error.message.includes('does not have access')) {
+        throw new functions.https.HttpsError(
+          'permission-denied',
+          'Your OpenAI account does not have access to required models. Please check your subscription.',
+          error.message
+        );
+      }
+    }
+
     throw new functions.https.HttpsError(
       'internal',
       'An error occurred during document analysis',
@@ -102,6 +120,34 @@ export const continueConversation = functions.https.onCall(
   }
 );
 
+export const testOpenAIConnection = functions.https.onCall(async (data, context) => {
+  if (!context.auth?.token?.admin) {
+    throw new functions.https.HttpsError('permission-denied', 'Requires admin access');
+  }
+  // test commit
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [{ role: 'user', content: 'Hello' }],
+      max_tokens: 5,
+    });
+
+    return {
+      success: true,
+      message: 'OpenAI connection successful',
+      modelResponse: response.choices[0].message.content,
+    };
+  } catch (error) {
+    console.error('OpenAI connection test failed:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      apiKey: `${functions.config().openai.api_key?.substring(0, 5)}...`,
+    };
+  }
+});
+
 function getAnalysisPrompt(type: 'general' | 'legal' | 'financial'): string {
   const basePrompt = `Analyze this document image and provide a structured response with:
 1. Risk Level: Determine if this document presents HIGH, MEDIUM, or LOW risk. Consider factors like:
@@ -142,7 +188,7 @@ Format the response in clear sections. Focus on the most important elements visi
 
 async function analyzeImageWithGPT4(imageUrl: string, type: 'general' | 'legal' | 'financial'): Promise<any> {
   const response = await openai.chat.completions.create({
-    model: 'gpt-3.5-turbo-1106',
+    model: 'gpt-3.5-turbo',
     messages: [
       {
         role: 'system',
