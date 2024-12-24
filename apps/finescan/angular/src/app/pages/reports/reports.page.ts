@@ -5,6 +5,8 @@ import { RouterLink } from '@angular/router';
 import { AnalysisService, FirebaseAuthService } from '@rizzium/shared/services';
 import { Analysis, AnalysisStatus } from '@rizzium/shared/interfaces';
 import { AnalysisResultsComponent } from '@rizzium/shared/ui/molecules';
+import { ModalController } from '@ionic/angular/standalone';
+import { AnalysisModalComponent } from '@rizzium/shared/ui/molecules';
 
 import {
   IonContent,
@@ -31,6 +33,9 @@ import {
   IonButtons,
   IonBackButton,
   IonToast,
+  IonGrid,
+  IonRow,
+  IonCol,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -44,6 +49,8 @@ import {
   arrowForward,
   informationCircle,
   analyticsOutline,
+  playOutline,
+  refreshOutline,
 } from 'ionicons/icons';
 import { Firestore, Timestamp, updateDoc, doc } from '@angular/fire/firestore';
 import { getFunctions, httpsCallable } from '@angular/fire/functions';
@@ -65,6 +72,21 @@ interface AnalysisResponse {
       reason: string;
       riskLevel: 'high' | 'medium' | 'low';
     }>;
+  };
+}
+
+interface AnalysisResult {
+  text: string;
+  flags: Array<{
+    start: number;
+    end: number;
+    reason: string;
+    riskLevel: 'high' | 'medium' | 'low';
+  }>;
+  summary: {
+    riskLevel: 'high' | 'medium' | 'low';
+    description: string;
+    recommendations: string[];
   };
 }
 
@@ -99,6 +121,10 @@ interface AnalysisResponse {
     IonButtons,
     IonBackButton,
     IonToast,
+    IonGrid,
+    IonRow,
+    IonCol,
+    AnalysisModalComponent,
   ],
   template: `
     <ion-header>
@@ -135,84 +161,61 @@ interface AnalysisResponse {
     </ion-header>
 
     <ion-content class="ion-padding">
-      @if (loading) {
-      <ion-list>
-        @for (_ of [1,2,3]; track $index) {
-        <ion-item>
-          <ion-label>
-            <h2><ion-skeleton-text animated style="width: 50%"></ion-skeleton-text></h2>
-            <p><ion-skeleton-text animated style="width: 70%"></ion-skeleton-text></p>
-          </ion-label>
-        </ion-item>
-        }
-      </ion-list>
-      } @else if (analyses.length === 0) {
-      <div class="empty-state">
-        <ion-icon name="document-text-outline" size="large"></ion-icon>
-        <h2>No Analysis History</h2>
-        <p>Upload a document to start analyzing</p>
-        <ion-button routerLink="/file-upload">Upload Document</ion-button>
-      </div>
-      } @else {
-      <ion-list>
-        @for (analysis of analyses; track analysis.id) {
-        <ion-item
-          [button]="true"
-          [detail]="true"
-          (click)="selectAnalysis(analysis)"
-          [class.selected]="selectedAnalysis?.id === analysis.id"
-          [attr.data-cy]="'analysis-item-' + analysis.id"
-        >
-          <ion-icon
-            slot="start"
-            [name]="getStatusIcon(analysis.status)"
-            [color]="getStatusColor(analysis.status)"
-          ></ion-icon>
-          <ion-label>
-            <h2>{{ analysis.fileName }}</h2>
-            <p>
-              <ion-icon name="time-outline"></ion-icon>
-              {{ analysis.createdAt.toDate() | date : 'medium' }}
-            </p>
-            @if (analysis.status === 'completed') {
-            <ion-badge [color]="getRiskColor(analysis.results?.riskLevel)">
-              {{ analysis.results?.riskLevel | uppercase }}
-            </ion-badge>
+      <ion-grid>
+        <ion-row>
+          <ion-col size="12">
+            @if (loading) {
+            <ion-list>
+              @for (_ of [1,2,3]; track $index) {
+              <ion-item>
+                <ion-label>
+                  <h2><ion-skeleton-text animated style="width: 50%"></ion-skeleton-text></h2>
+                  <p><ion-skeleton-text animated style="width: 70%"></ion-skeleton-text></p>
+                </ion-label>
+              </ion-item>
+              }
+            </ion-list>
+            } @else if (analyses.length === 0) {
+            <div class="empty-state">
+              <ion-icon name="document-text-outline" size="large"></ion-icon>
+              <h2>No Analysis History</h2>
+              <p>Upload a document to start analyzing</p>
+              <ion-button routerLink="/file-upload">Upload Document</ion-button>
+            </div>
+            } @else {
+            <ion-list>
+              @for (analysis of analyses; track analysis.id) {
+              <ion-item
+                [button]="true"
+                [detail]="true"
+                (click)="selectAnalysis(analysis)"
+                [class.selected]="selectedAnalysis?.id === analysis.id"
+                [attr.data-cy]="'analysis-item-' + analysis.id"
+              >
+                <ion-icon
+                  slot="start"
+                  [name]="getStatusIcon(analysis.status)"
+                  [color]="getStatusColor(analysis.status)"
+                ></ion-icon>
+                <ion-label>
+                  <h2>{{ analysis.fileName }}</h2>
+                  <p>
+                    <ion-icon name="time-outline"></ion-icon>
+                    {{ analysis.createdAt.toDate() | date : 'medium' }}
+                  </p>
+                  @if (analysis.status === 'completed') {
+                  <ion-badge [color]="getRiskColor(analysis.results?.analysis?.summary?.riskLevel)">
+                    {{ analysis.results?.analysis?.summary?.riskLevel | uppercase }}
+                  </ion-badge>
+                  }
+                </ion-label>
+              </ion-item>
+              }
+            </ion-list>
             }
-          </ion-label>
-        </ion-item>
-        }
-      </ion-list>
-
-      @if (selectedAnalysis) { @if (selectedAnalysis.status === 'pending' || selectedAnalysis.status === 'uploaded') {
-      <ion-card class="ion-margin-top">
-        <ion-card-content class="ion-text-center">
-          <ion-button (click)="startAnalysis(selectedAnalysis)">
-            {{ selectedAnalysis.status === 'pending' ? 'Start Analysis' : 'Process Document' }}
-          </ion-button>
-        </ion-card-content>
-      </ion-card>
-      } @else if (selectedAnalysis.status === 'processing') {
-      <ion-card class="ion-margin-top">
-        <ion-card-content class="ion-text-center">
-          <ion-spinner></ion-spinner>
-          <p>Analyzing document...</p>
-        </ion-card-content>
-      </ion-card>
-      } @else if (selectedAnalysis.status === 'failed') {
-      <!-- <ion-toast
-        [isOpen]="true"
-        message="Analysis failed. Please try again."
-        color="danger"
-        position="bottom"
-        [icon]="'alert-circle-outline'"
-      ></ion-toast> -->
-      } @else if (selectedAnalysis.status === 'completed' && selectedAnalysis.results) {
-      <ui-analysis-results
-        [analysis]="getAnalysisResults(selectedAnalysis)"
-        class="ion-margin-top"
-      ></ui-analysis-results>
-      } } }
+          </ion-col>
+        </ion-row>
+      </ion-grid>
     </ion-content>
   `,
   styles: [
@@ -376,6 +379,48 @@ interface AnalysisResponse {
           }
         }
       }
+
+      .processing-state {
+        text-align: center;
+        padding: 2rem;
+
+        ion-spinner {
+          margin-bottom: 1rem;
+        }
+
+        h3 {
+          margin: 0;
+          color: var(--ion-color-dark);
+        }
+
+        p {
+          margin: 0.5rem 0 0;
+          color: var(--ion-color-medium);
+        }
+      }
+
+      .retry-button {
+        margin-top: 1rem;
+      }
+
+      @media (min-width: 768px) {
+        ion-grid {
+          height: 100%;
+        }
+
+        ion-row {
+          height: 100%;
+        }
+
+        ion-col {
+          height: 100%;
+          overflow-y: auto;
+        }
+      }
+
+      .selected {
+        --background: var(--ion-color-light-shade);
+      }
     `,
   ],
 })
@@ -384,6 +429,7 @@ export class ReportsPage implements OnInit {
   private alertController = inject(AlertController);
   private functions = getFunctions();
   private authService = inject(FirebaseAuthService);
+  private modalCtrl = inject(ModalController);
 
   analyses: Analysis[] = [];
   selectedAnalysis: Analysis | null = null;
@@ -404,6 +450,8 @@ export class ReportsPage implements OnInit {
       arrowForward,
       informationCircle,
       analyticsOutline,
+      playOutline,
+      refreshOutline,
     });
   }
 
@@ -429,11 +477,28 @@ export class ReportsPage implements OnInit {
   }
 
   async selectAnalysis(analysis: Analysis) {
-    console.log('selectAnalysis called with:', analysis);
+    if (analysis.status === 'completed' || analysis.status === 'failed') {
+      const modal = await this.modalCtrl.create({
+        component: AnalysisModalComponent,
+        componentProps: {
+          analysis,
+        },
+        breakpoints: [0, 0.5, 0.75, 1],
+        initialBreakpoint: 0.75,
+      });
+
+      await modal.present();
+
+      const { data } = await modal.onWillDismiss();
+      if (data?.retry) {
+        this.startAnalysis(analysis);
+      }
+      return;
+    }
+
     this.selectedAnalysis = analysis;
 
     if (analysis.status === 'pending' || analysis.status === 'uploaded') {
-      console.log('Creating alert for analysis');
       const alert = await this.alertController.create({
         header: 'Start Analysis',
         message: 'Would you like to start analyzing this document?',
@@ -441,14 +506,10 @@ export class ReportsPage implements OnInit {
           {
             text: 'Cancel',
             role: 'cancel',
-            handler: () => {
-              console.log('Analysis cancelled');
-            },
           },
           {
             text: 'Start',
             handler: () => {
-              console.log('Starting analysis from alert');
               this.startAnalysis(analysis);
             },
           },
@@ -570,8 +631,8 @@ export class ReportsPage implements OnInit {
     }
   }
 
-  getRiskColor(risk: 'high' | 'medium' | 'low' | undefined): string {
-    switch (risk) {
+  getRiskColor(risk: string | undefined): string {
+    switch (risk?.toLowerCase()) {
       case 'high':
         return 'danger';
       case 'medium':
@@ -583,18 +644,20 @@ export class ReportsPage implements OnInit {
     }
   }
 
-  getAnalysisResults(analysis: Analysis) {
-    if (!analysis.results) return null;
+  getAnalysisResults(analysis: Analysis): AnalysisResult | null {
+    if (!analysis?.results?.analysis) return null;
+
     return {
-      text: analysis.results.text || analysis.fileName,
-      riskLevel: analysis.results.riskLevel,
+      text: analysis.fileName,
+      flags: (analysis.results.analysis.flags || []).map((flag) => ({
+        ...flag,
+        riskLevel: flag.riskLevel.toLowerCase() as 'high' | 'medium' | 'low',
+      })),
       summary: {
-        riskLevel: analysis.results.summary.riskLevel,
-        description: analysis.results.summary.description,
-        recommendations: analysis.results.summary.recommendations,
+        riskLevel: analysis.results.analysis.summary.riskLevel.toLowerCase() as 'high' | 'medium' | 'low',
+        description: analysis.results.analysis.summary.description,
+        recommendations: analysis.results.analysis.summary.recommendations,
       },
-      flags: analysis.results.flags,
-      recommendations: analysis.results.recommendations,
     };
   }
 

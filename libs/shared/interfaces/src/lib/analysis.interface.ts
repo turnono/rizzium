@@ -1,6 +1,6 @@
 import { Timestamp } from '@angular/fire/firestore';
 
-export type AnalysisStatus = 'uploaded' | 'processing' | 'completed' | 'failed' | 'pending';
+export type AnalysisStatus = 'pending' | 'uploaded' | 'processing' | 'completed' | 'failed';
 
 export interface Analysis {
   id: string;
@@ -8,22 +8,30 @@ export interface Analysis {
   fileName: string;
   fileUrl: string;
   status: AnalysisStatus;
+  metadata?: {
+    uploadedAt: string;
+    contentType: string;
+    size: number;
+  };
   createdAt: Timestamp;
+  updatedAt: Timestamp;
   completedAt?: Timestamp;
   results?: {
-    text: string;
-    riskLevel: 'high' | 'medium' | 'low';
-    summary: {
-      riskLevel: 'high' | 'medium' | 'low';
-      description: string;
-      recommendations: string[];
+    analysis: {
+      flags: Array<{
+        start: number;
+        end: number;
+        reason: string;
+        riskLevel: string;
+      }>;
+      riskLevel: string;
+      summary: {
+        recommendations: string[];
+        description: string;
+        riskLevel: string;
+      };
     };
-    flags: {
-      start: number;
-      end: number;
-      reason: string;
-      riskLevel: 'high' | 'medium' | 'low';
-    }[];
-    recommendations: string[];
+    success: boolean;
   };
+  error?: string;
 }

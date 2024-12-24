@@ -482,7 +482,7 @@ const ALLOWED_TYPES = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png
       }
 
       .upload-success {
-        background: var(--ion-color-success-tint);
+        // background: var(--ion-color-success-tint);
         border-radius: 16px;
         padding: 24px;
         text-align: center;
