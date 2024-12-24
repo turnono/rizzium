@@ -72,7 +72,7 @@ import { AlertController } from '@ionic/angular';
       <ion-card>
         <ion-card-header>
           <ion-card-title color="clear">Upload Document</ion-card-title>
-          <ion-card-subtitle color="clear">Select a document for analysis</ion-card-subtitle>
+          <ion-card-subtitle color="clear">Take a photo or select an image of your document</ion-card-subtitle>
         </ion-card-header>
 
         <ion-card-content>
@@ -80,10 +80,18 @@ import { AlertController } from '@ionic/angular';
             <ui-file-upload
               #fileUploadComponent
               path="finescan-uploads"
-              accept=".pdf,.doc,.docx,.txt"
+              accept="image/*,.jpg,.jpeg,.png,.gif,.webp"
               (progressChange)="onUploadProgress($event)"
               (urlGenerated)="onUrlGenerated($event)"
             ></ui-file-upload>
+          </div>
+
+          <div class="upload-info">
+            <ion-icon name="information-circle-outline"></ion-icon>
+            <p>
+              Supported formats: JPG, PNG, GIF, WEBP<br />
+              For best results, ensure the document is well-lit and clearly visible
+            </p>
           </div>
         </ion-card-content>
       </ion-card>
@@ -229,6 +237,29 @@ import { AlertController } from '@ionic/angular';
           }
         }
       }
+
+      .upload-info {
+        margin-top: 16px;
+        padding: 12px;
+        background: rgba(var(--ion-color-primary-rgb), 0.1);
+        border-radius: 8px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+
+        ion-icon {
+          font-size: 20px;
+          color: var(--ion-color-primary);
+          margin-top: 2px;
+        }
+
+        p {
+          margin: 0;
+          font-size: 14px;
+          color: var(--ion-color-medium);
+          line-height: 1.4;
+        }
+      }
     `,
   ],
 })
@@ -267,11 +298,12 @@ export class FileUploadPage {
     const files = event.dataTransfer?.files;
     if (files?.length) {
       const file = files[0];
-      const allowedTypes = ['.pdf', '.doc', '.docx', '.txt'];
-      const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
-      if (allowedTypes.includes(fileExtension)) {
+      if (allowedTypes.includes(file.type)) {
         this.fileUploadComponent.uploadFile(file);
+      } else {
+        this.showUnsupportedFormatAlert();
       }
     }
   }
@@ -326,6 +358,16 @@ export class FileUploadPage {
       `,
       cssClass: 'privacy-alert',
       buttons: ['Got It'],
+    });
+
+    await alert.present();
+  }
+
+  async showUnsupportedFormatAlert() {
+    const alert = await this.alertController.create({
+      header: 'Unsupported Format',
+      message: 'Please upload an image file (JPG, PNG, GIF, or WEBP)',
+      buttons: ['OK'],
     });
 
     await alert.present();
