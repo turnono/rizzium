@@ -5,7 +5,7 @@ import { RouterLink } from '@angular/router';
 import { AnalysisService, FirebaseAuthService } from '@rizzium/shared/services';
 import { Analysis, AnalysisStatus } from '@rizzium/shared/interfaces';
 import { AnalysisResultsComponent } from '@rizzium/shared/ui/molecules';
-import { User } from '@angular/fire/auth';
+
 import {
   IonContent,
   IonHeader,
