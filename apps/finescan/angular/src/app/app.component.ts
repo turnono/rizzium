@@ -9,7 +9,7 @@ import { FooterComponent } from '@rizzium/shared/ui/organisms';
   selector: 'app-root',
   template: `
     <ion-app>
-      <ion-content>
+      <ion-content class="main-content">
         <ion-router-outlet></ion-router-outlet>
       </ion-content>
       <rizzium-footer></rizzium-footer>
@@ -21,8 +21,14 @@ import { FooterComponent } from '@rizzium/shared/ui/organisms';
         background-color: var(--ion-color-dark);
       }
 
-      ion-content {
-        --padding-bottom: 60px;
+      .main-content {
+        --padding-bottom: 140px;
+      }
+
+      @media (min-width: 768px) {
+        .main-content {
+          --padding-bottom: 80px;
+        }
       }
     `,
   ],

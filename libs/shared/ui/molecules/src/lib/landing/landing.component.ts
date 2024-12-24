@@ -203,9 +203,13 @@ import { map } from 'rxjs/operators';
         background: transparent;
 
         ion-card-title {
-          font-size: 1.5rem;
+          font-size: 1.25rem;
           line-height: 1.2;
           margin-bottom: 8px;
+        }
+
+        ion-card-content {
+          padding: 12px;
         }
       }
 
@@ -218,24 +222,25 @@ import { map } from 'rxjs/operators';
 
       .feature-item {
         text-align: center;
-        padding: 16px;
+        padding: 12px;
         background: var(--ion-color-light);
         border-radius: 12px;
-        min-height: 120px;
+        min-height: auto;
 
         ion-icon {
-          font-size: 28px;
-          margin-bottom: 8px;
+          font-size: 24px;
+          margin-bottom: 4px;
         }
 
         h3 {
-          margin: 8px 0;
-          font-size: 16px;
+          margin: 4px 0;
+          font-size: 14px;
         }
 
         p {
           margin: 0;
-          font-size: 14px;
+          font-size: 12px;
+          color: var(--ion-color-medium);
         }
       }
 
@@ -247,25 +252,54 @@ import { map } from 'rxjs/operators';
 
         ion-button {
           margin: 0;
-          height: 44px;
+          height: 40px;
           --border-radius: 12px;
-          font-size: 16px;
+          font-size: 14px;
         }
       }
 
       @media (min-width: 768px) {
-        .main-content {
-          max-width: 600px;
-          padding: 16px;
-        }
-
         .feature-grid {
           grid-template-columns: repeat(3, 1fr);
           gap: 16px;
         }
 
+        .feature-item {
+          padding: 16px;
+          min-height: 120px;
+
+          ion-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+          }
+
+          h3 {
+            margin: 8px 0;
+            font-size: 16px;
+          }
+
+          p {
+            font-size: 14px;
+          }
+        }
+
+        .welcome-card {
+          ion-card-title {
+            font-size: 1.5rem;
+          }
+
+          ion-card-content {
+            padding: 16px;
+          }
+        }
+
         .action-buttons {
           flex-direction: row;
+
+          ion-button {
+            height: 44px;
+            font-size: 16px;
+          }
         }
       }
 
