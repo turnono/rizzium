@@ -105,17 +105,9 @@ const ALLOWED_TYPES = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png
           <h2 class="visually-accessible" color="clear">Upload Your Document</h2>
           <p>Tap here or drag a file to upload</p>
           <div class="file-types" role="list" aria-label="Accepted file types">
-            <ion-chip role="listitem">
-              <ion-icon name="document" aria-hidden="true" size="small"></ion-icon>
-              <ion-label>PDF</ion-label>
-            </ion-chip>
             <ion-chip>
               <ion-icon name="document" aria-hidden="true" size="small"></ion-icon>
-              <ion-label>DOC</ion-label>
-            </ion-chip>
-            <ion-chip>
-              <ion-icon name="document" aria-hidden="true" size="small"></ion-icon>
-              <ion-label>TXT</ion-label>
+              <ion-label>image of document</ion-label>
             </ion-chip>
           </div>
           <div class="help-text">

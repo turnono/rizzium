@@ -150,7 +150,7 @@ export const testOpenAIConnection = functions.https.onCall(async (data, context)
 });
 
 function getAnalysisPrompt(type: 'general' | 'legal' | 'financial'): string {
-  const basePrompt = `Analyze this document image and provide a structured response with:
+  const basePrompt = `Analyze this document image and provide a structured JSON response with:
 1. Risk Level: Determine if this document presents HIGH, MEDIUM, or LOW risk. Consider factors like:
    - Unusual terms or conditions
    - Financial obligations
@@ -175,7 +175,23 @@ function getAnalysisPrompt(type: 'general' | 'legal' | 'financial'): string {
    - Suggested modifications
    - Next steps
 
-Format the response in clear sections. Focus on the most important elements visible in the document.`;
+Format the response as a JSON object with the following structure:
+{
+  "riskLevel": "HIGH|MEDIUM|LOW",
+  "summary": {
+    "riskLevel": "HIGH|MEDIUM|LOW",
+    "description": "string",
+    "recommendations": ["string"]
+  },
+  "flags": [
+    {
+      "start": number,
+      "end": number,
+      "reason": "string",
+      "riskLevel": "HIGH|MEDIUM|LOW"
+    }
+  ]
+}`;
 
   switch (type) {
     case 'legal':
@@ -187,7 +203,26 @@ Format the response in clear sections. Focus on the most important elements visi
   }
 }
 
-async function analyzeImageWithGPT4(imageUrl: string, type: 'general' | 'legal' | 'financial'): Promise<any> {
+// Also update the return type for better type safety
+interface AnalysisResult {
+  riskLevel: 'HIGH' | 'MEDIUM' | 'LOW';
+  summary: {
+    riskLevel: 'HIGH' | 'MEDIUM' | 'LOW';
+    description: string;
+    recommendations: string[];
+  };
+  flags: Array<{
+    start: number;
+    end: number;
+    reason: string;
+    riskLevel: 'HIGH' | 'MEDIUM' | 'LOW';
+  }>;
+}
+
+async function analyzeImageWithGPT4(
+  imageUrl: string,
+  type: 'general' | 'legal' | 'financial'
+): Promise<AnalysisResult> {
   // Convert URL to base64 if it's not already in base64 format
   let base64Image = imageUrl;
   if (!imageUrl.startsWith('data:')) {
@@ -238,12 +273,8 @@ async function analyzeImageWithGPT4(imageUrl: string, type: 'general' | 'legal' 
   });
 
   try {
-    // Parse the JSON response
-    const analysis = JSON.parse(response.choices[0].message.content);
-    return {
-      ...analysis,
-      rawAnalysis: response.choices[0].message.content,
-    };
+    const analysis = JSON.parse(response.choices[0].message.content) as AnalysisResult;
+    return analysis;
   } catch (error) {
     console.error('Error parsing GPT-4 response:', error);
     throw new Error('Failed to parse analysis results');
