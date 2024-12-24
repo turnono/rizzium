@@ -1,7 +1,6 @@
 import { Route } from '@angular/router';
 import { LandingComponent } from '@rizzium/shared/ui/molecules';
-import { AuthGuard } from '@rizzium/shared/guards';
-import { NotAuthGuard } from '@rizzium/shared/guards';
+import { AuthGuard, NotAuthGuard } from '@rizzium/shared/guards';
 
 export const appRoutes: Route[] = [
   {
@@ -27,5 +26,17 @@ export const appRoutes: Route[] = [
     path: 'settings',
     loadComponent: () => import('./pages/settings/settings.page').then((m) => m.SettingsPage),
     canActivate: [AuthGuard],
+  },
+  {
+    path: 'privacy',
+    loadComponent: () => import('./pages/privacy-policy/privacy-policy.page').then((m) => m.PrivacyPolicyPage),
+  },
+  {
+    path: 'terms',
+    loadComponent: () => import('./pages/terms-of-service/terms-of-service.page').then((m) => m.TermsOfServicePage),
+  },
+  {
+    path: 'contact',
+    loadComponent: () => import('./pages/contact-us/contact-us.page').then((m) => m.ContactUsPage),
   },
 ];
