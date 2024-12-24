@@ -50,11 +50,12 @@ import { logoFacebook, logoTwitter, logoLinkedin, logoInstagram } from 'ionicons
         left: 0;
         right: 0;
         z-index: 10;
+        background: var(--ion-color-light);
       }
 
       ion-footer {
-        --ion-toolbar-background: var(--ion-color-dark);
-        --ion-toolbar-color: var(--ion-color-light);
+        --ion-toolbar-background: var(--ion-color-light);
+        --ion-toolbar-color: var(--ion-color-dark);
       }
 
       .footer-content {
@@ -63,6 +64,7 @@ import { logoFacebook, logoTwitter, logoLinkedin, logoInstagram } from 'ionicons
         flex-direction: column;
         align-items: center;
         gap: 12px;
+        max-height: 140px;
       }
 
       .footer-links {
@@ -115,6 +117,7 @@ import { logoFacebook, logoTwitter, logoLinkedin, logoInstagram } from 'ionicons
           padding: 16px;
           max-width: 1200px;
           margin: 0 auto;
+          max-height: 80px;
         }
 
         .footer-links a {
