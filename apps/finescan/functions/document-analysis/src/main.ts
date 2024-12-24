@@ -100,7 +100,7 @@ export const continueConversation = functions.https.onCall(
 
       // Call OpenAI API to get a response
       const response = await openai.chat.completions.create({
-        model: 'gpt-4',
+        model: 'gpt-4o-mini',
         messages: messages,
         max_tokens: 1000,
       });
