@@ -11,6 +11,7 @@ import * as functions from 'firebase-functions';
 import { initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import OpenAI from 'openai';
+import fetch from 'node-fetch';
 
 // Initialize Firebase Admin
 initializeApp();
@@ -124,7 +125,7 @@ export const testOpenAIConnection = functions.https.onCall(async (data, context)
   if (!context.auth?.token?.admin) {
     throw new functions.https.HttpsError('permission-denied', 'Requires admin access');
   }
-  // test commit
+  // te
 
   try {
     const response = await openai.chat.completions.create({
@@ -187,8 +188,23 @@ Format the response in clear sections. Focus on the most important elements visi
 }
 
 async function analyzeImageWithGPT4(imageUrl: string, type: 'general' | 'legal' | 'financial'): Promise<any> {
+  // Convert URL to base64 if it's not already in base64 format
+  let base64Image = imageUrl;
+  if (!imageUrl.startsWith('data:')) {
+    try {
+      const response = await fetch(imageUrl);
+      const arrayBuffer = await response.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const mimeType = response.headers.get('content-type') || 'image/jpeg';
+      base64Image = `data:${mimeType};base64,${buffer.toString('base64')}`;
+    } catch (error) {
+      console.error('Error converting image to base64:', error);
+      throw new functions.https.HttpsError('invalid-argument', 'Failed to process image URL');
+    }
+  }
+
   const response = await openai.chat.completions.create({
-    model: 'gpt-3.5-turbo',
+    model: 'gpt-4-vision-preview', // Updated to use the vision model
     messages: [
       {
         role: 'system',
@@ -200,7 +216,7 @@ async function analyzeImageWithGPT4(imageUrl: string, type: 'general' | 'legal' 
           {
             type: 'image_url',
             image_url: {
-              url: imageUrl,
+              url: base64Image,
             },
           },
         ],
