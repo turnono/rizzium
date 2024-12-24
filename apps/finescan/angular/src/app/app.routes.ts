@@ -22,7 +22,7 @@ export const appRoutes: Route[] = [
   },
   {
     path: 'privacy',
-    loadComponent: () => import('./pages/privacy-policy/privacy-policy.page').then((m) => m.PrivacyPolicyPageComponent),
+    loadComponent: () => import('./pages/privacy-policy/privacy-policy.page').then((m) => m.PrivacyPolicyPage),
   },
   {
     path: 'terms',
