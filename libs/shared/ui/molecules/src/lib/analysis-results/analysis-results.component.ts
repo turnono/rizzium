@@ -100,19 +100,26 @@ interface AnalysisResult {
       .document-section {
         margin: 2rem 0;
         padding: 1rem;
-        background: var(--ion-color-light);
+        background: var(--ion-color-light-shade);
         border-radius: 8px;
       }
 
       .text-content {
         line-height: 1.6;
         white-space: pre-wrap;
+        color: var(--ion-color-dark);
       }
 
       .highlighted-text {
-        background-color: rgba(var(--ion-color-danger-rgb), 0.1);
+        background-color: rgba(var(--ion-color-danger-rgb), 0.15);
         border-bottom: 2px solid var(--ion-color-danger);
+        padding: 2px 0;
         cursor: pointer;
+        transition: background-color 0.2s ease;
+
+        &:hover {
+          background-color: rgba(var(--ion-color-danger-rgb), 0.25);
+        }
       }
 
       .export-button {
@@ -121,6 +128,23 @@ interface AnalysisResult {
 
       ion-badge {
         margin-left: 0.5rem;
+        padding: 4px 8px;
+        font-weight: 500;
+
+        &[color='success'] {
+          --ion-color-success: #2d8a47;
+          --ion-color-success-contrast: #ffffff;
+        }
+
+        &[color='warning'] {
+          --ion-color-warning: #b45d12;
+          --ion-color-warning-contrast: #ffffff;
+        }
+
+        &[color='danger'] {
+          --ion-color-danger: #c41e3a;
+          --ion-color-danger-contrast: #ffffff;
+        }
       }
     `,
   ],
