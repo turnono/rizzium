@@ -1,12 +1,43 @@
 rules_version = '2';
 
-// Craft rules based on data in your Firestore database
-// allow write: if firestore.get(
-//    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
 service firebase.storage {
   match /b/{bucket}/o {
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidContentType() {
+      return request.resource.contentType.matches('image/.*');
+    }
+
+    function isValidFileSize() {
+      return request.resource.size <= 10 * 1024 * 1024; // 10MB max
+    }
+
+    // User uploads path
+    match /users/{userId}/uploads/{fileName} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId)
+        && isValidContentType()
+        && isValidFileSize();
+      allow delete: if isOwner(userId);
+    }
+
+    // Temporary analysis path (for OpenAI processing)
+    match /temp-analysis/{fileName} {
+      allow read: if request.auth.token.firebase.sign_in_provider == 'google.com'
+        && request.auth.token.firebase.sign_in_claims.cloudFunction == true;
+      allow write: if false; // Only allow writes through Cloud Functions
+    }
+
+    // Deny access to all other paths
     match /{allPaths=**} {
-      allow read, write;
+      allow read, write: if false;
     }
   }
 }

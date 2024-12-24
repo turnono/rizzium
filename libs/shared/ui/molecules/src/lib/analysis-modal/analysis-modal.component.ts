@@ -99,9 +99,9 @@ export class AnalysisModalComponent {
 
   constructor(private modalCtrl: ModalController, private alertController: AlertController) {
     addIcons({
-      close: closeOutline,
-      alertCircle: alertCircleOutline,
-      refresh: refreshOutline,
+      closeOutline,
+      alertCircleOutline,
+      refreshOutline,
     });
   }
 
