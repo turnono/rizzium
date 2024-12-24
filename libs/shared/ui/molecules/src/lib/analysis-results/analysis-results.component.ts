@@ -152,8 +152,8 @@ interface AnalysisResult {
 export class AnalysisResultsComponent {
   constructor() {
     addIcons({
-      warning: warningOutline,
-      download: downloadOutline,
+      warningOutline,
+      downloadOutline,
     });
   }
 

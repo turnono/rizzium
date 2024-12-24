@@ -41,13 +41,33 @@ export const analyzeDocument = functions.https.onCall(async (data: AnalysisReque
   }
 
   try {
-    // Analyze image with GPT-3.5 Vision
-    const analysis = await analyzeImageWithGPT4(data.imageUrl, data.analysisType);
+    // Add privacy-focused system message
+    const systemMessage = `
+      Analyze the document while following these privacy guidelines:
+      1. DO NOT extract or return any personal information (names, addresses, ID numbers, etc.) unless explicitly requested
+      2. If sensitive information is detected, mention its presence without revealing the actual data
+      3. Focus on document structure, type, and potential risks
+      4. Redact or mask any personal identifiers in the response
+      5. For legal documents, focus on document type and general terms rather than specific parties
+    `;
+
+    // Modify the analysis prompt
+    const analysisPrompt = `
+      ${systemMessage}
+      Please analyze this document with focus on ${data.analysisType} aspects.
+      If you detect sensitive information, indicate its presence without revealing the actual data.
+    `;
+
+    // Analyze image with privacy-aware prompt
+    const analysis = await analyzeImageWithGPT4(data.imageUrl, data.analysisType, analysisPrompt);
+
+    // Sanitize the response to ensure no sensitive data is included
+    const sanitizedAnalysis = sanitizeAnalysisResponse(analysis);
 
     // Update analysis document in Firestore
-    await updateAnalysisDocument(context.auth.uid, data.imageUrl, analysis);
+    await updateAnalysisDocument(context.auth.uid, data.imageUrl, sanitizedAnalysis);
 
-    return { success: true, analysis };
+    return { success: true, analysis: sanitizedAnalysis };
   } catch (error) {
     console.error('Analysis error:', error);
 
@@ -221,7 +241,8 @@ interface AnalysisResult {
 
 async function analyzeImageWithGPT4(
   imageUrl: string,
-  type: 'general' | 'legal' | 'financial'
+  type: 'general' | 'legal' | 'financial',
+  prompt: string
 ): Promise<AnalysisResult> {
   // Convert URL to base64 if it's not already in base64 format
   let base64Image = imageUrl;
@@ -246,7 +267,7 @@ async function analyzeImageWithGPT4(
         content: [
           {
             type: 'text',
-            text: getAnalysisPrompt(type),
+            text: prompt,
           },
         ],
       },
@@ -296,4 +317,29 @@ async function updateAnalysisDocument(userId: string, imageUrl: string, analysis
     results: analysis,
     updatedAt: new Date(),
   });
+}
+
+// Helper function to sanitize analysis response
+function sanitizeAnalysisResponse(analysis: any) {
+  // Remove or mask any detected personal information
+  const sensitivePatterns = [
+    /\b\d{13}\b/, // ID numbers
+    /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i, // Email addresses
+    /\b\d{10}\b/, // Phone numbers
+    // Add more patterns as needed
+  ];
+
+  let sanitizedText = analysis.text;
+  sensitivePatterns.forEach((pattern) => {
+    sanitizedText = sanitizedText.replace(pattern, '[REDACTED]');
+  });
+
+  return {
+    ...analysis,
+    text: sanitizedText,
+    summary: {
+      ...analysis.summary,
+      containsSensitiveInfo: sensitivePatterns.some((pattern) => pattern.test(analysis.text)),
+    },
+  };
 }

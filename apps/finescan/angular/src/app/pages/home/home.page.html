@@ -1,0 +1,100 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <div class="logo-container">
+      <img src="assets/finescan_logo.png" alt="FineScan Logo" class="header-logo" />
+      <ion-text>FineScan</ion-text>
+    </div>
+    @if (!isOnline) {
+    <ion-chip color="warning" class="offline-chip">
+      <ion-icon name="cloud-offline"></ion-icon>
+      <ion-label>Offline</ion-label>
+    </ion-chip>
+    }
+    <ion-buttons slot="end">
+      @if (isLoggedIn) {
+      <ion-button class="user-button" (click)="showUserMenu($event)">
+        <ion-icon slot="start" name="person"></ion-icon>
+        <ion-label class="hide-sm">{{ displayName }}</ion-label>
+      </ion-button>
+      } @else {
+      <ion-button class="login-button" (click)="navigateToLogin()">
+        <ion-icon slot="start" name="log-in"></ion-icon>
+        <ion-label>Sign In</ion-label>
+      </ion-button>
+      }
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <!-- Offline Warning -->
+  @if (!isOnline) {
+  <ion-card color="warning" class="offline-warning">
+    <ion-card-content>
+      <ion-icon name="warning"></ion-icon>
+      <p>You're currently offline. Some features may be limited.</p>
+    </ion-card-content>
+  </ion-card>
+  }
+
+  <div class="main-content">
+    <ion-card class="welcome-card">
+      <ion-card-header>
+        <ion-card-title class="ion-text-center">Document Analysis Made Easy</ion-card-title>
+      </ion-card-header>
+
+      <ion-card-content>
+        <div class="feature-grid">
+          <div class="feature-item">
+            <ion-icon name="shield-checkmark" color="success" size="large"></ion-icon>
+            <h3>Safe & Secure</h3>
+            <p>Your documents are protected</p>
+          </div>
+
+          <div class="feature-item">
+            <ion-icon name="analytics-outline" color="warning" size="large"></ion-icon>
+            <h3>Instant Analysis</h3>
+            <p>Get results in seconds</p>
+          </div>
+
+          <div class="feature-item">
+            <ion-icon name="phone-portrait" color="primary" size="large"></ion-icon>
+            <h3>Mobile Friendly</h3>
+            <p>Works on all devices</p>
+          </div>
+        </div>
+
+        <ion-grid>
+          @if (isLoggedIn) {
+          <ion-row class="ion-justify-content-center">
+            <ion-col size="12" size-md="2" size-sm="12">
+              <ion-button expand="block" size="large" class="main-action" [routerLink]="['/file-upload']">
+                <ion-icon slot="start" name="camera"></ion-icon>
+                Scan Document
+              </ion-button>
+            </ion-col>
+            <ion-col size="12" size-md="2" size-sm="12">
+              <ion-button expand="block" size="large" fill="outline" [routerLink]="['/reports']">
+                <ion-icon slot="start" name="document"></ion-icon>
+                View Reports
+              </ion-button>
+            </ion-col>
+          </ion-row>
+          } @else {
+          <ion-row>
+            <ion-col size="12" size-md="6" size-sm="12">
+              <ion-button expand="block" size="large" class="main-action" (click)="navigateToLogin()">
+                Get Started - It's Free
+              </ion-button>
+            </ion-col>
+          </ion-row>
+          }
+        </ion-grid>
+      </ion-card-content>
+    </ion-card>
+  </div>
+  <br />
+  <br />
+
+  <rizzium-footer [appName]="'finescan'"></rizzium-footer>
+</ion-content>

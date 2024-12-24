@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { IonFooter, IonToolbar, IonIcon } from '@ionic/angular/standalone';
@@ -9,39 +9,7 @@ import { logoFacebook, logoTwitter, logoLinkedin, logoInstagram } from 'ionicons
   selector: 'rizzium-footer',
   standalone: true,
   imports: [CommonModule, RouterLink, IonFooter, IonToolbar, IonIcon],
-  template: `
-    <ion-footer collapse="fade" class="ion-no-border">
-      <ion-toolbar color="clear">
-        <div class="footer-content">
-          <div class="footer-links">
-            <a routerLink="/privacy">Privacy Policy</a>
-            <a routerLink="/terms">Terms of Service</a>
-            <a routerLink="/contact">Contact Us</a>
-          </div>
-          <div class="social-links">
-            <a href="https://facebook.com/finescan" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-              <ion-icon name="logo-facebook"></ion-icon>
-            </a>
-            <a href="https://twitter.com/finescan" target="_blank" rel="noopener noreferrer" aria-label="Twitter">
-              <ion-icon name="logo-twitter"></ion-icon>
-            </a>
-            <a
-              href="https://linkedin.com/company/finescan"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="LinkedIn"
-            >
-              <ion-icon name="logo-linkedin"></ion-icon>
-            </a>
-            <a href="https://instagram.com/finescan" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-              <ion-icon name="logo-instagram"></ion-icon>
-            </a>
-          </div>
-          <div class="copyright">© {{ currentYear }} FineScan. All rights reserved.</div>
-        </div>
-      </ion-toolbar>
-    </ion-footer>
-  `,
+  templateUrl: './footer.component.html',
   styles: [
     `
       :host {
@@ -133,6 +101,7 @@ import { logoFacebook, logoTwitter, logoLinkedin, logoInstagram } from 'ionicons
 })
 export class FooterComponent {
   currentYear = new Date().getFullYear();
+  @Input() appName = 'rizzium';
 
   constructor() {
     addIcons({

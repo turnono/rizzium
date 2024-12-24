@@ -54,6 +54,10 @@ import {
   informationCircle,
 } from 'ionicons/icons';
 import { DataSaverService } from '@rizzium/shared/services';
+import { FooterComponent } from '@rizzium/shared/ui/organisms';
+import { Firestore, doc, setDoc } from '@angular/fire/firestore';
+import { firstValueFrom } from 'rxjs';
+import { FirebaseAuthService } from '@rizzium/shared/services';
 
 @Component({
   selector: 'app-settings',
@@ -82,6 +86,7 @@ import { DataSaverService } from '@rizzium/shared/services';
     IonBadge,
     IonBackButton,
     IonButtons,
+    FooterComponent,
   ],
   template: `
     <ion-header>
@@ -263,6 +268,7 @@ import { DataSaverService } from '@rizzium/shared/services';
         <span>Important privacy information</span>
       </div>
     </ion-content>
+    <rizzium-footer [appName]="'finescan'"></rizzium-footer>
   `,
   styles: [
     `
@@ -505,6 +511,7 @@ import { DataSaverService } from '@rizzium/shared/services';
 export class SettingsPage {
   private dataSaverService = inject(DataSaverService);
   private alertController = inject(AlertController);
+  private authService = inject(FirebaseAuthService);
 
   settings = {
     darkMode: false,
@@ -566,13 +573,27 @@ export class SettingsPage {
     }
   }
 
-  updateSettings() {
+  async updateSettings() {
     localStorage.setItem('finescan-settings', JSON.stringify(this.settings));
     this.applySettings();
     this.settingsSaved = true;
     setTimeout(() => {
       this.settingsSaved = false;
     }, 2000);
+
+    // Store retention setting in Firestore
+    const user = await firstValueFrom(this.authService.user$);
+    if (user) {
+      const firestore = inject(Firestore);
+      await setDoc(
+        doc(firestore, `users/${user.uid}/settings/preferences`),
+        {
+          dataRetention: parseInt(this.settings.dataRetention, 10),
+          // ... other settings
+        },
+        { merge: true }
+      );
+    }
   }
 
   private applySettings() {
@@ -595,19 +616,17 @@ export class SettingsPage {
     const alert = await this.alertController.create({
       header: 'Privacy Policy',
       message: `
-        <div class="privacy-policy">
-          <h3>Data Collection</h3>
-          <p>We collect only essential data needed for document analysis.</p>
+        Data Collection:
+        We collect only essential data needed for document analysis.
 
-          <h3>Data Storage</h3>
-          <p>Documents are encrypted and stored in secure Firebase servers.</p>
+        Data Storage:
+        Documents are encrypted and stored in secure Firebase servers.
 
-          <h3>Data Deletion</h3>
-          <p>You can delete your data at any time. Documents are automatically deleted based on your retention settings.</p>
+        Data Deletion:
+        You can delete your data at any time. Documents are automatically deleted based on your retention settings.
 
-          <h3>Your Control</h3>
-          <p>You have full control over your data and can export or delete it at any time.</p>
-        </div>
+        Your Control:
+        You have full control over your data and can export or delete it at any time.
       `,
       cssClass: 'privacy-policy-alert',
       buttons: ['Close'],

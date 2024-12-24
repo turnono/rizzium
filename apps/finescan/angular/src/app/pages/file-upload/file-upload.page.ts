@@ -1,6 +1,7 @@
 import { Component, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FileUploadComponent } from '@rizzium/shared/ui/molecules';
+import { FooterComponent } from '@rizzium/shared/ui/organisms';
 import { Storage } from '@angular/fire/storage';
 import { Router } from '@angular/router';
 import {
@@ -57,6 +58,7 @@ import { AlertController } from '@ionic/angular';
     IonProgressBar,
     IonBackButton,
     IonButtons,
+    FooterComponent,
   ],
   template: `
     <ion-header>
@@ -71,16 +73,18 @@ import { AlertController } from '@ionic/angular';
     <ion-content class="ion-padding">
       <ion-card>
         <ion-card-header>
-          <ion-card-title color="clear">Upload Document</ion-card-title>
-          <ion-card-subtitle color="clear">Take a photo or select an image of your document</ion-card-subtitle>
+          <ion-card-title color="clear" class="ion-text-center">Upload Document</ion-card-title>
+          <ion-card-subtitle color="clear" class="ion-text-center">
+            Take a photo or select an image of your document
+          </ion-card-subtitle>
         </ion-card-header>
 
-        <ion-card-content>
+        <ion-card-content class="ion-no-padding">
           <div class="upload-container" [class.uploading]="isUploading">
             <ui-file-upload
               #fileUploadComponent
               path="finescan-uploads"
-              accept="image/*,.jpg,.jpeg,.png,.gif,.webp"
+              accept="image/*,.jpg,.jpeg,.png,.webp"
               (progressChange)="onUploadProgress($event)"
               (urlGenerated)="onUrlGenerated($event)"
             ></ui-file-upload>
@@ -89,12 +93,13 @@ import { AlertController } from '@ionic/angular';
           <div class="upload-info">
             <ion-icon name="information-circle-outline"></ion-icon>
             <p>
-              Supported formats: JPG, PNG, GIF, WEBP<br />
+              Supported formats: JPG, PNG, WEBP<br />
               For best results, ensure the document is well-lit and clearly visible
             </p>
           </div>
         </ion-card-content>
       </ion-card>
+      <rizzium-footer [appName]="'finescan'"></rizzium-footer>
     </ion-content>
   `,
   styles: [
@@ -247,6 +252,10 @@ import { AlertController } from '@ionic/angular';
         align-items: flex-start;
         gap: 12px;
 
+        display: flex;
+        flex-wrap: nowrap;
+        justify-content: center;
+
         ion-icon {
           font-size: 20px;
           color: var(--ion-color-primary);
@@ -298,7 +307,7 @@ export class FileUploadPage {
     const files = event.dataTransfer?.files;
     if (files?.length) {
       const file = files[0];
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
 
       if (allowedTypes.includes(file.type)) {
         this.fileUploadComponent.uploadFile(file);
@@ -339,22 +348,17 @@ export class FileUploadPage {
     const alert = await this.alertController.create({
       header: 'Security & Privacy Details',
       message: `
-        <div class="privacy-details">
-          <h3>How We Protect Your Data</h3>
-          <ul>
-            <li>Documents are encrypted during upload and storage</li>
-            <li>Access is restricted to your account only</li>
-            <li>Data is stored in secure Firebase servers</li>
-            <li>Automatic deletion after 30 days</li>
-          </ul>
+        How We Protect Your Data:
+        • Documents are encrypted during upload and storage
+        • Access is restricted to your account only
+        • Data is stored in secure Firebase servers
+        • Automatic deletion after 30 days
 
-          <h3>Your Rights</h3>
-          <ul>
-            <li>Request data deletion at any time</li>
-            <li>Download your documents</li>
-            <li>View access logs</li>
-          </ul>
-        </div>
+
+        Your Rights:
+        • Request data deletion at any time
+        • Download your documents
+        • View access logs
       `,
       cssClass: 'privacy-alert',
       buttons: ['Got It'],
@@ -366,7 +370,7 @@ export class FileUploadPage {
   async showUnsupportedFormatAlert() {
     const alert = await this.alertController.create({
       header: 'Unsupported Format',
-      message: 'Please upload an image file (JPG, PNG, GIF, or WEBP)',
+      message: 'Please upload an image file (JPG, PNG, or WEBP)',
       buttons: ['OK'],
     });
 
