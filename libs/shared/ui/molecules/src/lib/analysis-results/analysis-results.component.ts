@@ -2,6 +2,8 @@ import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { jsPDF } from 'jspdf';
+import { addIcons } from 'ionicons';
+import { warningOutline, downloadOutline } from 'ionicons/icons';
 
 interface AnalysisResult {
   text: string;
@@ -26,10 +28,10 @@ interface AnalysisResult {
     <ion-card>
       <ion-card-header>
         <ion-card-title>Analysis Results</ion-card-title>
-        <ion-card-subtitle>
+        <ion-card-subtitle color="danger">
           Overall Risk Level:
-          <ion-badge [color]="getRiskColor(analysis?.summary.riskLevel)">
-            {{ analysis?.summary.riskLevel | uppercase }}
+          <ion-badge [color]="getRiskColor(analysis?.summary?.riskLevel)">
+            {{ analysis?.summary?.riskLevel | uppercase }}
           </ion-badge>
         </ion-card-subtitle>
       </ion-card-header>
@@ -38,30 +40,39 @@ interface AnalysisResult {
         <!-- Risk Summary -->
         <div class="summary-section">
           <h2>Risk Summary</h2>
-          <p>{{ analysis?.summary.description }}</p>
+          <p>{{ analysis?.summary?.description }}</p>
 
           <h3>Key Recommendations</h3>
           <ion-list>
-            @for (recommendation of analysis?.summary.recommendations; track recommendation) {
+            @if (analysis?.summary?.recommendations?.length) { @for (recommendation of analysis.summary.recommendations;
+            track recommendation) {
             <ion-item>
-              <ion-icon name="warning" slot="start" [color]="getRiskColor(analysis?.summary.riskLevel)"></ion-icon>
+              <ion-icon name="warning" slot="start" [color]="getRiskColor(analysis?.summary?.riskLevel)"></ion-icon>
               <ion-label>{{ recommendation }}</ion-label>
+            </ion-item>
+            } } @else {
+            <ion-item>
+              <ion-label>No recommendations available</ion-label>
             </ion-item>
             }
           </ion-list>
         </div>
 
         <!-- Document Text with Highlights -->
+        @if (analysis?.text) {
         <div class="document-section">
           <h2>Document Analysis</h2>
           <div class="text-content" [innerHTML]="highlightedText"></div>
         </div>
+        }
 
         <!-- Export Button -->
+        @if (analysis) {
         <ion-button expand="block" (click)="exportToPDF()" class="export-button">
-          <ion-icon name="download-outline" slot="start"></ion-icon>
+          <ion-icon name="download" slot="start"></ion-icon>
           Export Report as PDF
         </ion-button>
+        }
       </ion-card-content>
     </ion-card>
   `,
@@ -115,6 +126,13 @@ interface AnalysisResult {
   ],
 })
 export class AnalysisResultsComponent {
+  constructor() {
+    addIcons({
+      warning: warningOutline,
+      download: downloadOutline,
+    });
+  }
+
   @Input() set analysis(value: AnalysisResult | null) {
     if (value) {
       this._analysis = value;
@@ -155,7 +173,7 @@ export class AnalysisResultsComponent {
     this.highlightedText = html;
   }
 
-  getRiskColor(risk: 'high' | 'medium' | 'low' | undefined): string {
+  getRiskColor(risk: 'high' | 'medium' | 'low' | undefined | null): string {
     switch (risk) {
       case 'high':
         return 'danger';
