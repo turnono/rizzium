@@ -125,7 +125,7 @@ export const testOpenAIConnection = functions.https.onCall(async (data, context)
   if (!context.auth?.token?.admin) {
     throw new functions.https.HttpsError('permission-denied', 'Requires admin access');
   }
-  // test commit
+  // te
 
   try {
     const response = await openai.chat.completions.create({
