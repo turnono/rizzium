@@ -23,7 +23,6 @@ import {
   IonCardHeader,
   IonCardTitle,
   IonCardSubtitle,
-  IonAlert,
   AlertController,
   IonSegment,
   IonSegmentButton,
@@ -79,7 +78,6 @@ import { getFunctions, httpsCallable } from '@angular/fire/functions';
     IonBackButton,
     IonToast,
   ],
-  providers: [AnalysisService],
   template: `
     <ion-header>
       <ion-toolbar>

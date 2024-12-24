@@ -28,14 +28,7 @@ import {
   catchError,
   throwError,
 } from 'rxjs';
-import {
-  BusinessData,
-  Product,
-  Transaction,
-  Promotion,
-  Purchase,
-  BusinessUser,
-} from '@rizzium/shared/interfaces';
+import { BusinessData, Product, Transaction, Promotion, Purchase, BusinessUser } from '@rizzium/shared/interfaces';
 
 @Injectable({
   providedIn: 'root',
@@ -46,10 +39,7 @@ export class BusinessService implements OnDestroy {
   private authSubscription: Subscription;
   private businessesListener: (() => void) | null = null;
 
-  constructor(
-    private firestore: Firestore,
-    private authService: FirebaseAuthService
-  ) {
+  constructor(private firestore: Firestore, private authService: FirebaseAuthService) {
     this.authSubscription = this.authService.user$.subscribe((user) => {
       if (user) {
         this.initUserBusinessesListener(user.uid);
@@ -65,9 +55,7 @@ export class BusinessService implements OnDestroy {
     this.businessesListener = onSnapshot(
       q,
       (querySnapshot) => {
-        const businesses = querySnapshot.docs.map(
-          (doc) => ({ id: doc.id, ...doc.data() } as BusinessData)
-        );
+        const businesses = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as BusinessData));
         this.userBusinessesSubject.next(businesses);
       },
       (error) => {
@@ -122,10 +110,7 @@ export class BusinessService implements OnDestroy {
       await updateDoc(userRef, { businesses: updatedBusinesses });
 
       // Create a businessUser document
-      const businessUserRef = doc(
-        this.firestore,
-        `businesses/${newBusinessData.id}/businessUsers/${user.uid}`
-      );
+      const businessUserRef = doc(this.firestore, `businesses/${newBusinessData.id}/businessUsers/${user.uid}`);
       await setDoc(businessUserRef, {
         userId: user.uid,
         role: 'owner',
@@ -141,9 +126,7 @@ export class BusinessService implements OnDestroy {
     }
   }
 
-  async registerBusiness(
-    businessData: Omit<BusinessData, 'ownerId' | 'createdAt'>
-  ) {
+  async registerBusiness(businessData: Omit<BusinessData, 'ownerId' | 'createdAt'>) {
     return this.setupBusiness(businessData);
   }
 
@@ -170,14 +153,10 @@ export class BusinessService implements OnDestroy {
 
       if (userSnap.exists() && userSnap.data()['businesses']) {
         const businessIds = userSnap.data()['businesses'] as string[];
-        const businessObservables = businessIds.map((id) =>
-          this.getBusinessData(id)
-        );
+        const businessObservables = businessIds.map((id) => this.getBusinessData(id));
 
         const results = await firstValueFrom(forkJoin(businessObservables));
-        return results.filter(
-          (business): business is BusinessData => business !== null
-        );
+        return results.filter((business): business is BusinessData => business !== null);
       }
 
       return [];
@@ -208,25 +187,12 @@ export class BusinessService implements OnDestroy {
     return this.userBusinesses$;
   }
 
-  async getPastPurchases(
-    businessId: string,
-    userId: string
-  ): Promise<Purchase[]> {
+  async getPastPurchases(businessId: string, userId: string): Promise<Purchase[]> {
     try {
-      const purchasesRef = collection(
-        this.firestore,
-        `businesses/${businessId}/purchases`
-      );
-      const q = query(
-        purchasesRef,
-        where('userId', '==', userId),
-        orderBy('date', 'desc'),
-        limit(10)
-      );
+      const purchasesRef = collection(this.firestore, `businesses/${businessId}/purchases`);
+      const q = query(purchasesRef, where('userId', '==', userId), orderBy('date', 'desc'), limit(10));
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(
-        (doc) => ({ id: doc.id, ...doc.data() } as Purchase)
-      );
+      return querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Purchase));
     } catch (error) {
       console.error('Error fetching past purchases:', error);
       throw new Error('Failed to fetch past purchases. Please try again.');
@@ -234,26 +200,16 @@ export class BusinessService implements OnDestroy {
   }
 
   getLoyaltyPoints(businessId: string, userId: string): Observable<number> {
-    const customerDoc = doc(
-      this.firestore,
-      `businesses/${businessId}/customers/${userId}`
-    );
-    return from(getDoc(customerDoc)).pipe(
-      map((doc) => (doc.exists() ? doc.data()['loyaltyPoints'] || 0 : 0))
-    );
+    const customerDoc = doc(this.firestore, `businesses/${businessId}/customers/${userId}`);
+    return from(getDoc(customerDoc)).pipe(map((doc) => (doc.exists() ? doc.data()['loyaltyPoints'] || 0 : 0)));
   }
 
   async getPromotions(businessId: string): Promise<Promotion[]> {
     try {
-      const promotionsRef = collection(
-        this.firestore,
-        `businesses/${businessId}/promotions`
-      );
+      const promotionsRef = collection(this.firestore, `businesses/${businessId}/promotions`);
       const q = query(promotionsRef, where('validUntil', '>', Timestamp.now()));
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(
-        (doc) => ({ id: doc.id, ...doc.data() } as Promotion)
-      );
+      return querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Promotion));
     } catch (error) {
       console.error('Error fetching promotions:', error);
       throw new Error('Failed to fetch promotions. Please try again.');
@@ -262,10 +218,7 @@ export class BusinessService implements OnDestroy {
 
   async getUserRole(businessId: string, userId: string): Promise<string> {
     try {
-      const userRef = doc(
-        this.firestore,
-        `businesses/${businessId}/businessUsers/${userId}`
-      );
+      const userRef = doc(this.firestore, `businesses/${businessId}/businessUsers/${userId}`);
       const userSnap = await getDoc(userRef);
       if (userSnap.exists()) {
         return userSnap.data()['role'] || 'customer';
@@ -278,10 +231,7 @@ export class BusinessService implements OnDestroy {
   }
 
   getBusinessUsers(businessId: string): Observable<BusinessUser[]> {
-    const businessUsersRef = collection(
-      this.firestore,
-      `businesses/${businessId}/businessUsers`
-    );
+    const businessUsersRef = collection(this.firestore, `businesses/${businessId}/businessUsers`);
     return from(getDocs(businessUsersRef)).pipe(
       map((snapshot) =>
         snapshot.docs.map((doc) => {
@@ -299,23 +249,13 @@ export class BusinessService implements OnDestroy {
     );
   }
 
-  updateUserRole(
-    businessId: string,
-    userId: string,
-    newRole: string
-  ): Observable<void> {
-    const userRef = doc(
-      this.firestore,
-      `businesses/${businessId}/businessUsers/${userId}`
-    );
+  updateUserRole(businessId: string, userId: string, newRole: string): Observable<void> {
+    const userRef = doc(this.firestore, `businesses/${businessId}/businessUsers/${userId}`);
     return from(updateDoc(userRef, { role: newRole }));
   }
 
   removeUserFromBusiness(businessId: string, userId: string): Observable<void> {
-    const userRef = doc(
-      this.firestore,
-      `businesses/${businessId}/businessUsers/${userId}`
-    );
+    const userRef = doc(this.firestore, `businesses/${businessId}/businessUsers/${userId}`);
     return new Observable((observer) => {
       deleteDoc(userRef)
         .then(() => {
@@ -325,9 +265,7 @@ export class BusinessService implements OnDestroy {
               getDoc(userDocRef).then((userDoc) => {
                 if (userDoc.exists()) {
                   const userData = userDoc.data();
-                  const updatedBusinesses = (
-                    userData['businesses'] || []
-                  ).filter((id: string) => id !== businessId);
+                  const updatedBusinesses = (userData['businesses'] || []).filter((id: string) => id !== businessId);
                   updateDoc(userDocRef, { businesses: updatedBusinesses })
                     .then(() => {
                       observer.next();
@@ -350,14 +288,8 @@ export class BusinessService implements OnDestroy {
   }
 
   getActivePromotions(businessId: string): Observable<Promotion[]> {
-    const promotionsCollection = collection(
-      this.firestore,
-      `businesses/${businessId}/promotions`
-    );
-    const activePromotionsQuery = query(
-      promotionsCollection,
-      where('expiryDate', '>', Timestamp.now())
-    );
+    const promotionsCollection = collection(this.firestore, `businesses/${businessId}/promotions`);
+    const activePromotionsQuery = query(promotionsCollection, where('expiryDate', '>', Timestamp.now()));
 
     return from(getDocs(activePromotionsQuery)).pipe(
       map((querySnapshot) =>
@@ -374,46 +306,23 @@ export class BusinessService implements OnDestroy {
   }
 
   getLowStockProducts(businessId: string): Observable<Product[]> {
-    const productsCollection = collection(
-      this.firestore,
-      `businesses/${businessId}/products`
-    );
-    const lowStockQuery = query(
-      productsCollection,
-      where('stockQuantity', '<', 10),
-      limit(10)
-    );
+    const productsCollection = collection(this.firestore, `businesses/${businessId}/products`);
+    const lowStockQuery = query(productsCollection, where('stockQuantity', '<', 10), limit(10));
     return from(getDocs(lowStockQuery)).pipe(
-      map((snapshot) =>
-        snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Product))
-      )
+      map((snapshot) => snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Product)))
     );
   }
 
   getRecentTransactions(businessId: string): Observable<Transaction[]> {
-    const transactionsCollection = collection(
-      this.firestore,
-      `businesses/${businessId}/transactions`
-    );
-    const recentTransactionsQuery = query(
-      transactionsCollection,
-      orderBy('date', 'desc'),
-      limit(5)
-    );
+    const transactionsCollection = collection(this.firestore, `businesses/${businessId}/transactions`);
+    const recentTransactionsQuery = query(transactionsCollection, orderBy('date', 'desc'), limit(5));
     return from(getDocs(recentTransactionsQuery)).pipe(
-      map((snapshot) =>
-        snapshot.docs.map(
-          (doc) => ({ id: doc.id, ...doc.data() } as Transaction)
-        )
-      )
+      map((snapshot) => snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Transaction)))
     );
   }
 
   getBusinessUsersRealtime(businessId: string): Observable<BusinessUser[]> {
-    const businessUsersCollection = collection(
-      this.firestore,
-      `businesses/${businessId}/users`
-    );
+    const businessUsersCollection = collection(this.firestore, `businesses/${businessId}/users`);
     const businessUsersQuery = query(businessUsersCollection);
 
     return new Observable<BusinessUser[]>((observer) => {
@@ -439,15 +348,8 @@ export class BusinessService implements OnDestroy {
     });
   }
 
-  updateBusinessUserRole(
-    businessId: string,
-    userId: string,
-    newRole: string
-  ): Observable<void> {
-    const userDoc = doc(
-      this.firestore,
-      `businesses/${businessId}/users/${userId}`
-    );
+  updateBusinessUserRole(businessId: string, userId: string, newRole: string): Observable<void> {
+    const userDoc = doc(this.firestore, `businesses/${businessId}/users/${userId}`);
     return new Observable<void>((observer) => {
       updateDoc(userDoc, { role: newRole })
         .then(() => {
@@ -461,10 +363,7 @@ export class BusinessService implements OnDestroy {
   }
 
   removeBusinessUser(businessId: string, userId: string): Observable<void> {
-    const userDoc = doc(
-      this.firestore,
-      `businesses/${businessId}/users/${userId}`
-    );
+    const userDoc = doc(this.firestore, `businesses/${businessId}/users/${userId}`);
     return new Observable<void>((observer) => {
       deleteDoc(userDoc)
         .then(() => {
@@ -477,14 +376,8 @@ export class BusinessService implements OnDestroy {
     });
   }
 
-  addBusinessUser(
-    businessId: string,
-    userData: { name: string; email: string; role: string }
-  ): Observable<void> {
-    const userDoc = doc(
-      this.firestore,
-      `businesses/${businessId}/users/${userData.email}`
-    );
+  addBusinessUser(businessId: string, userData: { name: string; email: string; role: string }): Observable<void> {
+    const userDoc = doc(this.firestore, `businesses/${businessId}/users/${userData.email}`);
     return from(
       setDoc(userDoc, {
         name: userData.name,
