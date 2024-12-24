@@ -43,10 +43,30 @@ import {
   filterOutline,
   arrowForward,
   informationCircle,
+  analyticsOutline,
 } from 'ionicons/icons';
 import { Firestore, Timestamp, updateDoc, doc } from '@angular/fire/firestore';
 import { getFunctions, httpsCallable } from '@angular/fire/functions';
 import { firstValueFrom } from 'rxjs';
+
+// Add interface for the analysis response
+interface AnalysisResponse {
+  data: {
+    text?: string;
+    riskLevel?: 'high' | 'medium' | 'low';
+    summary: {
+      riskLevel: 'high' | 'medium' | 'low';
+      description: string;
+      recommendations: string[];
+    };
+    flags: Array<{
+      start: number;
+      end: number;
+      reason: string;
+      riskLevel: 'high' | 'medium' | 'low';
+    }>;
+  };
+}
 
 @Component({
   selector: 'app-reports',
@@ -383,6 +403,7 @@ export class ReportsPage implements OnInit {
       filterOutline,
       arrowForward,
       informationCircle,
+      analyticsOutline,
     });
   }
 
@@ -447,21 +468,43 @@ export class ReportsPage implements OnInit {
       // Update status to processing
       await this.updateAnalysisStatus(analysis.id, 'processing');
 
-      const analyzeDocument = httpsCallable(this.functions, 'analyzeDocument');
+      const analyzeDocument = httpsCallable<{ imageUrl: string; analysisType: string }, AnalysisResponse>(
+        this.functions,
+        'analyzeDocument'
+      );
 
-      // Make sure we're sending the correct data structure
-      const response = await analyzeDocument({
-        imageUrl: analysis.fileUrl,
-        analysisType: 'general',
-      });
+      // Add error handling and timeout
+      const response = (await Promise.race([
+        analyzeDocument({
+          imageUrl: analysis.fileUrl,
+          analysisType: 'general',
+        }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Analysis timeout')), 30000)),
+      ])) as AnalysisResponse;
+
+      if (!response.data) {
+        throw new Error('No analysis results received');
+      }
 
       // Update the analysis with results
       await this.updateAnalysisResults(analysis.id, response.data);
     } catch (error) {
       console.error('Error starting analysis:', error);
+
+      // Show error alert to user
+      const alert = await this.alertController.create({
+        header: 'Analysis Failed',
+        message: 'There was an error analyzing your document. Please try again later.',
+        buttons: ['OK'],
+      });
+      await alert.present();
+
       // Revert status to pending if analysis fails
-      await this.updateAnalysisStatus(analysis.id, 'pending');
-      throw error;
+      await this.updateAnalysisStatus(analysis.id, 'failed');
+
+      // Add error details to analysis document
+      const errorDetails = error instanceof Error ? error.message : 'Unknown error';
+      await this.updateAnalysisError(analysis.id, errorDetails);
     }
   }
 
@@ -557,5 +600,16 @@ export class ReportsPage implements OnInit {
 
   applyFilters() {
     // Implement filtering logic here
+  }
+
+  private async updateAnalysisError(analysisId: string, errorDetails: string) {
+    const user = await firstValueFrom(this.authService.user$);
+    if (!user) throw new Error('No authenticated user');
+
+    const docRef = doc(this.firestore, `users/${user.uid}/analyses/${analysisId}`);
+    await updateDoc(docRef, {
+      error: errorDetails,
+      updatedAt: Timestamp.now(),
+    });
   }
 }

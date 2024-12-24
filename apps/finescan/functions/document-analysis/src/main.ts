@@ -40,7 +40,7 @@ export const analyzeDocument = functions.https.onCall(async (data: AnalysisReque
   }
 
   try {
-    // Analyze image with GPT-4 Vision
+    // Analyze image with GPT-3.5 Vision
     const analysis = await analyzeImageWithGPT4(data.imageUrl, data.analysisType);
 
     // Update analysis document in Firestore
@@ -103,19 +103,38 @@ export const continueConversation = functions.https.onCall(
 );
 
 function getAnalysisPrompt(type: 'general' | 'legal' | 'financial'): string {
-  const basePrompt = `Analyze this document image and provide:
-1. Overall risk level (high, medium, low)
-2. Summary of key points
-3. Potential red flags or concerning elements
-4. Specific recommendations
+  const basePrompt = `Analyze this document image and provide a structured response with:
+1. Risk Level: Determine if this document presents HIGH, MEDIUM, or LOW risk. Consider factors like:
+   - Unusual terms or conditions
+   - Financial obligations
+   - Legal implications
+   - Missing information
 
-Focus on clearly visible text and important visual elements.`;
+2. Summary: Provide a clear, concise overview of:
+   - Main purpose of the document
+   - Key parties involved
+   - Critical dates or deadlines
+   - Important terms
+
+3. Red Flags: List specific concerns in the document:
+   - Unclear or ambiguous terms
+   - Potential risks or liabilities
+   - Missing signatures or information
+   - Unusual requirements
+
+4. Recommendations: Suggest specific actions like:
+   - Areas needing clarification
+   - Additional documentation needed
+   - Suggested modifications
+   - Next steps
+
+Format the response in clear sections. Focus on the most important elements visible in the document.`;
 
   switch (type) {
     case 'legal':
-      return `${basePrompt}\nPay special attention to legal terms, signatures, dates, and contractual elements.`;
+      return `${basePrompt}\nPay special attention to legal terminology, contractual obligations, liability clauses, and signature requirements.`;
     case 'financial':
-      return `${basePrompt}\nPay special attention to numbers, amounts, financial terms, and monetary values.`;
+      return `${basePrompt}\nFocus on financial terms, payment obligations, fees, interest rates, and monetary commitments.`;
     default:
       return basePrompt;
   }
@@ -123,7 +142,7 @@ Focus on clearly visible text and important visual elements.`;
 
 async function analyzeImageWithGPT4(imageUrl: string, type: 'general' | 'legal' | 'financial'): Promise<any> {
   const response = await openai.chat.completions.create({
-    model: 'gpt-4',
+    model: 'gpt-3.5-turbo-1106',
     messages: [
       {
         role: 'system',
@@ -141,7 +160,7 @@ async function analyzeImageWithGPT4(imageUrl: string, type: 'general' | 'legal' 
         ],
       },
     ],
-    max_tokens: 1000,
+    max_tokens: 1500,
   });
 
   try {
