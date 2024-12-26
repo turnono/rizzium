@@ -117,6 +117,12 @@ export class HomePageComponent implements OnDestroy {
       message: `Signed in as ${this.displayName}`,
       buttons: [
         {
+          text: 'Settings',
+          handler: () => {
+            this.router.navigate(['/settings']);
+          },
+        },
+        {
           text: 'Sign Out',
           role: 'destructive',
           handler: () => {
