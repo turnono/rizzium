@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { IonFooter, IonToolbar, IonIcon } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { logoFacebook, logoTwitter, logoLinkedin, logoInstagram } from 'ionicons/icons';
+import { logoFacebook, logoInstagram, logoTiktok, logoLinkedin, cloudOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'rizzium-footer',
@@ -106,9 +106,10 @@ export class FooterComponent {
   constructor() {
     addIcons({
       logoFacebook,
-      logoTwitter,
-      logoLinkedin,
       logoInstagram,
+      logoTiktok,
+      logoLinkedin,
+      cloudOutline,
     });
   }
 }

@@ -20,10 +20,12 @@ import {
   locationOutline,
   callOutline,
   logoFacebook,
-  logoTwitter,
   logoInstagram,
+  logoTiktok,
+  logoLinkedin,
   timeOutline,
   helpCircleOutline,
+  cloudOutline,
 } from 'ionicons/icons';
 
 @Component({
@@ -72,7 +74,7 @@ import {
               <ion-item lines="none" class="contact-item">
                 <ion-label>
                   <strong>Support Email:</strong>
-                  <p>support&#64;finescan.co.za</p>
+                  <p>taajirah0&#64;gmail.com</p>
                 </ion-label>
               </ion-item>
               <p class="note">We aim to respond to all emails within 24-48 hours during business days.</p>
@@ -87,9 +89,10 @@ import {
               <ion-item lines="none" class="contact-item">
                 <ion-label>
                   <strong>Office Address:</strong>
-                  <p>123 Main Street</p>
-                  <p>Cape Town, 8001</p>
-                  <p>South Africa</p>
+                  <p>35 Klip Cresent</p>
+                  <p>Eldorado Park</p>
+                  <p>Soweto, 1811</p>
+                  <p>Gauteng, South Africa</p>
                 </ion-label>
               </ion-item>
             </section>
@@ -102,7 +105,7 @@ import {
               <ion-item lines="none" class="contact-item">
                 <ion-label>
                   <strong>Phone Number:</strong>
-                  <p>+27 (0) 21 123 4567</p>
+                  <p>+27 65 862 3499</p>
                 </ion-label>
               </ion-item>
               <ion-item lines="none" class="contact-item">
@@ -121,17 +124,25 @@ import {
               </h2>
               <p>Stay connected with us through our social media channels for updates and announcements:</p>
               <div class="social-links">
-                <a href="https://facebook.com/finescan" target="_blank" rel="noopener noreferrer">
+                <a href="https://facebook.com/taajirah0" target="_blank" rel="noopener noreferrer">
                   <ion-icon name="logo-facebook"></ion-icon>
                   <span>Facebook</span>
                 </a>
-                <a href="https://twitter.com/finescan" target="_blank" rel="noopener noreferrer">
-                  <ion-icon name="logo-twitter"></ion-icon>
-                  <span>Twitter (X)</span>
-                </a>
-                <a href="https://instagram.com/finescan" target="_blank" rel="noopener noreferrer">
+                <a href="https://instagram.com/taajirah0" target="_blank" rel="noopener noreferrer">
                   <ion-icon name="logo-instagram"></ion-icon>
                   <span>Instagram</span>
+                </a>
+                <a href="https://tiktok.com/@taajirah0" target="_blank" rel="noopener noreferrer">
+                  <ion-icon name="logo-tiktok"></ion-icon>
+                  <span>TikTok</span>
+                </a>
+                <a href="https://linkedin.com/in/taajirah0" target="_blank" rel="noopener noreferrer">
+                  <ion-icon name="logo-linkedin"></ion-icon>
+                  <span>LinkedIn</span>
+                </a>
+                <a href="https://bsky.app/profile/taajirah0.bsky.social" target="_blank" rel="noopener noreferrer">
+                  <ion-icon name="cloud-outline"></ion-icon>
+                  <span>Bluesky</span>
                 </a>
               </div>
             </section>
@@ -298,17 +309,19 @@ import {
     `,
   ],
 })
-export class ContactUsPage {
+export class ContactUsComponent {
   constructor() {
     addIcons({
       mailOutline,
       locationOutline,
       callOutline,
       logoFacebook,
-      logoTwitter,
       logoInstagram,
+      logoTiktok,
+      logoLinkedin,
       timeOutline,
       helpCircleOutline,
+      cloudOutline,
     });
   }
 }

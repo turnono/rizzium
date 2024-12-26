@@ -28,6 +28,114 @@ interface AnalysisRequest {
   locale?: string;
 }
 
+async function processAndAnalyzeDocument(
+  fileUrl: string,
+  type: 'general' | 'legal' | 'financial',
+  prompt: string
+): Promise<AnalysisResult> {
+  let base64Content = fileUrl;
+  let isTextFile = false;
+  const MAX_TEXT_SIZE = 1024 * 1024; // 1MB limit for text files
+
+  if (!fileUrl.startsWith('data:')) {
+    try {
+      const response = await fetch(fileUrl);
+      const contentType = response.headers.get('content-type') || 'image/jpeg';
+      const contentLength = parseInt(response.headers.get('content-length') || '0');
+
+      isTextFile = contentType === 'text/plain';
+
+      if (isTextFile) {
+        if (contentLength > MAX_TEXT_SIZE) {
+          throw new functions.https.HttpsError(
+            'invalid-argument',
+            `Text file size (${contentLength} bytes) exceeds the maximum allowed size (${MAX_TEXT_SIZE} bytes)`
+          );
+        }
+        const text = await response.text();
+        return await analyzeTextContent(text, type, prompt);
+      } else {
+        const arrayBuffer = await response.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        base64Content = `data:${contentType};base64,${buffer.toString('base64')}`;
+      }
+    } catch (error) {
+      console.error('Error processing file:', error);
+      if (error instanceof functions.https.HttpsError) {
+        throw error;
+      }
+      throw new functions.https.HttpsError('invalid-argument', 'Failed to process file');
+    }
+  } else {
+    // Handle already base64 encoded content
+    const contentType = base64Content.split(';')[0].split(':')[1];
+    isTextFile = contentType === 'text/plain';
+
+    if (isTextFile) {
+      try {
+        const base64Data = base64Content.split(',')[1];
+        const text = Buffer.from(base64Data, 'base64').toString('utf-8');
+        if (text.length > MAX_TEXT_SIZE) {
+          throw new functions.https.HttpsError(
+            'invalid-argument',
+            `Text content size (${text.length} bytes) exceeds the maximum allowed size (${MAX_TEXT_SIZE} bytes)`
+          );
+        }
+        return await analyzeTextContent(text, type, prompt);
+      } catch (error) {
+        console.error('Error processing base64 text:', error);
+        if (error instanceof functions.https.HttpsError) {
+          throw error;
+        }
+        throw new functions.https.HttpsError('invalid-argument', 'Failed to process text content');
+      }
+    }
+  }
+
+  // Process as image if not text
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [
+      {
+        role: 'system',
+        content: [
+          {
+            type: 'text',
+            text: prompt,
+          },
+        ],
+      },
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'image_url',
+            image_url: {
+              url: base64Content,
+            },
+          },
+        ],
+      },
+    ],
+    temperature: 1,
+    max_tokens: 2048,
+    top_p: 1,
+    frequency_penalty: 0,
+    presence_penalty: 0,
+    response_format: {
+      type: 'json_object',
+    },
+  });
+
+  try {
+    const analysis = JSON.parse(response.choices[0].message.content) as AnalysisResult;
+    return analysis;
+  } catch (error) {
+    console.error('Error parsing GPT-4 response:', error);
+    throw new functions.https.HttpsError('internal', 'Failed to parse analysis results');
+  }
+}
+
 export const analyzeDocument = functions.https.onCall(async (data: AnalysisRequest, context) => {
   // Authentication check
   if (!context.auth) {
@@ -53,18 +161,20 @@ export const analyzeDocument = functions.https.onCall(async (data: AnalysisReque
       5. For legal documents, focus on document type and general terms rather than specific parties
       6. Consider regional context: ${data.region || 'global'} and locale: ${data.locale || 'en'}
       7. Adapt analysis to regional document formats, standards, and regulations if specified
+      8. Provide the analysis results in a JSON format
     `;
 
     // Modify the analysis prompt with region awareness
     const analysisPrompt = `
       ${systemMessage}
-      Please analyze this document with focus on ${data.analysisType} aspects.
+      Please analyze this document with focus on ${data.analysisType} aspects and return the results as a JSON object.
       If you detect sensitive information, indicate its presence without revealing the actual data.
       ${data.region ? `Consider specific standards and regulations for ${data.region}.` : ''}
+      Return your analysis in a valid JSON format matching the AnalysisResult interface.
     `;
 
-    // Analyze image with privacy-aware prompt
-    const analysis = await analyzeImageWithGPT4(data.imageUrl, data.analysisType, analysisPrompt);
+    // Use the new implementation
+    const analysis = await processAndAnalyzeDocument(data.imageUrl, data.analysisType, analysisPrompt);
 
     // Sanitize the response to ensure no sensitive data is included
     const sanitizedAnalysis = sanitizeAnalysisResponse(analysis);
@@ -76,7 +186,6 @@ export const analyzeDocument = functions.https.onCall(async (data: AnalysisReque
   } catch (error) {
     console.error('Analysis error:', error);
 
-    // More specific error handling
     if (error instanceof Error) {
       if (error.message.includes('API key')) {
         throw new functions.https.HttpsError(
@@ -192,66 +301,42 @@ interface AnalysisResult {
   }>;
 }
 
-async function analyzeImageWithGPT4(
-  imageUrl: string,
+async function analyzeTextContent(
+  text: string,
   type: 'general' | 'legal' | 'financial',
   prompt: string
 ): Promise<AnalysisResult> {
-  // Convert URL to base64 if it's not already in base64 format
-  let base64Image = imageUrl;
-  if (!imageUrl.startsWith('data:')) {
-    try {
-      const response = await fetch(imageUrl);
-      const arrayBuffer = await response.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-      const mimeType = response.headers.get('content-type') || 'image/jpeg';
-      base64Image = `data:${mimeType};base64,${buffer.toString('base64')}`;
-    } catch (error) {
-      console.error('Error converting image to base64:', error);
-      throw new functions.https.HttpsError('invalid-argument', 'Failed to process image URL');
-    }
-  }
-
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
-    messages: [
-      {
-        role: 'system',
-        content: [
-          {
-            type: 'text',
-            text: prompt,
-          },
-        ],
-      },
-      {
-        role: 'user',
-        content: [
-          {
-            type: 'image_url',
-            image_url: {
-              url: base64Image,
-            },
-          },
-        ],
-      },
-    ],
-    temperature: 1,
-    max_tokens: 2048,
-    top_p: 1,
-    frequency_penalty: 0,
-    presence_penalty: 0,
-    response_format: {
-      type: 'json_object',
-    },
-  });
-
   try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: prompt,
+        },
+        {
+          role: 'user',
+          content: `Analyze this text content: ${text}`,
+        },
+      ],
+      temperature: 1,
+      max_tokens: 2048,
+      top_p: 1,
+      frequency_penalty: 0,
+      presence_penalty: 0,
+      response_format: {
+        type: 'json_object',
+      },
+    });
+
     const analysis = JSON.parse(response.choices[0].message.content) as AnalysisResult;
-    return analysis;
+    return {
+      ...analysis,
+      text: text,
+    };
   } catch (error) {
-    console.error('Error parsing GPT-4 response:', error);
-    throw new Error('Failed to parse analysis results');
+    console.error('Error analyzing text content:', error);
+    throw new functions.https.HttpsError('internal', 'Failed to analyze text content');
   }
 }
 
