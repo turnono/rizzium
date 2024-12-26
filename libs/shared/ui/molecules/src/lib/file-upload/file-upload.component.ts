@@ -90,7 +90,7 @@ const ALLOWED_TYPES = ['text/plain', 'image/jpeg', 'image/png', 'image/webp'];
 
       <div
         class="upload-area"
-        (click)="triggerFileUpload()"
+        (click)="triggerFileUpload($event)"
         (dragover)="onDragOver($event)"
         (dragleave)="onDragLeave($event)"
         (drop)="onDrop($event)"
@@ -98,27 +98,27 @@ const ALLOWED_TYPES = ['text/plain', 'image/jpeg', 'image/png', 'image/webp'];
         role="button"
         tabindex="0"
         aria-label="Click or drag files here to upload"
-        (keydown.enter)="triggerFileUpload()"
-        (keydown.space)="triggerFileUpload()"
+        (keydown.enter)="triggerFileUpload($event)"
+        (keydown.space)="triggerFileUpload($event)"
         data-cy="upload-area"
       >
         @if (!selectedFile && !isUploading && !errorMessage && !uploadComplete) {
         <div class="upload-content" role="status">
           <ion-icon name="cloud-upload" size="large" class="upload-icon" aria-hidden="true"></ion-icon>
-          <h2 class="visually-accessible" color="clear">Upload Your Document</h2>
+          <h2 class="visually-accessible" color="clear">Upload Document</h2>
           @if (isMobile) {
-          <p>Tap here to upload</p>
+          <p>Tap here to upload a text file or image</p>
           } @if (!isMobile) {
-          <p>Tap here or drag a file to upload</p>
+          <p>Tap here or drag a text file or image to upload</p>
           }
           <div class="file-types" role="list" aria-label="Accepted file types">
-            <ion-chip>
+            <ion-chip (click)="triggerFileUpload($event, '.txt')">
+              <ion-icon name="document-text" aria-hidden="true" size="small"></ion-icon>
+              <ion-label>Text File (.txt)</ion-label>
+            </ion-chip>
+            <ion-chip (click)="triggerFileUpload($event, 'image/*')">
               <ion-icon name="image" aria-hidden="true" size="small"></ion-icon>
               <ion-label>Image (JPG, PNG, WEBP)</ion-label>
-            </ion-chip>
-            <ion-chip>
-              <ion-icon name="document-text" aria-hidden="true" size="small"></ion-icon>
-              <ion-label>Text File</ion-label>
             </ion-chip>
           </div>
           <div class="help-text" role="note">
@@ -745,7 +745,7 @@ export class FileUploadComponent {
   private platform = inject(Platform);
 
   @Input() path = 'uploads';
-  @Input() accept = '.txt,image/*';
+  @Input() accept = '.txt,image/jpeg,image/png,image/webp';
   @Output() urlGenerated = new EventEmitter<string>();
   @Output() validationError = new EventEmitter<string>();
   @Output() progressChange = new EventEmitter<number>();
@@ -804,6 +804,10 @@ export class FileUploadComponent {
 
   validateFile(file: File): string | null {
     if (!file) return 'No file selected';
+
+    if (file.size === 0) {
+      return 'File is empty. Please choose a file with content.';
+    }
 
     if (file.size > MAX_FILE_SIZE) {
       return `File size (${this.formatFileSize(file.size)}) exceeds the ${this.formatFileSize(MAX_FILE_SIZE)} limit`;
@@ -1094,9 +1098,8 @@ export class FileUploadComponent {
 
       const timestamp = Date.now();
       const sanitizedName = this.sanitizeFileName(file.name);
-      const filePath = `users/${user.uid}/finescan-uploads/${timestamp}_${sanitizedName}`;
+      const filePath = `users/${user.uid}/finescan/${timestamp}_${sanitizedName}`;
 
-      // Log all relevant information
       console.log('Starting upload:', {
         filePath,
         fileInfo: {
@@ -1106,7 +1109,6 @@ export class FileUploadComponent {
         },
         user: {
           uid: user.uid,
-          email: user.email,
         },
         timestamp,
       });
@@ -1119,6 +1121,7 @@ export class FileUploadComponent {
         customMetadata: {
           uploadedBy: user.uid,
           uploadedAt: new Date().toISOString(),
+          originalName: file.name,
         },
       };
 
@@ -1233,8 +1236,19 @@ export class FileUploadComponent {
     }
   }
 
-  triggerFileUpload() {
-    this.fileInput.nativeElement.click();
+  triggerFileUpload(event: Event, fileType?: string) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (this.fileInput?.nativeElement) {
+      // Set accept attribute based on file type
+      if (fileType) {
+        this.fileInput.nativeElement.accept = fileType;
+      } else {
+        this.fileInput.nativeElement.accept = this.accept;
+      }
+      this.fileInput.nativeElement.click();
+    }
   }
 
   async showUploadHelp() {

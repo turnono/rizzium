@@ -42,7 +42,13 @@ export const cleanupOldDocuments = functions.pubsub.schedule('every 24 hours').o
         if (data.fileUrl) {
           try {
             const fileName = data.fileUrl.split('/').pop();
-            await bucket.file(`finescan-uploads/${userId}/${fileName}`).delete();
+            // Try both new and legacy paths
+            try {
+              await bucket.file(`users/${userId}/finescan/${fileName}`).delete();
+            } catch (error) {
+              // If new path fails, try legacy path
+              await bucket.file(`users/${userId}/finescan-uploads/${fileName}`).delete();
+            }
           } catch (error) {
             console.error(`Error deleting file for analysis ${analysis.id}:`, error);
           }
