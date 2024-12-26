@@ -59,7 +59,7 @@ import { eyeOffOutline, eyeOutline } from 'ionicons/icons';
     <ion-content class="ion-padding">
       <ion-card>
         <ion-card-header>
-          <ion-card-title>{{ authMode === 'login' ? 'Login to' : 'Register for' }} FineScan</ion-card-title>
+          <ion-card-title>{{ authMode === 'login' ? 'Login to' : 'Register for' }} FineScan AI</ion-card-title>
         </ion-card-header>
         <ion-card-content>
           <form [formGroup]="authForm" (ngSubmit)="onSubmit()">

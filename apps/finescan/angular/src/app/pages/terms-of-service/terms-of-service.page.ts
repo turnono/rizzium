@@ -44,17 +44,17 @@ import { FooterComponent } from '@rizzium/shared/ui/organisms';
             <section>
               <h2>1. Introduction</h2>
               <p>
-                Welcome to FineScan! These Terms and Conditions govern your use of our application and services. By
-                accessing or using FineScan, you agree to comply with and be bound by these terms. If you do not agree,
-                please do not use our services.
+                Welcome to FineScan AI! These Terms and Conditions govern your use of our application and services. By
+                accessing or using FineScan AI, you agree to comply with and be bound by these terms. If you do not
+                agree, please do not use our services.
               </p>
             </section>
 
             <section>
               <h2>2. Definitions</h2>
               <ul>
-                <li>"Service" refers to the FineScan application and related features.</li>
-                <li>"User" refers to anyone accessing or using the FineScan application.</li>
+                <li>"Service" refers to the FineScan AI application and related features.</li>
+                <li>"User" refers to anyone accessing or using the FineScan AI application.</li>
                 <li>"Content" refers to any documents, images, or data uploaded by the user.</li>
               </ul>
             </section>
@@ -63,14 +63,14 @@ import { FooterComponent } from '@rizzium/shared/ui/organisms';
               <h2>3. Eligibility</h2>
               <p>
                 You must be at least 18 years old or have the consent of a legal guardian to use this service. By using
-                FineScan, you confirm that you meet these requirements.
+                FineScan AI, you confirm that you meet these requirements.
               </p>
             </section>
 
             <section>
               <h2>4. Use of the Service</h2>
               <p>
-                FineScan is provided for informational purposes only. It does not offer legal, financial, or
+                FineScan AI is provided for informational purposes only. It does not offer legal, financial, or
                 professional advice.
               </p>
               <p>You agree not to misuse the service, including but not limited to:</p>
@@ -84,8 +84,8 @@ import { FooterComponent } from '@rizzium/shared/ui/organisms';
             <section>
               <h2>5. User Content</h2>
               <ul>
-                <li>You retain ownership of the content you upload to FineScan</li>
-                <li>By uploading content, you grant FineScan permission to process it for analysis purposes</li>
+                <li>You retain ownership of the content you upload to FineScan AI</li>
+                <li>By uploading content, you grant FineScan AI permission to process it for analysis purposes</li>
                 <li>Uploaded content will be deleted immediately after analysis unless explicitly saved by the user</li>
               </ul>
             </section>
@@ -93,7 +93,7 @@ import { FooterComponent } from '@rizzium/shared/ui/organisms';
             <section>
               <h2>6. Privacy</h2>
               <p>
-                Your use of FineScan is also governed by our Privacy Policy, which explains how we collect, use, and
+                Your use of FineScan AI is also governed by our Privacy Policy, which explains how we collect, use, and
                 protect your data. By using the service, you agree to the terms outlined in the Privacy Policy.
               </p>
             </section>
@@ -102,12 +102,12 @@ import { FooterComponent } from '@rizzium/shared/ui/organisms';
               <h2>7. Limitation of Liability</h2>
               <ul>
                 <li>
-                  FineScan is provided "as is" and "as available." While we strive for accuracy, we do not guarantee
+                  FineScan AI is provided "as is" and "as available." While we strive for accuracy, we do not guarantee
                   that the analysis provided is free from errors.
                 </li>
                 <li>We are not responsible for decisions made based on the results provided by the service.</li>
                 <li>
-                  FineScan, its developers, and affiliates shall not be liable for any direct, indirect, or
+                  FineScan AI, its developers, and affiliates shall not be liable for any direct, indirect, or
                   consequential damages arising from the use of the service.
                 </li>
               </ul>

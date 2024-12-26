@@ -48,9 +48,9 @@ import { FooterComponent } from '@rizzium/shared/ui/organisms';
             <section>
               <h2>1. Introduction</h2>
               <p>
-                Welcome to FineScan! Your privacy is important to us. This Privacy Policy explains how we collect, use,
-                and protect your personal information in compliance with South African laws, including the Protection of
-                Personal Information Act (POPIA).
+                Welcome to FineScan AI! Your privacy is important to us. This Privacy Policy explains how we collect,
+                use, and protect your personal information in compliance with South African laws, including the
+                Protection of Personal Information Act (POPIA).
               </p>
               <p>By using our app, you agree to the terms outlined in this Privacy Policy.</p>
             </section>
@@ -113,9 +113,9 @@ import { FooterComponent } from '@rizzium/shared/ui/organisms';
             <section>
               <h2>6. Third-Party Services</h2>
               <p>
-                FineScan uses Google Firebase for authentication, hosting, storage, and AI processing. Firebase complies
-                with global security standards, including ISO 27001 and SOC 2. Your data is encrypted both in transit
-                and at rest.
+                FineScan AI uses Google Firebase for authentication, hosting, storage, and AI processing. Firebase
+                complies with global security standards, including ISO 27001 and SOC 2. Your data is encrypted both in
+                transit and at rest.
               </p>
               <p>
                 While some data may be processed outside South Africa, we ensure equivalent levels of protection as

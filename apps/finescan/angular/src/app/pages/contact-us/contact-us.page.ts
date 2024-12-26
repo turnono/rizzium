@@ -60,7 +60,7 @@ import {
           <div class="contact-content">
             <p class="intro">
               We value your feedback and are here to assist you with any questions or concerns you may have about
-              FineScan. Please feel free to reach out to us through any of the following methods:
+              FineScan AI. Please feel free to reach out to us through any of the following methods:
             </p>
 
             <section>
@@ -144,7 +144,7 @@ import {
               </p>
             </section>
 
-            <p class="outro">Thank you for choosing FineScan! We look forward to hearing from you.</p>
+            <p class="outro">Thank you for choosing FineScan AI! We look forward to hearing from you.</p>
           </div>
         </ion-card-content>
       </ion-card>
