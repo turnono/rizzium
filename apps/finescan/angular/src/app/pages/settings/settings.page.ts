@@ -226,7 +226,7 @@ import { FormatService } from '@rizzium/shared/services';
         </ion-card-content>
       </ion-card>
     </ion-content>
-    <rizzium-footer [appName]="'finescan'"></rizzium-footer>
+    <rizzium-footer [appName]="'FineScan AI'"></rizzium-footer>
   `,
   styles: [
     `

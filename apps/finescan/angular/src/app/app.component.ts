@@ -13,7 +13,7 @@ import { BehaviorSubject } from 'rxjs';
 })
 export class AppComponent implements OnInit {
   @ViewChild(IonContent) content!: IonContent;
-  title = 'finescan';
+  title = 'FineScan AI';
 
   private lastScrollTop = 0;
   showFooter$ = new BehaviorSubject<boolean>(true);

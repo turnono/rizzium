@@ -19,8 +19,8 @@ service firebase.storage {
       return request.resource.size <= 10 * 1024 * 1024; // 10MB max
     }
 
-    // User uploads path
-    match /users/{userId}/uploads/{fileName} {
+    // User uploads path - support both direct uploads and finescan-uploads
+    match /users/{userId}/{uploadType}/{fileName} {
       allow read: if isOwner(userId);
       allow create: if isOwner(userId)
         && isValidContentType()
