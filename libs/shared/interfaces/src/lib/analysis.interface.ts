@@ -2,6 +2,14 @@ import { Timestamp } from '@angular/fire/firestore';
 
 export type AnalysisStatus = 'pending' | 'uploaded' | 'processing' | 'completed' | 'failed';
 
+export interface UserSettings {
+  region: string;
+  locale: string;
+  timezone: string;
+  dateFormat: string;
+  currencyCode: string;
+}
+
 export interface Analysis {
   id: string;
   userId: string;

@@ -32,6 +32,10 @@ export const appRoutes: Route[] = [
     path: 'contact',
     loadComponent: () => import('./pages/contact-us/contact-us.page').then((m) => m.ContactUsPage),
   },
+  {
+    path: 'settings',
+    loadComponent: () => import('./pages/settings/settings.page').then((m) => m.SettingsPageComponent),
+  },
   // Add other routes as needed
   {
     path: '**',

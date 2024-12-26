@@ -24,6 +24,8 @@ const openai = new OpenAI({
 interface AnalysisRequest {
   imageUrl: string;
   analysisType: 'general' | 'legal' | 'financial';
+  region?: string;
+  locale?: string;
 }
 
 export const analyzeDocument = functions.https.onCall(async (data: AnalysisRequest, context) => {
@@ -41,7 +43,7 @@ export const analyzeDocument = functions.https.onCall(async (data: AnalysisReque
   }
 
   try {
-    // Add privacy-focused system message
+    // Add privacy-focused system message with region awareness
     const systemMessage = `
       Analyze the document while following these privacy guidelines:
       1. DO NOT extract or return any personal information (names, addresses, ID numbers, etc.) unless explicitly requested
@@ -49,13 +51,16 @@ export const analyzeDocument = functions.https.onCall(async (data: AnalysisReque
       3. Focus on document structure, type, and potential risks
       4. Redact or mask any personal identifiers in the response
       5. For legal documents, focus on document type and general terms rather than specific parties
+      6. Consider regional context: ${data.region || 'global'} and locale: ${data.locale || 'en'}
+      7. Adapt analysis to regional document formats, standards, and regulations if specified
     `;
 
-    // Modify the analysis prompt
+    // Modify the analysis prompt with region awareness
     const analysisPrompt = `
       ${systemMessage}
       Please analyze this document with focus on ${data.analysisType} aspects.
       If you detect sensitive information, indicate its presence without revealing the actual data.
+      ${data.region ? `Consider specific standards and regulations for ${data.region}.` : ''}
     `;
 
     // Analyze image with privacy-aware prompt
@@ -169,67 +174,15 @@ export const testOpenAIConnection = functions.https.onCall(async (data, context)
   }
 });
 
-function getAnalysisPrompt(type: 'general' | 'legal' | 'financial'): string {
-  const basePrompt = `Analyze this document image and provide a structured JSON response with:
-1. Risk Level: Determine if this document presents HIGH, MEDIUM, or LOW risk. Consider factors like:
-   - Unusual terms or conditions
-   - Financial obligations
-   - Legal implications
-   - Missing information
-
-2. Summary: Provide a clear, concise overview of:
-   - Main purpose of the document
-   - Key parties involved
-   - Critical dates or deadlines
-   - Important terms
-
-3. Red Flags: List specific concerns in the document:
-   - Unclear or ambiguous terms
-   - Potential risks or liabilities
-   - Missing signatures or information
-   - Unusual requirements
-
-4. Recommendations: Suggest specific actions like:
-   - Areas needing clarification
-   - Additional documentation needed
-   - Suggested modifications
-   - Next steps
-
-Format the response as a JSON object with the following structure:
-{
-  "riskLevel": "HIGH|MEDIUM|LOW",
-  "summary": {
-    "riskLevel": "HIGH|MEDIUM|LOW",
-    "description": "string",
-    "recommendations": ["string"]
-  },
-  "flags": [
-    {
-      "start": number,
-      "end": number,
-      "reason": "string",
-      "riskLevel": "HIGH|MEDIUM|LOW"
-    }
-  ]
-}`;
-
-  switch (type) {
-    case 'legal':
-      return `${basePrompt}\nPay special attention to legal terminology, contractual obligations, liability clauses, and signature requirements.`;
-    case 'financial':
-      return `${basePrompt}\nFocus on financial terms, payment obligations, fees, interest rates, and monetary commitments.`;
-    default:
-      return basePrompt;
-  }
-}
-
 // Also update the return type for better type safety
 interface AnalysisResult {
   riskLevel: 'HIGH' | 'MEDIUM' | 'LOW';
+  text?: string;
   summary: {
     riskLevel: 'HIGH' | 'MEDIUM' | 'LOW';
     description: string;
     recommendations: string[];
+    containsSensitiveInfo?: boolean;
   };
   flags: Array<{
     start: number;
@@ -302,7 +255,7 @@ async function analyzeImageWithGPT4(
   }
 }
 
-async function updateAnalysisDocument(userId: string, imageUrl: string, analysis: any): Promise<void> {
+async function updateAnalysisDocument(userId: string, imageUrl: string, analysis: AnalysisResult): Promise<void> {
   const db = getFirestore();
   const analysisRef = db.collection(`users/${userId}/analyses`).where('fileUrl', '==', imageUrl);
 
@@ -319,8 +272,7 @@ async function updateAnalysisDocument(userId: string, imageUrl: string, analysis
   });
 }
 
-// Helper function to sanitize analysis response
-function sanitizeAnalysisResponse(analysis: any) {
+function sanitizeAnalysisResponse(analysis: AnalysisResult): AnalysisResult {
   // Remove or mask any detected personal information
   const sensitivePatterns = [
     /\b\d{13}\b/, // ID numbers

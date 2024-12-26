@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -36,13 +36,13 @@ import {
   imageOutline,
   flashOutline,
   documentTextOutline,
-  colorPalette,
-  speedometer,
+  colorPaletteOutline as colorPalette,
+  speedometerOutline,
   informationCircleOutline,
   checkmarkCircleOutline,
-  checkmark,
+  checkmarkOutline,
   alertCircleOutline,
-  warning,
+  warningOutline,
   shieldCheckmarkOutline,
   eyeOffOutline,
   timeOutline,
@@ -50,14 +50,17 @@ import {
   helpCircleOutline,
   lockClosedOutline,
   serverOutline,
-  arrowForward,
-  informationCircle,
+  arrowForwardOutline as arrowForward,
+  informationCircleOutline as informationCircle,
 } from 'ionicons/icons';
 import { DataSaverService } from '@rizzium/shared/services';
 import { FooterComponent } from '@rizzium/shared/ui/organisms';
-import { Firestore, doc, setDoc } from '@angular/fire/firestore';
+import { Firestore, doc, setDoc, getDoc, Timestamp } from '@angular/fire/firestore';
 import { firstValueFrom } from 'rxjs';
 import { FirebaseAuthService } from '@rizzium/shared/services';
+import { Subject, takeUntil, filter } from 'rxjs';
+import { FirebaseError } from '@angular/fire/app';
+import type { AlertButton } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'app-settings',
@@ -115,7 +118,7 @@ import { FirebaseAuthService } from '@rizzium/shared/services';
         <ion-card>
           <ion-card-header>
             <ion-card-title role="heading" aria-level="2">
-              <ion-icon name="color-palette" aria-hidden="true"></ion-icon>
+              <ion-icon name="color-palette-outline" aria-hidden="true"></ion-icon>
               Appearance
               <ion-badge color="primary" class="new-feature">New</ion-badge>
             </ion-card-title>
@@ -187,7 +190,7 @@ import { FirebaseAuthService } from '@rizzium/shared/services';
 
                 @if (dataSaverSettings.enabled) {
                 <div class="data-saver-info" role="status" aria-live="polite">
-                  <ion-icon name="speedometer" aria-hidden="true"></ion-icon>
+                  <ion-icon name="speedometer-outline" aria-hidden="true"></ion-icon>
                   <div class="info-content">
                     <h4>Data Saver is Active</h4>
                     <p>Optimizing performance and reducing data usage</p>
@@ -204,7 +207,7 @@ import { FirebaseAuthService } from '@rizzium/shared/services';
         <ion-card>
           <ion-card-header>
             <ion-card-title role="heading" aria-level="2">
-              <ion-icon name="shield-checkmark" aria-hidden="true"></ion-icon>
+              <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
               Privacy & Security
             </ion-card-title>
           </ion-card-header>
@@ -243,13 +246,13 @@ import { FirebaseAuthService } from '@rizzium/shared/services';
               </ion-item>
 
               <div class="privacy-info" role="note">
-                <ion-icon name="information-circle" aria-hidden="true"></ion-icon>
+                <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
                 <div class="info-content">
                   <h4>Your Privacy is Protected</h4>
                   <p>All documents are encrypted and stored securely. We never share your data with third parties.</p>
                   <ion-button fill="clear" size="small" (click)="showPrivacyPolicy()">
                     View Privacy Policy
-                    <ion-icon name="arrow-forward" slot="end"></ion-icon>
+                    <ion-icon name="arrow-forward-outline" slot="end"></ion-icon>
                   </ion-button>
                 </div>
               </div>
@@ -258,15 +261,76 @@ import { FirebaseAuthService } from '@rizzium/shared/services';
         </ion-card>
       </div>
 
-      <div class="help-section">
-        <ion-icon name="help-circle-outline"></ion-icon>
-        <span>Need help with settings?</span>
-      </div>
+      <!-- Region Settings -->
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>
+            <ion-icon name="language-outline"></ion-icon>
+            Regional Settings
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-list>
+            <ion-item>
+              <ion-label>Region</ion-label>
+              <ion-select [(ngModel)]="settings.region" interface="action-sheet">
+                <ion-select-option value="global">Global</ion-select-option>
+                <ion-select-option value="us">United States</ion-select-option>
+                <ion-select-option value="eu">European Union</ion-select-option>
+                <ion-select-option value="uk">United Kingdom</ion-select-option>
+                <ion-select-option value="au">Australia</ion-select-option>
+                <ion-select-option value="ca">Canada</ion-select-option>
+                <ion-select-option value="za">South Africa</ion-select-option>
+              </ion-select>
+            </ion-item>
 
-      <div class="info-section">
-        <ion-icon name="information-circle-outline"></ion-icon>
-        <span>Important privacy information</span>
-      </div>
+            <ion-item>
+              <ion-label>Language</ion-label>
+              <ion-select [(ngModel)]="settings.locale" interface="action-sheet">
+                <ion-select-option value="en">English</ion-select-option>
+                <ion-select-option value="es">Español</ion-select-option>
+                <ion-select-option value="fr">Français</ion-select-option>
+                <ion-select-option value="de">Deutsch</ion-select-option>
+              </ion-select>
+            </ion-item>
+
+            <ion-item>
+              <ion-label>Time Zone</ion-label>
+              <ion-select [(ngModel)]="settings.timezone" interface="action-sheet">
+                <ion-select-option value="UTC">UTC</ion-select-option>
+                <ion-select-option value="America/New_York">Eastern Time</ion-select-option>
+                <ion-select-option value="America/Chicago">Central Time</ion-select-option>
+                <ion-select-option value="America/Denver">Mountain Time</ion-select-option>
+                <ion-select-option value="America/Los_Angeles">Pacific Time</ion-select-option>
+                <ion-select-option value="Europe/London">London</ion-select-option>
+                <ion-select-option value="Europe/Paris">Paris</ion-select-option>
+                <ion-select-option value="Asia/Tokyo">Tokyo</ion-select-option>
+              </ion-select>
+            </ion-item>
+
+            <ion-item>
+              <ion-label>Date Format</ion-label>
+              <ion-select [(ngModel)]="settings.dateFormat" interface="action-sheet">
+                <ion-select-option value="MM/DD/YYYY">MM/DD/YYYY</ion-select-option>
+                <ion-select-option value="DD/MM/YYYY">DD/MM/YYYY</ion-select-option>
+                <ion-select-option value="YYYY-MM-DD">YYYY-MM-DD</ion-select-option>
+              </ion-select>
+            </ion-item>
+
+            <ion-item>
+              <ion-label>Currency</ion-label>
+              <ion-select [(ngModel)]="settings.currencyCode" interface="action-sheet">
+                <ion-select-option value="USD">USD ($)</ion-select-option>
+                <ion-select-option value="EUR">EUR (€)</ion-select-option>
+                <ion-select-option value="GBP">GBP (£)</ion-select-option>
+                <ion-select-option value="AUD">AUD ($)</ion-select-option>
+                <ion-select-option value="CAD">CAD ($)</ion-select-option>
+                <ion-select-option value="ZAR">ZAR (R)</ion-select-option>
+              </ion-select>
+            </ion-item>
+          </ion-list>
+        </ion-card-content>
+      </ion-card>
     </ion-content>
     <rizzium-footer [appName]="'finescan'"></rizzium-footer>
   `,
@@ -505,20 +569,38 @@ import { FirebaseAuthService } from '@rizzium/shared/services';
           }
         }
       }
+
+      ion-card-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      ion-icon {
+        font-size: 24px;
+      }
     `,
   ],
 })
-export class SettingsPage {
+export class SettingsPageComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+  private firestore = inject(Firestore);
   private dataSaverService = inject(DataSaverService);
   private alertController = inject(AlertController);
   private authService = inject(FirebaseAuthService);
+  private settingsLoaded = false;
 
   settings = {
-    darkMode: false,
+    region: 'global',
+    locale: 'en',
+    timezone: 'UTC',
+    dateFormat: 'MM/DD/YYYY',
+    currencyCode: 'USD',
+    theme: 'system',
     notifications: true,
-    autoDownload: false,
-    theme: 'default',
-    language: 'en',
+    autoSave: true,
+    imageQuality: 'high',
+    privacyMode: false,
+    darkMode: false,
     dataRetention: '30',
     enhancedPrivacy: false,
   };
@@ -532,6 +614,49 @@ export class SettingsPage {
 
   settingsSaved = false;
 
+  ngOnInit() {
+    // Wait for authenticated user before loading settings
+    this.authService.user$
+      .pipe(
+        filter((user) => user !== null), // Only proceed when we have a user
+        takeUntil(this.destroy$)
+      )
+      .subscribe((user) => {
+        console.log('Auth state in settings:', user);
+        if (!this.settingsLoaded) {
+          this.loadSettings(user!.uid);
+        }
+      });
+
+    // Subscribe to data saver settings
+    this.dataSaverService.settings$.pipe(takeUntil(this.destroy$)).subscribe((settings) => {
+      this.dataSaverSettings = settings;
+    });
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private resetToDefaults() {
+    this.settings = {
+      region: 'global',
+      locale: 'en',
+      timezone: 'UTC',
+      dateFormat: 'MM/DD/YYYY',
+      currencyCode: 'USD',
+      theme: 'system',
+      notifications: true,
+      autoSave: true,
+      imageQuality: 'high',
+      privacyMode: false,
+      darkMode: false,
+      dataRetention: '30',
+      enhancedPrivacy: false,
+    };
+  }
+
   constructor() {
     addIcons({
       moonOutline,
@@ -544,12 +669,12 @@ export class SettingsPage {
       flashOutline,
       documentTextOutline,
       colorPalette,
-      speedometer,
+      speedometerOutline,
       informationCircleOutline,
       checkmarkCircleOutline,
-      checkmark,
+      checkmarkOutline,
       alertCircleOutline,
-      warning,
+      warningOutline,
       shieldCheckmarkOutline,
       eyeOffOutline,
       timeOutline,
@@ -560,39 +685,220 @@ export class SettingsPage {
       arrowForward,
       informationCircle,
     });
-    this.loadSettings();
-    this.dataSaverService.settings$.subscribe((settings) => {
-      this.dataSaverSettings = settings;
-    });
   }
 
-  loadSettings() {
-    const savedSettings = localStorage.getItem('finescan-settings');
-    if (savedSettings) {
-      this.settings = JSON.parse(savedSettings);
+  private async initializeUserSettings(userId: string): Promise<void> {
+    console.log('Initializing user settings for:', userId);
+    const userRef = doc(this.firestore, `users/${userId}`);
+    const settingsRef = doc(this.firestore, `users/${userId}/settings/preferences`);
+
+    try {
+      // First ensure user document exists
+      const userSnap = await getDoc(userRef);
+      if (!userSnap.exists()) {
+        console.log('Creating user document');
+        await setDoc(userRef, {
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+        });
+      }
+
+      // Then create settings document
+      const settingsSnap = await getDoc(settingsRef);
+      if (!settingsSnap.exists()) {
+        console.log('Creating settings document');
+        await setDoc(settingsRef, {
+          ...this.settings,
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+        });
+      }
+    } catch (error) {
+      console.error('Error initializing user settings:', error);
+      throw error;
     }
   }
 
-  async updateSettings() {
-    localStorage.setItem('finescan-settings', JSON.stringify(this.settings));
-    this.applySettings();
-    this.settingsSaved = true;
-    setTimeout(() => {
-      this.settingsSaved = false;
-    }, 2000);
+  async loadSettings(userId: string) {
+    console.log('Loading settings for user:', userId);
+    try {
+      // Initialize user and settings documents
+      await this.initializeUserSettings(userId);
 
-    // Store retention setting in Firestore
-    const user = await firstValueFrom(this.authService.user$);
-    if (user) {
-      const firestore = inject(Firestore);
-      await setDoc(
-        doc(firestore, `users/${user.uid}/settings/preferences`),
-        {
-          dataRetention: parseInt(this.settings.dataRetention, 10),
-          // ... other settings
-        },
-        { merge: true }
-      );
+      // Now load the settings
+      const settingsDoc = doc(this.firestore, `users/${userId}/settings/preferences`);
+      const settingsSnapshot = await getDoc(settingsDoc);
+
+      if (settingsSnapshot.exists()) {
+        console.log('Settings found:', settingsSnapshot.data());
+        const data = settingsSnapshot.data();
+        this.settings = {
+          ...this.settings,
+          region: this.validateRegion(data['region']),
+          locale: this.validateLocale(data['locale']),
+          timezone: this.validateTimezone(data['timezone']),
+          dateFormat: this.validateDateFormat(data['dateFormat']),
+          currencyCode: this.validateCurrencyCode(data['currencyCode']),
+          theme: data['theme'] || this.settings.theme,
+          notifications: Boolean(data['notifications']),
+          autoSave: Boolean(data['autoSave']),
+          imageQuality: data['imageQuality'] || this.settings.imageQuality,
+          privacyMode: Boolean(data['privacyMode']),
+          darkMode: Boolean(data['darkMode']),
+          dataRetention: this.validateDataRetention(data['dataRetention']),
+          enhancedPrivacy: Boolean(data['enhancedPrivacy']),
+        };
+        this.applySettings();
+      }
+      this.settingsLoaded = true;
+    } catch (error) {
+      console.error('Error loading settings:', error);
+      if (error instanceof FirebaseError) {
+        console.error('Firebase error code:', error.code);
+        console.error('Firebase error message:', error.message);
+        const alert = await this.alertController.create({
+          header: 'Settings Error',
+          message: `Error: ${error.message}`,
+          buttons: [
+            {
+              text: 'Try Again',
+              handler: () => {
+                this.loadSettings(userId);
+              },
+            },
+            {
+              text: 'Use Defaults',
+              role: 'cancel',
+              handler: () => {
+                this.resetToDefaults();
+                this.settingsLoaded = true;
+              },
+            },
+          ],
+        });
+        await alert.present();
+      } else {
+        this.resetToDefaults();
+        this.settingsLoaded = true;
+      }
+    }
+  }
+
+  // Validation methods to ensure data integrity
+  private validateRegion(region: string): string {
+    const validRegions = ['global', 'us', 'eu', 'uk', 'au', 'ca', 'za'];
+    return validRegions.includes(region) ? region : 'global';
+  }
+
+  private validateLocale(locale: string): string {
+    const validLocales = ['en', 'es', 'fr', 'de'];
+    return validLocales.includes(locale) ? locale : 'en';
+  }
+
+  private validateTimezone(timezone: string): string {
+    const validTimezones = [
+      'UTC',
+      'America/New_York',
+      'America/Chicago',
+      'America/Denver',
+      'America/Los_Angeles',
+      'Europe/London',
+      'Europe/Paris',
+      'Asia/Tokyo',
+    ];
+    return validTimezones.includes(timezone) ? timezone : 'UTC';
+  }
+
+  private validateDateFormat(format: string): string {
+    const validFormats = ['MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD'];
+    return validFormats.includes(format) ? format : 'MM/DD/YYYY';
+  }
+
+  private validateCurrencyCode(code: string): string {
+    const validCurrencies = ['USD', 'EUR', 'GBP', 'AUD', 'CAD', 'ZAR'];
+    return validCurrencies.includes(code) ? code : 'USD';
+  }
+
+  private validateDataRetention(retention: string): string {
+    const validRetentions = ['7', '30', '90'];
+    return validRetentions.includes(retention) ? retention : '30';
+  }
+
+  async updateSettings(isInitial = false) {
+    try {
+      const user = await firstValueFrom(this.authService.user$);
+      if (!user) {
+        throw new Error('No authenticated user');
+      }
+
+      const settingsDoc = doc(this.firestore, `users/${user.uid}/settings/preferences`);
+
+      // Validate all settings before saving
+      const validatedSettings = {
+        ...this.settings,
+        region: this.validateRegion(this.settings.region),
+        locale: this.validateLocale(this.settings.locale),
+        timezone: this.validateTimezone(this.settings.timezone),
+        dateFormat: this.validateDateFormat(this.settings.dateFormat),
+        currencyCode: this.validateCurrencyCode(this.settings.currencyCode),
+        dataRetention: this.validateDataRetention(this.settings.dataRetention),
+        updatedAt: Timestamp.now(),
+      };
+
+      await setDoc(settingsDoc, validatedSettings, { merge: true });
+      this.applySettings();
+
+      if (!isInitial) {
+        this.settingsSaved = true;
+        setTimeout(() => {
+          this.settingsSaved = false;
+        }, 3000);
+      }
+    } catch (error) {
+      console.error('Error updating settings:', error);
+
+      let errorMessage = 'Failed to save settings. Please try again.';
+      let buttons: AlertButton[] = [{ text: 'OK' }];
+
+      if (error instanceof FirebaseError) {
+        switch (error.code) {
+          case 'permission-denied':
+            errorMessage = 'You do not have permission to update settings. Please sign out and sign in again.';
+            buttons = [
+              {
+                text: 'Try Again',
+                handler: () => {
+                  this.updateSettings(isInitial);
+                },
+              },
+              {
+                text: 'Sign Out',
+                handler: () => {
+                  this.authService.signOut();
+                },
+              },
+            ];
+            break;
+          case 'not-found':
+            errorMessage = 'Settings document not found. Creating new settings...';
+            // Try to create the settings document
+            await setDoc(
+              doc(this.firestore, `users/${(await firstValueFrom(this.authService.user$))!.uid}/settings/preferences`),
+              this.settings,
+              { merge: false }
+            );
+            return;
+          default:
+            errorMessage = `Error: ${error.message}`;
+        }
+      }
+
+      const alert = await this.alertController.create({
+        header: 'Error',
+        message: errorMessage,
+        buttons,
+      });
+      await alert.present();
     }
   }
 
@@ -601,11 +907,30 @@ export class SettingsPage {
     document.body.classList.toggle('dark', this.settings.darkMode);
 
     // Apply theme color
-    document.body.className = document.body.className.replace(/theme-\w+/, '');
+    document.body.className = document.body.className
+      .split(' ')
+      .filter((c) => !c.startsWith('theme-'))
+      .join(' ');
     document.body.classList.add(`theme-${this.settings.theme}`);
 
-    // Apply language
-    // Implement language change logic here
+    // Apply data saver settings if enabled
+    if (this.settings.privacyMode) {
+      this.dataSaverSettings.imageQuality = 70; // Reduce image quality
+      this.updateDataSaverSettings();
+    }
+
+    // Emit settings change event for other components
+    document.dispatchEvent(
+      new CustomEvent('settingsChanged', {
+        detail: {
+          region: this.settings.region,
+          locale: this.settings.locale,
+          timezone: this.settings.timezone,
+          dateFormat: this.settings.dateFormat,
+          currencyCode: this.settings.currencyCode,
+        },
+      })
+    );
   }
 
   updateDataSaverSettings() {
