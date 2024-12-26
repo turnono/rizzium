@@ -14,7 +14,7 @@
       @if (isLoggedIn) {
       <ion-button class="user-button" (click)="showUserMenu($event)">
         <ion-icon slot="start" name="person"></ion-icon>
-        <ion-label class="hide-sm">{{ displayName }}</ion-label>
+        <ion-label class="hide-sm">{{ displayName | slice: 0:10 }}</ion-label>
       </ion-button>
       } @else {
       <ion-button class="login-button" (click)="navigateToLogin()">

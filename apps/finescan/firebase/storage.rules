@@ -12,15 +12,25 @@ service firebase.storage {
     }
 
     function isValidContentType() {
-      return request.resource.contentType.matches('image/.*');
+      return request.resource.contentType.matches('image/.*') ||
+             request.resource.contentType == 'text/plain';
     }
 
     function isValidFileSize() {
       return request.resource.size <= 10 * 1024 * 1024; // 10MB max
     }
 
-    // User uploads path - support both direct uploads and finescan-uploads
-    match /users/{userId}/{uploadType}/{fileName} {
+    // User uploads path - new structure
+    match /users/{userId}/finescan/{fileName} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId)
+        && isValidContentType()
+        && isValidFileSize();
+      allow delete: if isOwner(userId);
+    }
+
+    // Legacy path support - for cleanup function compatibility
+    match /users/{userId}/finescan-uploads/{fileName} {
       allow read: if isOwner(userId);
       allow create: if isOwner(userId)
         && isValidContentType()
