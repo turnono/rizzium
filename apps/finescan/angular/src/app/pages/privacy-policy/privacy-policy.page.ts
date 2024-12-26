@@ -163,8 +163,8 @@ import { FooterComponent } from '@rizzium/shared/ui/organisms';
             <section>
               <h2>11. Contact Us</h2>
               <p>For questions, concerns, or requests related to this Privacy Policy, please contact us at:</p>
-              <p><strong>Email:</strong> privacy&#64;finescan.co.za</p>
-              <p><strong>Address:</strong> 123 Main Street, Cape Town, 8001, South Africa</p>
+              <p><strong>Email:</strong> taajirah0&#64;gmail.com</p>
+              <p><strong>Address:</strong> 35 Klip Cresent, Eldorado Park, Soweto, 1811, Gauteng, South Africa</p>
             </section>
           </div>
         </ion-card-content>

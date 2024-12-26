@@ -30,7 +30,7 @@ export const appRoutes: Route[] = [
   },
   {
     path: 'contact',
-    loadComponent: () => import('./pages/contact-us/contact-us.page').then((m) => m.ContactUsPage),
+    loadComponent: () => import('./pages/contact-us/contact-us.page').then((m) => m.ContactUsComponent),
   },
   {
     path: 'settings',
