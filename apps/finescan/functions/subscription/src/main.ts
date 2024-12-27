@@ -6,7 +6,7 @@ import Stripe from 'stripe';
 initializeApp();
 
 const stripe = new Stripe(functions.config().stripe.secret_key, {
-  apiVersion: '2023-10-16',
+  apiVersion: '2024-12-18.acacia',
 });
 
 const db = getFirestore();
