@@ -3,28 +3,32 @@ import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 import { provideIonicAngular } from '@ionic/angular/standalone';
 import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
-import { getFirestore, provideFirestore } from '@angular/fire/firestore';
 import { getAuth, provideAuth } from '@angular/fire/auth';
-import { firebaseConfig } from './firebase-config';
+import { getFirestore, provideFirestore } from '@angular/fire/firestore';
+import { getFunctions, provideFunctions } from '@angular/fire/functions';
 import { getStorage, provideStorage } from '@angular/fire/storage';
-import { AnalysisService, DataSaverService } from '@rizzium/shared/services';
-import { AuthGuard, NotAuthGuard } from '@rizzium/shared/guards';
+import { firebaseConfig } from './firebase-config';
+import { getApp } from 'firebase/app';
+import { getStripePayments } from '@stripe/firestore-stripe-payments';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(appRoutes),
+    provideIonicAngular({}),
     provideFirebaseApp(() => initializeApp(firebaseConfig)),
+    provideAuth(() => getAuth()),
     provideFirestore(() => getFirestore()),
-    provideAuth(() => {
-      const auth = getAuth();
-      auth.useDeviceLanguage();
-      return auth;
-    }),
+    provideFunctions(() => getFunctions()),
     provideStorage(() => getStorage()),
-    provideIonicAngular(),
-    AnalysisService,
-    DataSaverService,
-    AuthGuard,
-    NotAuthGuard,
+    {
+      provide: 'STRIPE_PAYMENTS',
+      useFactory: () => {
+        const app = getApp();
+        return getStripePayments(app, {
+          productsCollection: 'products',
+          customersCollection: 'stripe_customers',
+        });
+      },
+    },
   ],
 };

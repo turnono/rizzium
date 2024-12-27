@@ -30,9 +30,50 @@ service cloud.firestore {
       let usage = get(/databases/$(database)/documents/users/$(userId)/usage/current).data;
       let user = get(/databases/$(database)/documents/users/$(userId)).data;
       return !usage.exists() ||
-             (user.plan == 'free' && usage.monthlyScans < 10) ||
-             (user.plan == 'business' && usage.monthlyScans < 1000) ||
-             (user.plan == 'enterprise');
+             (user.tier == 'free' && usage.monthlyScans < 3) ||
+             (user.tier == 'basic' && usage.monthlyScans < 20) ||
+             (user.tier == 'pro' && usage.monthlyScans < 100) ||
+             (user.tier == 'business');
+    }
+
+    function isWithinStorageLimit(userId) {
+      let usage = get(/databases/$(database)/documents/users/$(userId)/usage/current).data;
+      let user = get(/databases/$(database)/documents/users/$(userId)).data;
+      let storageLimit =
+        user.tier == 'free' ? 50 * 1024 * 1024 :
+        user.tier == 'basic' ? 200 * 1024 * 1024 :
+        user.tier == 'pro' ? 1024 * 1024 * 1024 :
+        user.tier == 'business' ? null : 0;
+
+      return storageLimit == null || !usage.exists() || usage.storageUsed < storageLimit;
+    }
+
+    // Stripe customers
+    match /stripe_customers/{uid} {
+      allow read: if request.auth.uid == uid;
+
+      match /checkout_sessions/{id} {
+        allow read, write: if request.auth.uid == uid;
+      }
+      match /subscriptions/{id} {
+        allow read: if request.auth.uid == uid;
+      }
+      match /payments/{id} {
+        allow read: if request.auth.uid == uid;
+      }
+    }
+
+    // Products and pricing
+    match /products/{id} {
+      allow read: if true;
+
+      match /prices/{id} {
+        allow read: if true;
+      }
+
+      match /tax_rates/{id} {
+        allow read: if true;
+      }
     }
 
     // Users collection and subcollections
@@ -51,13 +92,13 @@ service cloud.firestore {
       // Usage tracking
       match /usage/{usageId} {
         allow read: if isOwner(userId);
-        allow write: if isAdmin(userId) || (isOwner(userId) && isWithinUsageLimit(userId));
+        allow write: if isAdmin(userId) || (isOwner(userId) && isWithinUsageLimit(userId) && isWithinStorageLimit(userId));
       }
 
       // Nested analyses collection
       match /analyses/{analysisId} {
         allow read: if isOwner(userId);
-        allow create: if isOwner(userId) && isWithinUsageLimit(userId);
+        allow create: if isOwner(userId) && isWithinUsageLimit(userId) && isWithinStorageLimit(userId);
         allow update: if isOwner(userId);
         allow delete: if isOwner(userId);
       }

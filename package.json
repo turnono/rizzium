@@ -19,6 +19,8 @@
     "@capacitor/camera": "^6.1.2",
     "@capacitor/core": "6.1.2",
     "@ionic/angular": "latest",
+    "@stripe/firestore-stripe-payments": "^0.0.6",
+    "@stripe/stripe-js": "^5.4.0",
     "@types/stripe": "^8.0.416",
     "dayjs": "^1.11.13",
     "dotenv": "^16.4.5",
