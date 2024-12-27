@@ -10,17 +10,58 @@ import PaystackPop from '@paystack/inline-js';
 interface PaystackResponse {
   reference: string;
   status: string;
-  trans: string;
-  message?: string;
-  transaction?: string;
+  message: string;
+  transaction: string;
+  trxref: string;
+  redirecturl?: string;
 }
 
 interface PaystackVerifyResponse {
-  status: string;
-  amount: number;
-  customer: {
-    email: string;
-    metadata?: Record<string, unknown>;
+  status: boolean;
+  message: string;
+  data: {
+    id: number;
+    status: string;
+    reference: string;
+    amount: number;
+    gateway_response: string;
+    paid_at: string;
+    created_at: string;
+    channel: string;
+    currency: string;
+    ip_address: string;
+    customer: {
+      id: number;
+      first_name: string | null;
+      last_name: string | null;
+      email: string;
+      customer_code: string;
+      phone: string | null;
+      metadata: Record<string, unknown>;
+      risk_action: string;
+    };
+    authorization: {
+      authorization_code: string;
+      bin: string;
+      last4: string;
+      exp_month: string;
+      exp_year: string;
+      card_type: string;
+      bank: string;
+      country_code: string;
+      brand: string;
+      reusable: boolean;
+    };
+    plan: string | null;
+    split: Record<string, unknown> | null;
+    subaccount: Record<string, unknown> | null;
+    metadata: {
+      custom_fields: Array<{
+        display_name: string;
+        variable_name: string;
+        value: string | number;
+      }>;
+    };
   };
 }
 
@@ -30,7 +71,26 @@ export interface PaystackTransaction {
   amount: number;
   planId: string;
   createdAt: Date;
-  metadata?: Record<string, unknown>;
+  customerEmail: string;
+  metadata?: {
+    custom_fields: Array<{
+      display_name: string;
+      variable_name: string;
+      value: string | number;
+    }>;
+  };
+  authorization?: {
+    authorization_code: string;
+    bin: string;
+    last4: string;
+    exp_month: string;
+    exp_year: string;
+    card_type: string;
+    bank: string;
+    country_code: string;
+    brand: string;
+    reusable: boolean;
+  };
 }
 
 interface PaystackOptions {
@@ -121,7 +181,7 @@ export class PaystackService {
       );
       const { data } = await verifyPayment({ reference });
 
-      if (data.status === 'success') {
+      if (data.data.status === 'success') {
         // Update user's subscription
         const subscriptionRef = doc(this.firestore, `users/${user.uid}/subscriptions/current`);
         const subscriptionData = {
@@ -132,8 +192,9 @@ export class PaystackService {
           autoRenew: true,
           paystackReference: reference,
           lastPaymentDate: new Date(),
-          customerEmail: data.customer.email,
-          customerMetadata: data.customer.metadata,
+          customerEmail: data.data.customer.email,
+          customerMetadata: data.data.customer.metadata,
+          authorization: data.data.authorization,
         };
 
         await setDoc(subscriptionRef, subscriptionData);
@@ -143,11 +204,12 @@ export class PaystackService {
         await setDoc(transactionRef, {
           reference,
           status: 'success',
-          amount: data.amount / 100, // Convert from kobo back to main currency
+          amount: data.data.amount / 100, // Convert from kobo back to main currency
           planId,
           createdAt: new Date(),
-          customerEmail: data.customer.email,
-          metadata: data.customer.metadata,
+          customerEmail: data.data.customer.email,
+          metadata: data.data.metadata,
+          authorization: data.data.authorization,
         } as PaystackTransaction);
       } else {
         throw new Error('Payment verification failed');
