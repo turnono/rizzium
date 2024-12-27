@@ -21,6 +21,20 @@ service cloud.firestore {
       return hasRole('admin', userId);
     }
 
+    function hasActiveSubscription(userId) {
+      let user = get(/databases/$(database)/documents/users/$(userId)).data;
+      return user.subscriptionStatus == 'active' && user.subscriptionEndDate > request.time;
+    }
+
+    function isWithinUsageLimit(userId) {
+      let usage = get(/databases/$(database)/documents/users/$(userId)/usage/current).data;
+      let user = get(/databases/$(database)/documents/users/$(userId)).data;
+      return !usage.exists() ||
+             (user.plan == 'free' && usage.monthlyScans < 10) ||
+             (user.plan == 'business' && usage.monthlyScans < 1000) ||
+             (user.plan == 'enterprise');
+    }
+
     // Users collection and subcollections
     match /users/{userId} {
       allow read: if isOwner(userId);
@@ -28,21 +42,31 @@ service cloud.firestore {
       allow update: if isOwner(userId) || isAdmin(userId);
       allow delete: if isAdmin(userId);
 
+      // Subscription management
+      match /subscriptions/{subscriptionId} {
+        allow read: if isOwner(userId);
+        allow write: if isAdmin(userId);
+      }
+
+      // Usage tracking
+      match /usage/{usageId} {
+        allow read: if isOwner(userId);
+        allow write: if isAdmin(userId) || (isOwner(userId) && isWithinUsageLimit(userId));
+      }
+
       // Nested analyses collection
       match /analyses/{analysisId} {
         allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
+        allow create: if isOwner(userId) && isWithinUsageLimit(userId);
         allow update: if isOwner(userId);
         allow delete: if isOwner(userId);
       }
+    }
 
-      // Nested settings collection
-      match /settings/{settingId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update: if isOwner(userId);
-        allow delete: if isOwner(userId);
-      }
+    // Subscription plans
+    match /plans/{planId} {
+      allow read: if true;
+      allow write: if isAdmin(request.auth.uid);
     }
   }
 }

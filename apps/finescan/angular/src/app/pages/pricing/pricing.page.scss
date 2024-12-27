@@ -1,0 +1,62 @@
+.pricing-header {
+  margin-bottom: 2rem;
+  h1 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+  }
+  p {
+    color: var(--ion-color-medium);
+    font-size: 1.1rem;
+  }
+}
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  padding: 1rem;
+}
+
+ion-card {
+  position: relative;
+  &.featured {
+    border: 2px solid var(--ion-color-primary);
+    transform: scale(1.02);
+  }
+}
+
+.featured-badge {
+  position: absolute;
+  top: -12px;
+  right: 20px;
+  z-index: 1;
+}
+
+.price {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--ion-color-dark);
+}
+
+.plan-limits {
+  margin: 1rem 0;
+  border-top: 1px solid var(--ion-color-light);
+  padding-top: 1rem;
+}
+
+ion-item {
+  --padding-start: 0;
+  ion-icon {
+    margin-right: 0.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .pricing-grid {
+    grid-template-columns: 1fr;
+  }
+  ion-card.featured {
+    transform: none;
+  }
+}
