@@ -6,6 +6,7 @@
   "implicitDependencies": [
     "finescan-functions-cleanup",
     "finescan-functions-document-analysis",
+    "finescan-functions-payment",
     "finescan-functions-user"
   ],
   "targets": {
