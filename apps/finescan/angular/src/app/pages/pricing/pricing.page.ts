@@ -71,6 +71,7 @@ export class PricingPageComponent implements OnInit {
 
   plans$: Observable<SubscriptionPlan[]>;
   currentPlan$: Observable<SubscriptionPlan | null>;
+  readonly Infinity = Infinity;
 
   constructor() {
     addIcons({
@@ -110,9 +111,17 @@ export class PricingPageComponent implements OnInit {
       return;
     }
 
+    if (!plan.stripePriceId) {
+      // Handle free plan or business plan (contact sales)
+      if (plan.tier === 'business') {
+        // Redirect to contact sales page or show modal
+        this.router.navigate(['/contact']);
+      }
+      return;
+    }
+
     try {
-      await this.subscriptionService.upgradePlan(plan.id);
-      this.router.navigate(['/settings']);
+      await this.subscriptionService.upgradePlan(plan.stripePriceId);
     } catch (error) {
       console.error('Error upgrading plan:', error);
       // Handle error (show toast or alert)

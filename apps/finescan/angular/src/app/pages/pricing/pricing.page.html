@@ -15,8 +15,8 @@
 
     <div class="pricing-grid">
         @for (plan of plans$ | async; track plan.id) {
-        <ion-card [class.featured]="plan.name === 'Business'">
-            @if (plan.name === 'Business') {
+        <ion-card [class.featured]="plan.isPopular">
+            @if (plan.isPopular) {
             <ion-badge color="primary" class="featured-badge">
                 Most Popular
             </ion-badge>
@@ -24,7 +24,13 @@
             <ion-card-header>
                 <ion-card-title>{{ plan.name }}</ion-card-title>
                 <ion-card-subtitle>
+                    @if (plan.price === 0) {
+                    <span class="price">Free</span>
+                    } @else if (plan.price === null) {
+                    <span class="price">Contact Sales</span>
+                    } @else {
                     <span class="price">${{ plan.price }}/month</span>
+                    }
                 </ion-card-subtitle>
             </ion-card-header>
 
@@ -41,11 +47,23 @@
                 <div class="plan-limits">
                     <ion-item lines="none">
                         <ion-icon name="flash-outline" slot="start"></ion-icon>
-                        <ion-label>{{ plan.scanLimit }} scans/month</ion-label>
+                        <ion-label>
+                            @if (plan.scanLimit === Infinity) {
+                            Unlimited scans
+                            } @else {
+                            {{ plan.scanLimit }} scans/month
+                            }
+                        </ion-label>
                     </ion-item>
                     <ion-item lines="none">
                         <ion-icon name="server-outline" slot="start"></ion-icon>
-                        <ion-label>{{ formatStorage(plan.storageLimit) }} storage</ion-label>
+                        <ion-label>
+                            @if (plan.storageLimit === Infinity) {
+                            Unlimited storage
+                            } @else {
+                            {{ formatStorage(plan.storageLimit) }} storage
+                            }
+                        </ion-label>
                     </ion-item>
                     <ion-item lines="none">
                         <ion-icon name="time-outline" slot="start"></ion-icon>
@@ -53,9 +71,17 @@
                     </ion-item>
                 </div>
 
-                <ion-button expand="block" [color]="plan.name === 'Business' ? 'primary' : 'medium'"
-                    (click)="selectPlan(plan)" [disabled]="(currentPlan$ | async)?.id === plan.id">
-                    {{ (currentPlan$ | async)?.id === plan.id ? 'Current Plan' : 'Select Plan' }}
+                <ion-button expand="block" [color]="plan.isPopular ? 'primary' : 'medium'" (click)="selectPlan(plan)"
+                    [disabled]="(currentPlan$ | async)?.id === plan.id">
+                    @if ((currentPlan$ | async)?.id === plan.id) {
+                    Current Plan
+                    } @else if (plan.tier === 'business') {
+                    Contact Sales
+                    } @else if (plan.tier === 'free') {
+                    Get Started
+                    } @else {
+                    Upgrade Now
+                    }
                 </ion-button>
             </ion-card-content>
         </ion-card>
