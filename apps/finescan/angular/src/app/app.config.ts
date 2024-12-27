@@ -8,8 +8,6 @@ import { getFirestore, provideFirestore } from '@angular/fire/firestore';
 import { getFunctions, provideFunctions } from '@angular/fire/functions';
 import { getStorage, provideStorage } from '@angular/fire/storage';
 import { firebaseConfig } from './firebase-config';
-import { getApp } from 'firebase/app';
-import { getStripePayments } from '@stripe/firestore-stripe-payments';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -20,15 +18,5 @@ export const appConfig: ApplicationConfig = {
     provideFirestore(() => getFirestore()),
     provideFunctions(() => getFunctions()),
     provideStorage(() => getStorage()),
-    {
-      provide: 'STRIPE_PAYMENTS',
-      useFactory: () => {
-        const app = getApp();
-        return getStripePayments(app, {
-          productsCollection: 'products',
-          customersCollection: 'stripe_customers',
-        });
-      },
-    },
   ],
 };

@@ -1,12 +1,10 @@
 import { Injectable, inject } from '@angular/core';
-import { Firestore, doc, getDoc, collection, getDocs } from '@angular/fire/firestore';
-import { Functions, httpsCallable } from '@angular/fire/functions';
+import { Firestore, doc, getDoc, collection, getDocs, setDoc } from '@angular/fire/firestore';
+import { Functions } from '@angular/fire/functions';
 import { Observable, from, of, throwError } from 'rxjs';
 import { map, catchError, switchMap } from 'rxjs/operators';
 import { FirebaseAuthService } from './firebase-auth.service';
-import { getStripePayments, createCheckoutSession } from '@stripe/firestore-stripe-payments';
-import type { Stripe } from '@stripe/stripe-js';
-import { getApp } from 'firebase/app';
+import { PaystackService } from './paystack.service';
 
 export type PlanTier = 'free' | 'basic' | 'pro' | 'business';
 
@@ -20,7 +18,6 @@ export interface SubscriptionPlan {
   storageLimit: number;
   aiModel: 'gpt-3.5-turbo' | 'gpt-4';
   retentionDays: number;
-  stripePriceId?: string;
   description: string;
   isPopular?: boolean;
 }
@@ -32,8 +29,7 @@ export interface UserSubscription {
   startDate: Date;
   endDate: Date;
   autoRenew: boolean;
-  stripeSubscriptionId?: string;
-  stripeCustomerId?: string;
+  paystackReference?: string;
 }
 
 export interface UsageStats {
@@ -51,15 +47,7 @@ export class SubscriptionService {
   private firestore = inject(Firestore);
   private functions = inject(Functions);
   private authService = inject(FirebaseAuthService);
-  private payments: ReturnType<typeof getStripePayments>;
-
-  constructor() {
-    const app = getApp();
-    this.payments = getStripePayments(app, {
-      productsCollection: 'products',
-      customersCollection: 'stripe_customers',
-    });
-  }
+  private paystackService = inject(PaystackService);
 
   getAvailablePlans(): Observable<SubscriptionPlan[]> {
     const plansRef = collection(this.firestore, 'products');
@@ -80,7 +68,7 @@ export class SubscriptionService {
     return this.authService.user$.pipe(
       switchMap((user) => {
         if (!user) return of(null);
-        const subscriptionRef = doc(this.firestore, `stripe_customers/${user.uid}/subscriptions/current`);
+        const subscriptionRef = doc(this.firestore, `users/${user.uid}/subscriptions/current`);
         return from(getDoc(subscriptionRef)).pipe(
           map((doc) => (doc.exists() ? (doc.data() as UserSubscription) : null))
         );
@@ -88,30 +76,37 @@ export class SubscriptionService {
     );
   }
 
-  async upgradePlan(priceId: string): Promise<void> {
+  async upgradePlan(planId: string): Promise<void> {
     const user = await this.authService.getCurrentUser();
     if (!user) throw new Error('User must be authenticated');
 
     try {
-      const session = await createCheckoutSession(this.payments, {
-        price: priceId,
-        success_url: window.location.origin + '/settings',
-        cancel_url: window.location.origin + '/pricing',
-      });
+      // Get plan details
+      const planRef = doc(this.firestore, `products/${planId}`);
+      const planDoc = await getDoc(planRef);
+      if (!planDoc.exists()) throw new Error('Plan not found');
 
-      window.location.assign(session.url);
+      const plan = planDoc.data() as SubscriptionPlan;
+      if (plan.price === 0) {
+        // Handle free plan
+        const subscriptionRef = doc(this.firestore, `users/${user.uid}/subscriptions/current`);
+        await setDoc(subscriptionRef, {
+          planId,
+          tier: plan.tier,
+          status: 'active',
+          startDate: new Date(),
+          endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+          autoRenew: true,
+        } as UserSubscription);
+        return;
+      }
+
+      // Initialize Paystack payment
+      await this.paystackService.initializePayment(plan.price, planId, user.email || '');
     } catch (error) {
-      console.error('Error creating checkout session:', error);
+      console.error('Error upgrading plan:', error);
       throw error;
     }
-  }
-
-  async openCustomerPortal(): Promise<void> {
-    const portalFunction = httpsCallable(this.functions, 'ext-firestore-stripe-payments-createPortalLink');
-    const { data } = await portalFunction({
-      returnUrl: window.location.origin + '/settings',
-    });
-    window.location.assign((data as { url: string }).url);
   }
 
   getUsageStats(): Observable<UsageStats> {
