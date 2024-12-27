@@ -5,7 +5,7 @@ import { Functions, httpsCallable } from '@angular/fire/functions';
 import { from, Observable, switchMap, throwError } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { paystackConfig } from '../../../../../apps/finescan/angular/src/app/paystack.config';
-import { PaystackPop } from '@paystack/inline-js';
+import PaystackPop from '@paystack/inline-js';
 
 interface PaystackResponse {
   reference: string;
@@ -33,6 +33,24 @@ export interface PaystackTransaction {
   metadata?: Record<string, unknown>;
 }
 
+interface PaystackOptions {
+  key: string;
+  email: string;
+  amount: number;
+  ref: string;
+  currency: string;
+  channels: Array<'card' | 'bank_transfer' | 'ussd' | 'qr' | 'mobile_money'>;
+  metadata: {
+    custom_fields: Array<{
+      display_name: string;
+      variable_name: string;
+      value: string | number;
+    }>;
+  };
+  onSuccess: (response: PaystackResponse) => void;
+  onCancel: () => void;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -42,12 +60,7 @@ export class PaystackService {
   private authService = inject(FirebaseAuthService);
   private config = paystackConfig;
 
-  async initializePayment(
-    amount: number,
-    planId: string,
-    email: string,
-    metadata?: Record<string, unknown>
-  ): Promise<void> {
+  async initializePayment(amount: number, planId: string, email: string): Promise<void> {
     const user = await this.authService.getCurrentUser();
     if (!user) throw new Error('User must be authenticated');
 
@@ -61,15 +74,24 @@ export class PaystackService {
       const handler = new PaystackPop();
       handler.newTransaction({
         key: this.config.publicKey,
-        email: email,
+        email,
         amount: amount * 100, // Convert to kobo
         ref: reference,
         currency: 'NGN',
-        channels: ['card', 'bank', 'ussd', 'qr', 'mobile_money', 'bank_transfer'],
+        channels: ['card', 'bank_transfer', 'ussd', 'qr', 'mobile_money'],
         metadata: {
-          planId,
-          userId: user.uid,
-          ...metadata,
+          custom_fields: [
+            {
+              display_name: 'Plan ID',
+              variable_name: 'plan_id',
+              value: planId,
+            },
+            {
+              display_name: 'User ID',
+              variable_name: 'user_id',
+              value: user.uid,
+            },
+          ],
         },
         onSuccess: async (response: PaystackResponse) => {
           if (response.status === 'success') {
@@ -81,7 +103,7 @@ export class PaystackService {
         onCancel: () => {
           console.log('Payment window closed');
         },
-      });
+      } as PaystackOptions);
     } catch (error) {
       console.error('Error initializing payment:', error);
       throw new Error('Failed to initialize payment. Please try again.');

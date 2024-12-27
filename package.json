@@ -76,6 +76,7 @@
     "@swc/helpers": "~0.5.11",
     "@types/jest": "^29.5.12",
     "@types/node": "18.16.9",
+    "@types/paystack__inline-js": "^1.0.0",
     "@typescript-eslint/utils": "^7.16.0",
     "angular-eslint": "^18.3.0",
     "cypress": "^13.17.0",
