@@ -353,18 +353,18 @@ async function updateAnalysisDocument(userId: string, imageUrl: string, analysis
 
   // Create a clean version of the analysis object without undefined values
   const cleanAnalysis = {
-    riskLevel: analysis.riskLevel,
+    riskLevel: analysis.riskLevel || 'LOW',
     summary: {
-      riskLevel: analysis.summary.riskLevel,
-      description: analysis.summary.description,
-      recommendations: analysis.summary.recommendations,
-      containsSensitiveInfo: analysis.summary.containsSensitiveInfo || false,
+      riskLevel: analysis.summary?.riskLevel || 'LOW',
+      description: analysis.summary?.description || 'No description provided',
+      recommendations: analysis.summary?.recommendations || [],
+      containsSensitiveInfo: analysis.summary?.containsSensitiveInfo || false,
     },
     flags: (analysis.flags || []).map((flag) => ({
-      start: flag.start,
-      end: flag.end,
-      reason: flag.reason,
-      riskLevel: flag.riskLevel,
+      start: flag.start || 0,
+      end: flag.end || 0,
+      reason: flag.reason || 'Unknown reason',
+      riskLevel: flag.riskLevel || 'LOW',
     })),
   };
 
