@@ -367,16 +367,18 @@ function sanitizeAnalysisResponse(analysis: AnalysisResult): AnalysisResult {
   ];
 
   let sanitizedText = analysis.text;
-  sensitivePatterns.forEach((pattern) => {
-    sanitizedText = sanitizedText.replace(pattern, '[REDACTED]');
-  });
+  if (sanitizedText) {
+    sensitivePatterns.forEach((pattern) => {
+      sanitizedText = sanitizedText!.replace(pattern, '[REDACTED]');
+    });
+  }
 
   return {
     ...analysis,
     text: sanitizedText,
     summary: {
       ...analysis.summary,
-      containsSensitiveInfo: sensitivePatterns.some((pattern) => pattern.test(analysis.text)),
+      containsSensitiveInfo: sanitizedText ? sensitivePatterns.some((pattern) => pattern.test(sanitizedText)) : false,
     },
   };
 }
