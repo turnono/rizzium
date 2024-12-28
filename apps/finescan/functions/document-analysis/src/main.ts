@@ -360,7 +360,7 @@ async function updateAnalysisDocument(userId: string, imageUrl: string, analysis
       recommendations: analysis.summary.recommendations,
       containsSensitiveInfo: analysis.summary.containsSensitiveInfo || false,
     },
-    flags: analysis.flags.map((flag) => ({
+    flags: (analysis.flags || []).map((flag) => ({
       start: flag.start,
       end: flag.end,
       reason: flag.reason,
