@@ -26,26 +26,41 @@ service cloud.firestore {
       return user.subscriptionStatus == 'active' && user.subscriptionEndDate > request.time;
     }
 
-    function isWithinUsageLimit(userId) {
-      let usage = get(/databases/$(database)/documents/users/$(userId)/usage/current).data;
+    function getUserTier(userId) {
       let user = get(/databases/$(database)/documents/users/$(userId)).data;
-      return !usage.exists() ||
-             (user.tier == 'free' && usage.monthlyScans < 3) ||
-             (user.tier == 'basic' && usage.monthlyScans < 20) ||
-             (user.tier == 'pro' && usage.monthlyScans < 100) ||
-             (user.tier == 'business');
+      return user.tier;
+    }
+
+    function getMonthlyScans(userId) {
+      let usagePath = /databases/$(database)/documents/users/$(userId)/usage/current;
+      return exists(usagePath) ? get(usagePath).data.monthlyScans : 0;
+    }
+
+    function getStorageUsed(userId) {
+      let usagePath = /databases/$(database)/documents/users/$(userId)/usage/current;
+      return exists(usagePath) ? get(usagePath).data.storageUsed : 0;
+    }
+
+    function isWithinUsageLimit(userId) {
+      let tier = getUserTier(userId);
+      let scans = getMonthlyScans(userId);
+
+      return tier == 'business' ||
+             (tier == 'free' && scans < 3) ||
+             (tier == 'basic' && scans < 20) ||
+             (tier == 'pro' && scans < 100);
     }
 
     function isWithinStorageLimit(userId) {
-      let usage = get(/databases/$(database)/documents/users/$(userId)/usage/current).data;
-      let user = get(/databases/$(database)/documents/users/$(userId)).data;
+      let tier = getUserTier(userId);
+      let used = getStorageUsed(userId);
       let storageLimit =
-        user.tier == 'free' ? 50 * 1024 * 1024 :
-        user.tier == 'basic' ? 200 * 1024 * 1024 :
-        user.tier == 'pro' ? 1024 * 1024 * 1024 :
-        user.tier == 'business' ? null : 0;
+        tier == 'free' ? 50 * 1024 * 1024 :
+        tier == 'basic' ? 200 * 1024 * 1024 :
+        tier == 'pro' ? 1024 * 1024 * 1024 :
+        tier == 'business' ? null : 0;
 
-      return storageLimit == null || !usage.exists() || usage.storageUsed < storageLimit;
+      return storageLimit == null || used < storageLimit;
     }
 
     // Stripe customers
@@ -97,13 +112,24 @@ service cloud.firestore {
       // Usage tracking
       match /usage/{usageId} {
         allow read: if isOwner(userId);
-        allow write: if isAdmin(userId) || (isOwner(userId) && isWithinUsageLimit(userId) && isWithinStorageLimit(userId));
+        allow create: if isOwner(userId);
+        allow update: if isAdmin(userId) || (
+          isOwner(userId) &&
+          (
+            !exists(/databases/$(database)/documents/users/$(userId)/usage/$(usageId)) ||
+            (isWithinUsageLimit(userId) && isWithinStorageLimit(userId))
+          )
+        );
+        allow delete: if isAdmin(userId);
       }
 
       // Nested analyses collection
       match /analyses/{analysisId} {
         allow read: if isOwner(userId);
-        allow create: if isOwner(userId) && isWithinUsageLimit(userId) && isWithinStorageLimit(userId);
+        allow create: if isOwner(userId) && (
+          !exists(/databases/$(database)/documents/users/$(userId)/usage/current) ||
+          (isWithinUsageLimit(userId) && isWithinStorageLimit(userId))
+        );
         allow update: if isOwner(userId);
         allow delete: if isOwner(userId);
       }
