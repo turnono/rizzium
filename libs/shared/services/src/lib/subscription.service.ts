@@ -1,10 +1,11 @@
 import { Injectable, inject } from '@angular/core';
-import { Firestore, doc, getDoc, collection, getDocs, setDoc } from '@angular/fire/firestore';
+import { Firestore, doc, getDoc, setDoc } from '@angular/fire/firestore';
 import { Functions } from '@angular/fire/functions';
 import { Observable, from, of, throwError } from 'rxjs';
 import { map, catchError, switchMap } from 'rxjs/operators';
 import { FirebaseAuthService } from './firebase-auth.service';
 import { PaystackService } from './paystack.service';
+import { SUBSCRIPTION_PLANS, Plan } from './plans.config';
 
 export type PlanTier = 'free' | 'basic' | 'pro' | 'business';
 
@@ -49,19 +50,8 @@ export class SubscriptionService {
   private authService = inject(FirebaseAuthService);
   private paystackService = inject(PaystackService);
 
-  getAvailablePlans(): Observable<SubscriptionPlan[]> {
-    const plansRef = collection(this.firestore, 'products');
-    return from(getDocs(plansRef)).pipe(
-      map((snapshot) =>
-        snapshot.docs.map(
-          (doc) =>
-            ({
-              id: doc.id,
-              ...doc.data(),
-            } as SubscriptionPlan)
-        )
-      )
-    );
+  getAvailablePlans(): Observable<Plan[]> {
+    return of(SUBSCRIPTION_PLANS);
   }
 
   getCurrentSubscription(): Observable<UserSubscription | null> {
@@ -81,17 +71,14 @@ export class SubscriptionService {
     if (!user) throw new Error('User must be authenticated');
 
     try {
-      // Get plan details
-      const planRef = doc(this.firestore, `products/${planId}`);
-      const planDoc = await getDoc(planRef);
-      if (!planDoc.exists()) throw new Error('Plan not found');
+      const plan = SUBSCRIPTION_PLANS.find((p) => p.id === planId);
+      if (!plan) throw new Error('Invalid plan selected');
 
-      const plan = planDoc.data() as SubscriptionPlan;
       if (plan.price === 0) {
         // Handle free plan
         const subscriptionRef = doc(this.firestore, `users/${user.uid}/subscriptions/current`);
         await setDoc(subscriptionRef, {
-          planId,
+          planId: plan.id,
           tier: plan.tier,
           status: 'active',
           startDate: new Date(),
@@ -102,7 +89,7 @@ export class SubscriptionService {
       }
 
       // Initialize Paystack payment
-      await this.paystackService.initializePayment(plan.price, planId, user.email || '');
+      await this.paystackService.initializePayment(planId, user.email || '');
     } catch (error) {
       console.error('Error upgrading plan:', error);
       throw error;

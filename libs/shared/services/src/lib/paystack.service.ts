@@ -6,6 +6,7 @@ import { from, Observable, switchMap, throwError } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { paystackConfig } from '../../../../../apps/finescan/angular/src/app/paystack.config';
 import PaystackPop from '@paystack/inline-js';
+import { SUBSCRIPTION_PLANS } from './plans.config';
 
 interface PaystackResponse {
   reference: string;
@@ -120,13 +121,16 @@ export class PaystackService {
   private authService = inject(FirebaseAuthService);
   private config = paystackConfig;
 
-  async initializePayment(amount: number, planId: string, email: string): Promise<void> {
+  async initializePayment(planId: string, email: string): Promise<void> {
     const user = await this.authService.getCurrentUser();
     if (!user) throw new Error('User must be authenticated');
 
     if (!this.config.publicKey) {
       throw new Error('Paystack public key not configured');
     }
+
+    const plan = SUBSCRIPTION_PLANS.find((p) => p.id === planId);
+    if (!plan) throw new Error('Invalid plan selected');
 
     const reference = `PAY-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
@@ -135,10 +139,11 @@ export class PaystackService {
       handler.newTransaction({
         key: this.config.publicKey,
         email,
-        amount: amount * 100, // Convert to kobo
+        amount: plan.price * 100, // Convert to cents
         ref: reference,
-        currency: 'NGN',
-        channels: ['card', 'bank_transfer', 'ussd', 'qr', 'mobile_money'],
+        plan: plan.planCode, // Use the Paystack plan code
+        currency: 'ZAR',
+        channels: ['card', 'bank_transfer'],
         metadata: {
           custom_fields: [
             {
