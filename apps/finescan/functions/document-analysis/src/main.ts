@@ -101,13 +101,17 @@ async function processAndAnalyzeDocument(
         content: [
           {
             type: 'text',
-            text: prompt,
+            text: `${prompt}\n\nIMPORTANT: Respond with a JSON object. You must format your entire response as a valid JSON object following the exact format specified above.`,
           },
         ],
       },
       {
         role: 'user',
         content: [
+          {
+            type: 'text',
+            text: 'Analyze this image and provide your analysis as a JSON object:',
+          },
           {
             type: 'image_url',
             image_url: {
@@ -214,6 +218,7 @@ export const analyzeDocument = functions.https.onCall(async (data: AnalysisReque
          - No financial exposure
 
       5. Response Format:
+         You must respond with a valid JSON object in the following format:
          For invalid content:
          {
            "error": true,
@@ -224,11 +229,24 @@ export const analyzeDocument = functions.https.onCall(async (data: AnalysisReque
            ]
          }
 
-         For valid content, follow AnalysisResult interface with:
-         - Clear risk level justification
-         - Specific recommendations for improvement
-         - Detailed explanation of findings
-         - Properly formatted flags with precise locations
+         For valid content:
+         {
+           "riskLevel": "HIGH" | "MEDIUM" | "LOW",
+           "summary": {
+             "riskLevel": "HIGH" | "MEDIUM" | "LOW",
+             "description": "string",
+             "recommendations": ["string"],
+             "containsSensitiveInfo": boolean
+           },
+           "flags": [
+             {
+               "start": number,
+               "end": number,
+               "reason": "string",
+               "riskLevel": "HIGH" | "MEDIUM" | "LOW"
+             }
+           ]
+         }
     `;
 
     // Modify the analysis prompt with specific instructions
@@ -252,10 +270,12 @@ export const analyzeDocument = functions.https.onCall(async (data: AnalysisReque
          - Consider practical implementation
 
       4. Quality Checks:
-         - Ensure all responses follow the AnalysisResult interface
+         - Ensure response is a valid JSON object
          - Verify risk levels match the defined criteria
          - Confirm all flags have precise locations
          - Validate recommendations are relevant and specific
+
+      Remember: Your response must be a valid JSON object following the format specified above.
     `;
 
     // Use the new implementation
@@ -397,11 +417,11 @@ async function analyzeTextContent(
       messages: [
         {
           role: 'system',
-          content: prompt,
+          content: `${prompt}\n\nIMPORTANT: Respond with a JSON object. You must format your entire response as a valid JSON object following the exact format specified above.`,
         },
         {
           role: 'user',
-          content: `Analyze this text content: ${text}`,
+          content: `Analyze this text content and provide your analysis as a JSON object: ${text}`,
         },
       ],
       temperature: 1,

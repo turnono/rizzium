@@ -1,0 +1,91 @@
+<mxfile host="65bd71144e">
+    <diagram name="Finescan Flow" id="finescan-flow">
+        <mxGraphModel dx="1225" dy="593" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="state-1" value="1: HOME&#10;&#10;IN: -&#10;OUT: RouteSelection, AuthState&#10;Online/Offline Status" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#6610f2;strokeColor=#6f42c1;fontColor=#FFFFFF;align=center;verticalAlign=middle;spacing=8;spacingTop=0;" parent="1" vertex="1">
+                    <mxGeometry x="30" y="30" width="160" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="state-2" value="2: LOGIN&#10;&#10;IN: Credentials, ReturnUrl&#10;OUT: AuthToken" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#007bff;strokeColor=#00d4ff;fontColor=#FFFFFF;align=center;verticalAlign=middle;spacing=8;spacingTop=0;" parent="1" vertex="1">
+                    <mxGeometry x="310" y="30" width="160" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="state-3" value="3: FILE_UPLOAD&#10;&#10;IN: File, AuthToken&#10;OUT: UploadID" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#28a745;strokeColor=#98ff98;fontColor=#FFFFFF;align=center;verticalAlign=middle;spacing=8;spacingTop=0;dashed=1;" parent="1" vertex="1">
+                    <mxGeometry x="510" y="30" width="160" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="state-4" value="4: REPORTS&#10;&#10;IN: UploadID, AuthToken&#10;OUT: AnalysisResults" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#17a2b8;strokeColor=#90e0ef;fontColor=#FFFFFF;align=center;verticalAlign=middle;spacing=8;spacingTop=0;dashed=1;" parent="1" vertex="1">
+                    <mxGeometry x="710" y="30" width="160" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="state-5" value="5: SETTINGS&#10;&#10;IN: AuthToken&#10;OUT: UserPreferences" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#6c757d;strokeColor=#adb5bd;fontColor=#FFFFFF;align=center;verticalAlign=middle;spacing=8;spacingTop=0;dashed=1;" parent="1" vertex="1">
+                    <mxGeometry x="640" y="170" width="160" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="state-6" value="6: PRICING&#10;&#10;IN: AuthState&#10;OUT: SelectedPlan, BusinessContact" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#fd7e14;strokeColor=#ffd700;fontColor=#FFFFFF;align=center;verticalAlign=middle;spacing=8;spacingTop=0;" parent="1" vertex="1">
+                    <mxGeometry x="910" y="320" width="160" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="state-7" value="7: PRIVACY_POLICY&#10;&#10;IN: Language&#10;OUT: PolicyContent" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#6c757d;strokeColor=#adb5bd;fontColor=#FFFFFF;align=center;verticalAlign=middle;spacing=8;spacingTop=0;" parent="1" vertex="1">
+                    <mxGeometry x="50" y="300" width="160" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="state-8" value="8: TERMS_OF_SERVICE&#10;&#10;IN: Language&#10;OUT: TermsContent" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#6c757d;strokeColor=#adb5bd;fontColor=#FFFFFF;align=center;verticalAlign=middle;spacing=8;spacingTop=0;" parent="1" vertex="1">
+                    <mxGeometry x="310" y="350" width="160" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="state-9" value="9: CONTACT_US&#10;&#10;IN: UserQuery, BusinessPlan?&#10;OUT: SupportTicket" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#20c997;strokeColor=#98ff98;fontColor=#FFFFFF;align=center;verticalAlign=middle;spacing=8;spacingTop=0;" parent="1" vertex="1">
+                    <mxGeometry x="490" y="450" width="160" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-1-2" value="Route: /login&#10;→ RouteSelection" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;curved=1;" parent="1" source="state-1" target="state-2" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-2-3" value="→ AuthToken" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;curved=1;" parent="1" source="state-2" target="state-3" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-3-4" value="→ UploadID" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;curved=1;" parent="1" source="state-3" target="state-4" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-4-5" value="→ AuthToken" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;entryX=1;entryY=0.5;curved=1;" parent="1" source="state-4" target="state-5" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-1-5" value="User Menu → Settings" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.75;entryX=0;entryY=0.5;curved=1;dashed=1;" parent="1" source="state-1" target="state-5" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-1-6" value="Route: /pricing" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.75;entryX=0;entryY=0.5;curved=1;" parent="1" source="state-1" target="state-6" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-6-4" value="After Upgrade" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.25;entryX=0;entryY=0.75;curved=1;" parent="1" source="state-6" target="state-4" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-all-7" value="Route: /privacy" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0;exitY=0.75;entryX=0.5;entryY=0;curved=1;" parent="1" source="state-1" target="state-7" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-all-8" value="Route: /terms" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;curved=1;" parent="1" source="state-1" target="state-8" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-all-9" value="Route: /contact" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.75;entryX=0.5;entryY=0;curved=1;" parent="1" source="state-1" target="state-9" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-all-1" value="Route: /home" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0;exitY=0.25;entryX=1;entryY=0.75;curved=1;dashed=1;" parent="1" source="state-3" target="state-1" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-4-3" value="New Upload" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0;exitY=0.25;entryX=1;entryY=0.25;curved=1;" parent="1" source="state-4" target="state-3" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-5-1" value="Back" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0;exitY=0.25;entryX=1;entryY=0.75;curved=1;" parent="1" source="state-5" target="state-1" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-6-9" value="Business Plan" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;entryX=0;entryY=0.5;curved=1;" parent="1" source="state-6" target="state-9" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-6-2" value="Not Authenticated" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;curved=1;" parent="1" source="state-6" target="state-2" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-logout" value="Logout" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0;exitY=0.75;entryX=1;entryY=0.25;curved=1;dashed=1;" parent="1" source="state-5" target="state-2" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="back-nav-note" value="Note: All pages have back navigation&#10;to their previous state" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="30" y="460" width="160" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="auth-notice" value="Note: Dashed borders indicate&#10;AuthGuard protected states" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="30" y="500" width="160" height="40" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

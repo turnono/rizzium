@@ -1,0 +1,16 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Update flowchart
+echo "Updating flowchart..."
+npx ts-node scripts/update-flowchart.ts
+
+# Run validation
+echo "Running flowchart validation..."
+npx ts-node scripts/validate-flowchart.ts
+
+# If validation fails, prevent commit
+if [ $? -ne 0 ]; then
+  echo "Flowchart validation failed. Please check the validation errors above."
+  exit 1
+fi

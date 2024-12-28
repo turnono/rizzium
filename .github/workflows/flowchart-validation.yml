@@ -1,0 +1,107 @@
+name: Flowchart Validation
+
+on:
+  pull_request:
+    paths:
+      - 'apps/finescan/angular/src/app/**'
+      - 'docs/diagrams/**'
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/finescan/angular/src/app/**'
+
+jobs:
+  update-flowchart:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Update flowchart
+        id: update
+        run: npx ts-node scripts/update-flowchart.ts
+
+      - name: Check for changes
+        id: git-check
+        run: |
+          git add docs/diagrams/finescan_flow.drawio
+          git diff --staged --quiet || echo "changes=true" >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request
+        if: steps.git-check.outputs.changes == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          commit-message: 'chore: update flowchart to match code changes'
+          title: 'chore: update flowchart to match code changes'
+          body: |
+            This PR updates the flowchart to match recent code changes.
+
+            Changes were automatically generated based on the current codebase structure.
+            Please review the changes to ensure they accurately represent the application flow.
+          branch: update-flowchart
+          base: ${{ github.head_ref || github.ref_name }}
+          delete-branch: true
+
+  validate:
+    runs-on: ubuntu-latest
+    needs: update-flowchart
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run flowchart validation
+        id: validation
+        run: npx ts-node scripts/validate-flowchart.ts
+        continue-on-error: true
+
+      - name: Comment on PR
+        if: steps.validation.outcome == 'failure'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const { execSync } = require('child_process');
+
+            let validationOutput;
+            try {
+              validationOutput = execSync('npx ts-node scripts/validate-flowchart.ts 2>&1').toString();
+            } catch (error) {
+              validationOutput = error.stdout.toString();
+            }
+
+            const body = `## Flowchart Validation Failed
+
+            The flowchart needs to be updated to reflect recent code changes:
+
+            \`\`\`
+            ${validationOutput}
+            \`\`\`
+
+            I've created a PR with the necessary updates. Please review and merge it.`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
