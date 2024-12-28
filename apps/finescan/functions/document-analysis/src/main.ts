@@ -350,9 +350,32 @@ async function updateAnalysisDocument(userId: string, imageUrl: string, analysis
   }
 
   const doc = snapshot.docs[0];
+
+  // Create a clean version of the analysis object without undefined values
+  const cleanAnalysis = {
+    riskLevel: analysis.riskLevel,
+    summary: {
+      riskLevel: analysis.summary.riskLevel,
+      description: analysis.summary.description,
+      recommendations: analysis.summary.recommendations,
+      containsSensitiveInfo: analysis.summary.containsSensitiveInfo || false,
+    },
+    flags: analysis.flags.map((flag) => ({
+      start: flag.start,
+      end: flag.end,
+      reason: flag.reason,
+      riskLevel: flag.riskLevel,
+    })),
+  };
+
+  // Only add text if it exists
+  if (analysis.text !== undefined) {
+    cleanAnalysis['text'] = analysis.text;
+  }
+
   await doc.ref.update({
     status: 'completed',
-    results: analysis,
+    results: cleanAnalysis,
     updatedAt: new Date(),
   });
 }
