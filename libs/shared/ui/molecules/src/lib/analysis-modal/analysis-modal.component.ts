@@ -67,7 +67,29 @@ import { closeOutline, alertCircleOutline, refreshOutline } from 'ionicons/icons
           </ion-button>
         </ion-card-content>
       </ion-card>
-      } @else if (analysis) {
+      } @else if (!this.analysis?.results?.analysis) {
+      <ion-card color="warning">
+        <ion-card-header>
+          <ion-card-title>
+            <ion-icon name="alert-circle-outline"></ion-icon>
+            Unable to Analyze Image
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <p>We were unable to analyze this image. This could be because:</p>
+          <ul>
+            <li>The image format is not supported</li>
+            <li>The image quality is too low</li>
+            <li>The content is not what we expected</li>
+          </ul>
+          <p>File name: {{ analysis.fileName }}</p>
+          <ion-button expand="block" (click)="retryAnalysis()" class="retry-button">
+            <ion-icon name="refresh-outline" slot="start"></ion-icon>
+            Try Again
+          </ion-button>
+        </ion-card-content>
+      </ion-card>
+      } @else {
       <ui-analysis-results [analysis]="analysisResults"></ui-analysis-results>
       }
     </ion-content>
@@ -112,12 +134,15 @@ export class AnalysisModalComponent {
       text: this.analysis.fileName,
       flags: (this.analysis.results.analysis.flags || []).map((flag) => ({
         ...flag,
-        riskLevel: flag.riskLevel.toLowerCase() as 'high' | 'medium' | 'low',
+        riskLevel: (flag.riskLevel || 'low').toLowerCase() as 'high' | 'medium' | 'low',
       })),
       summary: {
-        riskLevel: this.analysis.results.analysis.summary.riskLevel.toLowerCase() as 'high' | 'medium' | 'low',
-        description: this.analysis.results.analysis.summary.description,
-        recommendations: this.analysis.results.analysis.summary.recommendations,
+        riskLevel: (this.analysis.results.analysis.summary?.riskLevel || 'low').toLowerCase() as
+          | 'high'
+          | 'medium'
+          | 'low',
+        description: this.analysis.results.analysis.summary?.description || 'No description available',
+        recommendations: this.analysis.results.analysis.summary?.recommendations || [],
       },
     };
   }

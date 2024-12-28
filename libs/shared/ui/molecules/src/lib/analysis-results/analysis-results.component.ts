@@ -69,7 +69,7 @@ interface AnalysisResult {
         <!-- Export Button -->
         @if (analysis) {
         <ion-button expand="block" (click)="exportToPDF()" class="export-button">
-          <ion-icon name="download" slot="start"></ion-icon>
+          <ion-icon name="download-outline" slot="start"></ion-icon>
           Export Report as PDF
         </ion-button>
         }
@@ -173,7 +173,7 @@ export class AnalysisResultsComponent {
   processText() {
     if (!this._analysis) return;
 
-    let text = this._analysis.text;
+    const text = this._analysis.text;
     let html = '';
     let lastIndex = 0;
 

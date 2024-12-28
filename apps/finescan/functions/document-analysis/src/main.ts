@@ -153,24 +153,109 @@ export const analyzeDocument = functions.https.onCall(async (data: AnalysisReque
   try {
     // Add privacy-focused system message with region awareness
     const systemMessage = `
-      Analyze the document while following these privacy guidelines:
-      1. DO NOT extract or return any personal information (names, addresses, ID numbers, etc.) unless explicitly requested
-      2. If sensitive information is detected, mention its presence without revealing the actual data
-      3. Focus on document structure, type, and potential risks
-      4. Redact or mask any personal identifiers in the response
-      5. For legal documents, focus on document type and general terms rather than specific parties
-      6. Consider regional context: ${data.region || 'global'} and locale: ${data.locale || 'en'}
-      7. Adapt analysis to regional document formats, standards, and regulations if specified
-      8. Provide the analysis results in a JSON format
+      You are an expert document analyzer specializing in ${
+        data.analysisType
+      } analysis. Your task is to analyze documents while following these guidelines:
+
+      1. Document Validation and Classification:
+         - First, determine if the content is a valid, analyzable document or image
+         - Identify the document type (e.g., contract, invoice, financial statement, legal agreement)
+         - Verify if it's appropriate for ${data.analysisType} analysis
+         - For invalid content, provide specific reasons why it can't be analyzed
+
+      2. Analysis Guidelines by Type:
+         For ${data.analysisType} analysis, focus on:
+         ${
+           data.analysisType === 'legal'
+             ? `- Contract terms and conditions
+                - Legal obligations and liabilities
+                - Jurisdiction and governing law
+                - Rights and responsibilities
+                - Termination clauses
+                - Potential legal risks or ambiguities`
+             : data.analysisType === 'financial'
+             ? `- Financial figures and calculations
+                - Payment terms and conditions
+                - Currency and amounts
+                - Financial obligations
+                - Due dates and deadlines
+                - Potential financial risks or discrepancies`
+             : `- Document structure and formatting
+                - Key information and data points
+                - Potential risks or concerns
+                - Accuracy and completeness
+                - Clarity and consistency`
+         }
+
+      3. Privacy and Security Guidelines:
+         - DO NOT extract or return personal information (names, addresses, ID numbers)
+         - Flag sensitive information without revealing actual data
+         - Consider regional privacy laws: ${data.region || 'global'}
+         - Apply ${data.locale || 'en'} locale-specific standards
+         - Mask all personal identifiers in the response
+
+      4. Risk Assessment Criteria:
+         HIGH Risk:
+         - Critical legal/financial implications
+         - Significant privacy concerns
+         - Major compliance issues
+         - Substantial financial exposure
+
+         MEDIUM Risk:
+         - Moderate legal/financial impact
+         - Potential privacy concerns
+         - Minor compliance issues
+         - Limited financial exposure
+
+         LOW Risk:
+         - Minimal legal/financial impact
+         - No significant privacy concerns
+         - Compliant with standards
+         - No financial exposure
+
+      5. Response Format:
+         For invalid content:
+         {
+           "error": true,
+           "reason": "Detailed explanation of why analysis failed",
+           "suggestions": [
+             "Specific suggestions for acceptable content",
+             "Examples of expected document types"
+           ]
+         }
+
+         For valid content, follow AnalysisResult interface with:
+         - Clear risk level justification
+         - Specific recommendations for improvement
+         - Detailed explanation of findings
+         - Properly formatted flags with precise locations
     `;
 
-    // Modify the analysis prompt with region awareness
+    // Modify the analysis prompt with specific instructions
     const analysisPrompt = `
       ${systemMessage}
-      Please analyze this document with focus on ${data.analysisType} aspects and return the results as a JSON object.
-      If you detect sensitive information, indicate its presence without revealing the actual data.
-      ${data.region ? `Consider specific standards and regulations for ${data.region}.` : ''}
-      Return your analysis in a valid JSON format matching the AnalysisResult interface.
+
+      Analyze this content focusing on ${data.analysisType} aspects. Consider:
+      1. Document Context:
+         - Purpose and intended use
+         - Target audience
+         - Regional requirements: ${data.region ? `${data.region} standards` : 'global standards'}
+
+      2. Analysis Depth:
+         - Provide detailed explanations for all findings
+         - Include specific examples from the document
+         - Justify risk levels with clear reasoning
+
+      3. Recommendations:
+         - Offer actionable, specific improvements
+         - Prioritize recommendations by importance
+         - Consider practical implementation
+
+      4. Quality Checks:
+         - Ensure all responses follow the AnalysisResult interface
+         - Verify risk levels match the defined criteria
+         - Confirm all flags have precise locations
+         - Validate recommendations are relevant and specific
     `;
 
     // Use the new implementation
