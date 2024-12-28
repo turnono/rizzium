@@ -44,7 +44,7 @@ import { closeOutline, alertCircleOutline, refreshOutline } from 'ionicons/icons
         <ion-title>Analysis Details</ion-title>
         <ion-buttons slot="end">
           <ion-button (click)="dismiss()">
-            <ion-icon name="close" slot="icon-only"></ion-icon>
+            <ion-icon name="close-outline" slot="icon-only"></ion-icon>
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
