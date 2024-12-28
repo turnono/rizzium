@@ -69,6 +69,7 @@ export class FirebaseAuthService {
 
   private async initializeUser(user: User): Promise<void> {
     const userRef = doc(this.firestore, `users/${user.uid}`);
+    const usageRef = doc(this.firestore, `users/${user.uid}/usage/current`);
 
     const userData = {
       email: user.email,
@@ -81,16 +82,38 @@ export class FirebaseAuthService {
       role: 'user', // Default role
     };
 
-    await setDoc(userRef, userData, { merge: true });
+    const usageData = {
+      monthlyScans: 0,
+      storageUsed: 0,
+      lastResetDate: Timestamp.now(),
+    };
+
+    await Promise.all([setDoc(userRef, userData, { merge: true }), setDoc(usageRef, usageData, { merge: true })]);
   }
 
   private async getUserRole(user: User): Promise<{ [businessId: string]: UserRole }> {
     const userRef = doc(this.firestore, `users/${user.uid}`);
     const userSnap = await getDoc(userRef);
     if (userSnap.exists()) {
+      // Ensure usage document exists
+      await this.ensureUsageDocumentExists(user.uid);
       return (userSnap.data()['businesses'] as { [businessId: string]: UserRole }) || {};
     }
     return {};
+  }
+
+  private async ensureUsageDocumentExists(userId: string): Promise<void> {
+    const usageRef = doc(this.firestore, `users/${userId}/usage/current`);
+    const usageSnap = await getDoc(usageRef);
+
+    if (!usageSnap.exists()) {
+      const usageData = {
+        monthlyScans: 0,
+        storageUsed: 0,
+        lastResetDate: Timestamp.now(),
+      };
+      await setDoc(usageRef, usageData);
+    }
   }
 
   async signOut(): Promise<void> {
