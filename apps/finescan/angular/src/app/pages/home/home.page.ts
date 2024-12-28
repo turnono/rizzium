@@ -1,10 +1,11 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { AlertController, IonicModule } from '@ionic/angular';
 import { FirebaseAuthService } from '@rizzium/shared/services';
 import { map } from 'rxjs/operators';
-import { Observable, Subscription, fromEvent, merge } from 'rxjs';
+import { Subscription, fromEvent, merge } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { addIcons } from 'ionicons';
 import {
   documentTextOutline,
@@ -47,17 +48,16 @@ import { FooterComponent } from '@rizzium/shared/ui/organisms';
   styleUrls: ['./home.page.scss'],
 })
 export class HomePageComponent implements OnDestroy {
-  isLoggedIn = false;
-  displayName = 'User';
+  private authService = inject(FirebaseAuthService);
+  private router = inject(Router);
+  private alertController = inject(AlertController);
+
+  isLoggedIn$ = this.authService.user$.pipe(map((user) => !!user));
+  displayName$ = this.authService.user$.pipe(map((user) => user?.displayName || 'User'));
   isOnline = navigator.onLine;
-  private authSubscription: Subscription;
   private networkSubscription: Subscription;
 
-  constructor(
-    private router: Router,
-    private authService: FirebaseAuthService,
-    private alertController: AlertController
-  ) {
+  constructor() {
     // Register all icons
     addIcons({
       documentTextOutline,
@@ -92,29 +92,24 @@ export class HomePageComponent implements OnDestroy {
       document: documentOutline,
     });
 
-    // Auth subscription
+    // Network subscription
     this.networkSubscription = merge(
       fromEvent(window, 'online').pipe(map(() => true)),
       fromEvent(window, 'offline').pipe(map(() => false))
     ).subscribe((status) => {
       this.isOnline = status;
     });
-
-    this.authSubscription = this.authService.user$.subscribe((user) => {
-      this.isLoggedIn = !!user;
-      this.displayName = user?.displayName || 'User';
-    });
   }
 
   ngOnDestroy() {
-    this.authSubscription?.unsubscribe();
     this.networkSubscription?.unsubscribe();
   }
 
-  async showUserMenu(event: Event) {
+  async showUserMenu() {
+    const displayName = await firstValueFrom(this.displayName$);
     const alert = await this.alertController.create({
       header: 'Account',
-      message: `Signed in as ${this.displayName}`,
+      message: `Signed in as ${displayName}`,
       buttons: [
         {
           text: 'Settings',

@@ -11,10 +11,10 @@
     </ion-chip>
     }
     <ion-buttons slot="end">
-      @if (isLoggedIn) {
-      <ion-button class="user-button" (click)="showUserMenu($event)">
+      @if (isLoggedIn$ | async) {
+      <ion-button class="user-button" (click)="showUserMenu()">
         <ion-icon slot="start" name="person"></ion-icon>
-        <ion-label class="hide-sm">{{ displayName | slice: 0:10 }}</ion-label>
+        <ion-label class="hide-sm">{{ displayName$ | async | slice:0:10 }}</ion-label>
       </ion-button>
       } @else {
       <ion-button class="login-button" (click)="navigateToLogin()">
@@ -65,7 +65,7 @@
         </div>
 
         <ion-grid>
-          @if (isLoggedIn) {
+          @if (isLoggedIn$ | async) {
           <ion-row class="ion-justify-content-center">
             <ion-col size="12" size-md="2" size-sm="12">
               <ion-button expand="block" size="large" class="main-action" [routerLink]="['/file-upload']">

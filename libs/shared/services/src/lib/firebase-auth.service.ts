@@ -12,7 +12,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
 } from '@angular/fire/auth';
-import { Firestore, doc, setDoc, getDoc, updateDoc, arrayUnion, Timestamp } from '@angular/fire/firestore';
+import { Firestore, doc, setDoc, getDoc, updateDoc, Timestamp } from '@angular/fire/firestore';
 import { Observable, BehaviorSubject, from } from 'rxjs';
 import { first, tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
@@ -28,12 +28,27 @@ export class FirebaseAuthService {
   private errorHandler = inject(ErrorHandlerService);
 
   constructor(private firestore: Firestore, private router: Router) {
-    onAuthStateChanged(this.auth, (user) => {
+    onAuthStateChanged(this.auth, async (user) => {
       console.log('Auth state changed:', user);
       if (user) {
-        this.getUserRole(user).then((role) => {
+        try {
+          // Check if user document exists
+          const userRef = doc(this.firestore, `users/${user.uid}`);
+          const userSnap = await getDoc(userRef);
+
+          // If user document doesn't exist, initialize it
+          if (!userSnap.exists()) {
+            await this.initializeUser(user);
+          }
+
+          // Now safely get the user role
+          await this.getUserRole(user);
           this.userSubject.next(user);
-        });
+        } catch (error) {
+          console.error('Error during user initialization:', error);
+          this.errorHandler.handleError(error);
+          this.userSubject.next(user); // Still update the user state even if role fetch fails
+        }
       } else {
         this.userSubject.next(null);
       }
@@ -54,7 +69,6 @@ export class FirebaseAuthService {
 
   private async initializeUser(user: User): Promise<void> {
     const userRef = doc(this.firestore, `users/${user.uid}`);
-    const cartRef = doc(this.firestore, `carts/${user.uid}`);
 
     const userData = {
       email: user.email,
@@ -62,18 +76,12 @@ export class FirebaseAuthService {
       photoURL: user.photoURL,
       createdAt: Timestamp.now(),
       businesses: {},
+      tier: 'free', // Initialize with free tier
+      subscriptionStatus: 'inactive',
+      role: 'user', // Default role
     };
 
     await setDoc(userRef, userData, { merge: true });
-
-    await setDoc(
-      cartRef,
-      {
-        items: [],
-        createdAt: Timestamp.now(),
-      },
-      { merge: true }
-    );
   }
 
   private async getUserRole(user: User): Promise<{ [businessId: string]: UserRole }> {
