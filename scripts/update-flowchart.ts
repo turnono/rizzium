@@ -35,12 +35,12 @@ interface ComponentInfo {
 
 async function analyzeComponents(): Promise<ComponentInfo[]> {
   const components: ComponentInfo[] = [];
-  const componentFiles = await globPromise('apps/finescan/angular/src/app/pages/**/*.component.ts');
-  const routeFiles = await globPromise('apps/finescan/angular/src/app/**/*.routes.ts');
+  const componentFiles = await globPromise('apps/finescan/angular/src/app/pages/**/*.component.ts', {});
+  const routeFiles = await globPromise('apps/finescan/angular/src/app/**/*.routes.ts', {});
 
   // Read all route configurations
   const routeConfigs = new Map<string, { path: string; protected: boolean }>();
-  for (const routeFile of routeFiles) {
+  for (const routeFile of routeFiles as string[]) {
     const content = readFileSync(routeFile, 'utf-8');
     const sourceFile = ts.createSourceFile(routeFile, content, ts.ScriptTarget.Latest, true);
 
@@ -49,23 +49,29 @@ async function analyzeComponents(): Promise<ComponentInfo[]> {
         const routes = node.declarationList.declarations.find(
           (d) => ts.isIdentifier(d.name) && d.name.text.includes('routes')
         );
-        if (routes && routes.initializer && ts.isArrayLiteralExpression(routes.initializer)) {
+        if (
+          routes &&
+          ts.isVariableDeclaration(routes) &&
+          routes.initializer &&
+          ts.isArrayLiteralExpression(routes.initializer)
+        ) {
           routes.initializer.elements.forEach((element) => {
             if (ts.isObjectLiteralExpression(element)) {
               const path = element.properties.find(
-                (p) => ts.isPropertyAssignment(p) && ts.isIdentifier(p.name) && p.name.text === 'path'
+                (p): p is ts.PropertyAssignment =>
+                  ts.isPropertyAssignment(p) && ts.isIdentifier(p.name) && p.name.text === 'path'
               );
               const component = element.properties.find(
-                (p) => ts.isPropertyAssignment(p) && ts.isIdentifier(p.name) && p.name.text === 'component'
+                (p): p is ts.PropertyAssignment =>
+                  ts.isPropertyAssignment(p) && ts.isIdentifier(p.name) && p.name.text === 'component'
               );
               const guards = element.properties.find(
-                (p) => ts.isPropertyAssignment(p) && ts.isIdentifier(p.name) && p.name.text === 'canActivate'
+                (p): p is ts.PropertyAssignment =>
+                  ts.isPropertyAssignment(p) && ts.isIdentifier(p.name) && p.name.text === 'canActivate'
               );
 
               if (path && component && ts.isStringLiteral(path.initializer)) {
-                const componentName = (component as ts.PropertyAssignment).initializer
-                  .getText()
-                  .replace(/Component$/, '');
+                const componentName = component.initializer.getText().replace(/Component$/, '');
                 routeConfigs.set(componentName, {
                   path: path.initializer.text,
                   protected: guards !== undefined && guards.initializer.getText().includes('AuthGuard'),
@@ -79,7 +85,7 @@ async function analyzeComponents(): Promise<ComponentInfo[]> {
   }
 
   // Analyze each component
-  for (const file of componentFiles) {
+  for (const file of componentFiles as string[]) {
     const content = readFileSync(file, 'utf-8');
     const sourceFile = ts.createSourceFile(file, content, ts.ScriptTarget.Latest, true);
 
