@@ -8,8 +8,10 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'apps/finescan/angular/src/app/**'
+      - fineprint
+    # Temporarily remove path restrictions for testing
+    # paths:
+    #   - 'apps/finescan/angular/src/app/**'
 
 jobs:
   update-flowchart:
