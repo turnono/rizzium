@@ -170,7 +170,6 @@ import { FooterComponent } from '@rizzium/shared/ui/organisms';
         </ion-card-content>
       </ion-card>
     </ion-content>
-    <rizzium-footer [appName]="'finescan'"></rizzium-footer>
   `,
   styles: [
     `

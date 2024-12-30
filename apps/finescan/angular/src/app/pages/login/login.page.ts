@@ -119,7 +119,6 @@ import { eyeOffOutline, eyeOutline } from 'ionicons/icons';
         </ion-card-content>
       </ion-card>
     </ion-content>
-    <rizzium-footer [appName]="'finescan'"></rizzium-footer>
   `,
   styles: [
     `
