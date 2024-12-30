@@ -11,7 +11,7 @@ import {
 } from '@ionic/angular/standalone';
 import { Storage, ref, uploadBytesResumable, getDownloadURL } from '@angular/fire/storage';
 import { Firestore, addDoc, collection } from '@angular/fire/firestore';
-import { FirebaseAuthService, UsageLimitService } from '@rizzium/shared/services';
+import { FirebaseAuthService } from '@rizzium/shared/services';
 import { Router } from '@angular/router';
 
 @Component({
@@ -34,7 +34,6 @@ export class FileUploadComponent {
   private storage = inject(Storage);
   private firestore = inject(Firestore);
   private authService = inject(FirebaseAuthService);
-  private usageLimitService = inject(UsageLimitService);
   private router = inject(Router);
 
   selectedFile = signal<File | null>(null);
@@ -51,13 +50,6 @@ export class FileUploadComponent {
     if (!file) return;
 
     try {
-      // Check usage limits before proceeding
-      const canProceed = await this.usageLimitService.checkAndIncrementUsage();
-      if (!canProceed) {
-        console.log('Upload blocked: Usage limit reached');
-        return;
-      }
-
       const user = await this.authService.getCurrentUser();
       if (!user) {
         console.error('Upload failed: No authenticated user');

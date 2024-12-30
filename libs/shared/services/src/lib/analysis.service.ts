@@ -1,15 +1,17 @@
-import { Injectable } from '@angular/core';
-import { Firestore, collection, query, where, orderBy, getDocs, onSnapshot } from '@angular/fire/firestore';
+import { Injectable, inject } from '@angular/core';
+import { Firestore, collection, query, orderBy, onSnapshot, doc, deleteDoc } from '@angular/fire/firestore';
 import { Observable, from, switchMap } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { Analysis } from '@rizzium/shared/interfaces';
 import { FirebaseAuthService } from './firebase-auth.service';
+import { UsageLimitService } from './usage-limit.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AnalysisService {
-  constructor(private firestore: Firestore, private authService: FirebaseAuthService) {}
+  private firestore = inject(Firestore);
+  private authService = inject(FirebaseAuthService);
+  private usageLimitService = inject(UsageLimitService);
 
   getUserAnalyses(): Observable<Analysis[]> {
     return from(this.authService.getCurrentUser()).pipe(
@@ -43,5 +45,17 @@ export class AnalysisService {
         });
       })
     );
+  }
+
+  async startAnalysis(analysisId: string): Promise<boolean> {
+    return this.usageLimitService.checkAndIncrementUsage();
+  }
+
+  async deleteAnalysis(analysisId: string): Promise<void> {
+    const user = await this.authService.getCurrentUser();
+    if (!user) throw new Error('No authenticated user');
+
+    const analysisRef = doc(this.firestore, `users/${user.uid}/analyses/${analysisId}`);
+    await deleteDoc(analysisRef);
   }
 }
