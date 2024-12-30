@@ -52,6 +52,7 @@ import {
   analyticsOutline,
   playOutline,
   refreshOutline,
+  trashOutline,
 } from 'ionicons/icons';
 import { Firestore, Timestamp, updateDoc, doc } from '@angular/fire/firestore';
 import { getFunctions, httpsCallable } from '@angular/fire/functions';
@@ -211,6 +212,9 @@ interface AnalysisResult {
                   </ion-badge>
                   }
                 </ion-label>
+                <ion-button slot="end" fill="clear" color="danger" (click)="deleteAnalysis($event, analysis)">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </ion-button>
               </ion-item>
               }
             </ion-list>
@@ -427,12 +431,13 @@ interface AnalysisResult {
     `,
   ],
 })
-export class ReportsPage implements OnInit {
+export class ReportsPageComponent implements OnInit {
   private firestore = inject(Firestore);
   private alertController = inject(AlertController);
   private functions = getFunctions();
   private authService = inject(FirebaseAuthService);
   private modalCtrl = inject(ModalController);
+  private analysisService = inject(AnalysisService);
 
   analyses: Analysis[] = [];
   selectedAnalysis: Analysis | null = null;
@@ -441,7 +446,7 @@ export class ReportsPage implements OnInit {
   statusFilter = 'all';
   searchTerm = '';
 
-  constructor(private analysisService: AnalysisService) {
+  constructor() {
     addIcons({
       documentTextOutline,
       timeOutline,
@@ -455,28 +460,55 @@ export class ReportsPage implements OnInit {
       analyticsOutline,
       playOutline,
       refreshOutline,
+      trashOutline,
     });
   }
 
   ngOnInit() {
-    this.analysisService.getUserAnalyses().subscribe({
-      next: (analyses) => {
+    this.analysisService.getUserAnalyses().subscribe(
+      (analyses) => {
         this.analyses = analyses;
         this.loading = false;
-
-        if (this.selectedAnalysis) {
-          const updatedAnalysis = analyses.find((a) => a.id === this.selectedAnalysis?.id);
-          if (updatedAnalysis) {
-            this.selectedAnalysis = updatedAnalysis;
-          }
-        }
       },
-      error: (error) => {
-        console.error('Error loading analyses:', error);
-        this.analyses = [];
+      (error) => {
+        console.error('Error fetching analyses:', error);
         this.loading = false;
-      },
+      }
+    );
+  }
+
+  async deleteAnalysis(event: Event, analysis: Analysis) {
+    event.stopPropagation(); // Prevent item click when clicking delete button
+
+    const alert = await this.alertController.create({
+      header: 'Confirm Delete',
+      message: `Are you sure you want to delete the analysis for "${analysis.fileName}"?`,
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+        },
+        {
+          text: 'Delete',
+          role: 'destructive',
+          handler: async () => {
+            try {
+              await this.analysisService.deleteAnalysis(analysis.id);
+            } catch (error) {
+              console.error('Error deleting analysis:', error);
+              const errorAlert = await this.alertController.create({
+                header: 'Error',
+                message: 'Failed to delete the analysis. Please try again.',
+                buttons: ['OK'],
+              });
+              await errorAlert.present();
+            }
+          },
+        },
+      ],
     });
+
+    await alert.present();
   }
 
   async selectAnalysis(analysis: Analysis) {
@@ -527,6 +559,13 @@ export class ReportsPage implements OnInit {
     try {
       if (!analysis.fileUrl) {
         throw new Error('No file URL available for analysis');
+      }
+
+      // Check usage limits and increment usage
+      const canProceed = await this.analysisService.startAnalysis(analysis.id);
+      if (!canProceed) {
+        console.log('Analysis blocked: Usage limit reached');
+        return;
       }
 
       // Update status to processing
@@ -583,14 +622,16 @@ export class ReportsPage implements OnInit {
     });
   }
 
-  private async updateAnalysisResults(analysisId: string, results: any) {
+  private async updateAnalysisResults(analysisId: string, results: AnalysisResponse['data']) {
     const user = await firstValueFrom(this.authService.user$);
     if (!user) throw new Error('No authenticated user');
 
     const docRef = doc(this.firestore, `users/${user.uid}/analyses/${analysisId}`);
     await updateDoc(docRef, {
       status: 'completed',
-      results,
+      results: {
+        analysis: results,
+      },
       completedAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
     });

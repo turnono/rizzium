@@ -144,8 +144,20 @@ export class PaystackService {
         plan: plan.planCode, // Use the Paystack plan code
         currency: 'ZAR',
         channels: ['card', 'bank_transfer'],
+        label: `Finescan ${plan.name} Plan - ${email}`,
+        description: `${plan.name} Plan - ${plan.features.join(', ')}`,
         metadata: {
           custom_fields: [
+            {
+              display_name: 'Plan Name',
+              variable_name: 'plan_name',
+              value: plan.name,
+            },
+            {
+              display_name: 'Plan Features',
+              variable_name: 'plan_features',
+              value: plan.features.join(', '),
+            },
             {
               display_name: 'Plan ID',
               variable_name: 'plan_id',
