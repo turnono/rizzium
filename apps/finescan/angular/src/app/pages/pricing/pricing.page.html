@@ -10,7 +10,7 @@
 <ion-content class="ion-padding">
     <div class="pricing-header ion-text-center">
         <h1>Choose Your Plan</h1>
-        <p>Start with our free plan or upgrade for more features</p>
+        <p>Try 3 free document analyses per month, then upgrade to continue scanning</p>
     </div>
 
     <div class="pricing-grid">
@@ -29,7 +29,7 @@
                     } @else if (plan.price === null) {
                     <span class="price">Contact Sales</span>
                     } @else {
-                    <span class="price">${{ plan.price }}/month</span>
+                    <span class="price">R{{ plan.price }}/month</span>
                     }
                 </ion-card-subtitle>
             </ion-card-header>

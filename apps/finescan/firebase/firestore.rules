@@ -31,9 +31,9 @@ service cloud.firestore {
       return user.tier;
     }
 
-    function getMonthlyScans(userId) {
+    function getScansUsed(userId) {
       let usagePath = /databases/$(database)/documents/users/$(userId)/usage/current;
-      return exists(usagePath) ? get(usagePath).data.monthlyScans : 0;
+      return exists(usagePath) ? get(usagePath).data.scansUsed : 0;
     }
 
     function getStorageUsed(userId) {
@@ -43,7 +43,7 @@ service cloud.firestore {
 
     function isWithinUsageLimit(userId) {
       let tier = getUserTier(userId);
-      let scans = getMonthlyScans(userId);
+      let scans = getScansUsed(userId);
 
       return tier == 'business' ||
              (tier == 'free' && scans < 3) ||
