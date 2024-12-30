@@ -36,4 +36,17 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/pricing/pricing.page').then((m) => m.PricingPageComponent),
     canActivate: [AuthGuard],
   },
+  {
+    path: 'settings',
+    loadComponent: () => import('./pages/settings/settings.page').then((m) => m.SettingsPageComponent),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'terms',
+    loadComponent: () => import('./pages/terms-of-service/terms-of-service.page').then((m) => m.TermsOfServicePage),
+  },
+  {
+    path: 'privacy',
+    loadComponent: () => import('./pages/privacy-policy/privacy-policy.page').then((m) => m.PrivacyPolicyPage),
+  },
 ];

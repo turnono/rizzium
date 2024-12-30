@@ -99,7 +99,6 @@ import { AlertController } from '@ionic/angular';
           </div>
         </ion-card-content>
       </ion-card>
-      <rizzium-footer [appName]="'finescan'"></rizzium-footer>
     </ion-content>
   `,
   styles: [
