@@ -14,16 +14,14 @@
 .pricing-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
+  gap: 1rem;
   padding: 1rem;
 }
 
-ion-card {
+.featured {
   position: relative;
-  &.featured {
-    border: 2px solid var(--ion-color-primary);
-    transform: scale(1.02);
-  }
+  border: 2px solid var(--ion-color-primary);
+  transform: scale(1.02);
 }
 
 .featured-badge {
@@ -31,32 +29,50 @@ ion-card {
   top: -12px;
   right: 20px;
   z-index: 1;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
 }
 
 .price {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: bold;
   color: var(--ion-color-dark);
 }
 
+ion-card {
+  margin: 1rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+ion-card-header {
+  text-align: center;
+  padding: 1.5rem 1rem;
+}
+
+ion-card-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
 .plan-limits {
-  margin: 1rem 0;
+  margin-top: 1rem;
   border-top: 1px solid var(--ion-color-light);
   padding-top: 1rem;
 }
 
-ion-item {
-  --padding-start: 0;
-  ion-icon {
-    margin-right: 0.5rem;
-  }
+ion-button {
+  margin-top: 1.5rem;
 }
 
 @media (max-width: 768px) {
   .pricing-grid {
     grid-template-columns: 1fr;
   }
-  ion-card.featured {
-    transform: none;
+
+  .featured {
+    transform: scale(1);
   }
 }

@@ -1,3 +1,4 @@
+export * from './lib/usage-limit.service';
 export * from './lib/firebase-auth.service';
 export * from './lib/format.service';
 export * from './lib/subscription.service';
@@ -9,3 +10,5 @@ export * from './lib/product.service';
 export * from './lib/customer.service';
 export * from './lib/transaction.service';
 export * from './lib/report.service';
+export * from './lib/paystack.service';
+export * from './lib/plans.config';

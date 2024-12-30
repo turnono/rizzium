@@ -111,17 +111,14 @@ export class PricingPageComponent implements OnInit {
       return;
     }
 
-    if (!plan.stripePriceId) {
-      // Handle free plan or business plan (contact sales)
-      if (plan.tier === 'business') {
-        // Redirect to contact sales page or show modal
-        this.router.navigate(['/contact']);
-      }
+    if (plan.tier === 'business') {
+      // Redirect to contact sales page for business plan
+      this.router.navigate(['/contact']);
       return;
     }
 
     try {
-      await this.subscriptionService.upgradePlan(plan.stripePriceId);
+      await this.subscriptionService.upgradePlan(plan.id);
     } catch (error) {
       console.error('Error upgrading plan:', error);
       // Handle error (show toast or alert)

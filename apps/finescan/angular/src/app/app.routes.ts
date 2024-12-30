@@ -1,9 +1,15 @@
-import { Route } from '@angular/router';
+import { Routes } from '@angular/router';
 import { AuthGuard } from '@rizzium/shared/guards';
+import { UsageLimitGuard } from '@rizzium/shared/guards';
 
-export const appRoutes: Route[] = [
+export const routes: Routes = [
   {
     path: '',
+    redirectTo: 'home',
+    pathMatch: 'full',
+  },
+  {
+    path: 'home',
     loadComponent: () => import('./pages/home/home.page').then((m) => m.HomePageComponent),
   },
   {
@@ -13,7 +19,12 @@ export const appRoutes: Route[] = [
   {
     path: 'file-upload',
     loadComponent: () => import('./pages/file-upload/file-upload.page').then((m) => m.FileUploadPage),
-    canActivate: [AuthGuard],
+    canActivate: [AuthGuard, UsageLimitGuard],
+  },
+  {
+    path: 'upload',
+    redirectTo: 'file-upload',
+    pathMatch: 'full',
   },
   {
     path: 'reports',
@@ -21,24 +32,8 @@ export const appRoutes: Route[] = [
     canActivate: [AuthGuard],
   },
   {
-    path: 'privacy',
-    loadComponent: () => import('./pages/privacy-policy/privacy-policy.page').then((m) => m.PrivacyPolicyPage),
-  },
-  {
-    path: 'terms',
-    loadComponent: () => import('./pages/terms-of-service/terms-of-service.page').then((m) => m.TermsOfServicePage),
-  },
-  {
-    path: 'contact',
-    loadComponent: () => import('./pages/contact-us/contact-us.page').then((m) => m.ContactUsComponent),
-  },
-  {
-    path: 'settings',
-    loadComponent: () => import('./pages/settings/settings.page').then((m) => m.SettingsPageComponent),
-  },
-  // Add other routes as needed
-  {
-    path: '**',
-    redirectTo: '',
+    path: 'pricing',
+    loadComponent: () => import('./pages/pricing/pricing.page').then((m) => m.PricingPageComponent),
+    canActivate: [AuthGuard],
   },
 ];

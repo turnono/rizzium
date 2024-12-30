@@ -1,2 +1,2 @@
 export * from './lib/auth.guard';
-export * from './lib/not-auth.guard';
+export * from './lib/usage-limit.guard';

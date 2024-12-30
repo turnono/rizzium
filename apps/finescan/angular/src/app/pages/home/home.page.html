@@ -79,12 +79,23 @@
                 View Reports
               </ion-button>
             </ion-col>
+            <ion-col size="12" size-md="2" size-sm="12">
+              <ion-button expand="block" size="large" fill="outline" [routerLink]="['/pricing']">
+                <ion-icon slot="start" name="flash"></ion-icon>
+                Upgrade Plan
+              </ion-button>
+            </ion-col>
           </ion-row>
           } @else {
           <ion-row>
             <ion-col size="12" size-md="6" size-sm="12">
               <ion-button expand="block" size="large" class="main-action" (click)="navigateToLogin()">
                 Get Started - It's Free
+              </ion-button>
+            </ion-col>
+            <ion-col size="12" size-md="6" size-sm="12">
+              <ion-button expand="block" size="large" fill="outline" [routerLink]="['/pricing']">
+                View Pricing Plans
               </ion-button>
             </ion-col>
           </ion-row>

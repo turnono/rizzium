@@ -1,4 +1,4 @@
-import { AppUser, UserRole } from '@rizzium/shared/interfaces';
+import { AppUser, AppUserData, UserRole } from '@rizzium/shared/interfaces';
 import { Injectable, inject } from '@angular/core';
 import {
   Auth,
@@ -68,27 +68,33 @@ export class FirebaseAuthService {
   }
 
   private async initializeUser(user: User): Promise<void> {
-    const userRef = doc(this.firestore, `users/${user.uid}`);
-    const usageRef = doc(this.firestore, `users/${user.uid}/usage/current`);
+    try {
+      const userRef = doc(this.firestore, `users/${user.uid}`);
+      const userData: AppUserData = {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+        businesses: {},
+      };
+      await setDoc(userRef, userData);
 
-    const userData = {
-      email: user.email,
-      displayName: user.displayName,
-      photoURL: user.photoURL,
-      createdAt: Timestamp.now(),
-      businesses: {},
-      tier: 'free', // Initialize with free tier
-      subscriptionStatus: 'inactive',
-      role: 'user', // Default role
-    };
-
-    const usageData = {
-      monthlyScans: 0,
-      storageUsed: 0,
-      lastResetDate: Timestamp.now(),
-    };
-
-    await Promise.all([setDoc(userRef, userData, { merge: true }), setDoc(usageRef, usageData, { merge: true })]);
+      // Initialize usage stats for trial
+      const usageRef = doc(this.firestore, `users/${user.uid}/usage/current`);
+      await setDoc(usageRef, {
+        scansUsed: 0,
+        scansLimit: 3, // Trial limit
+        storageUsed: 0,
+        storageLimit: 50 * 1024 * 1024, // 50MB trial storage
+        retentionDays: 7,
+        lastResetDate: Timestamp.now(), // To track monthly reset
+      });
+    } catch (error) {
+      console.error('Error initializing user:', error);
+      throw error;
+    }
   }
 
   private async getUserRole(user: User): Promise<{ [businessId: string]: UserRole }> {
@@ -143,10 +149,10 @@ export class FirebaseAuthService {
     const user = await this.user$.pipe(first()).toPromise();
     if (user) {
       const userDoc = await getDoc(doc(this.firestore, `users/${user.uid}`));
-      const userData = userDoc.data();
+      const userData = userDoc.data() as AppUserData;
       return {
         ...user,
-        businesses: userData?.['businesses'] || {},
+        ...userData,
       } as AppUser;
     }
     return null;
