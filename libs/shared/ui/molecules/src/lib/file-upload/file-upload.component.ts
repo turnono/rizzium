@@ -15,9 +15,19 @@ import {
   IonList,
   Platform,
 } from '@ionic/angular/standalone';
-import { Storage, ref, uploadBytesResumable, getDownloadURL } from '@angular/fire/storage';
-import { Firestore, collection, addDoc, Timestamp } from '@angular/fire/firestore';
-import { FirebaseAuthService } from '@rizzium/shared/services';
+import { Storage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from '@angular/fire/storage';
+import {
+  Firestore,
+  collection,
+  addDoc,
+  Timestamp,
+  doc,
+  getDoc,
+  updateDoc,
+  FirestoreError,
+  setDoc,
+} from '@angular/fire/firestore';
+import { FirebaseAuthService, UsageLimitService } from '@rizzium/shared/services';
 import { addIcons } from 'ionicons';
 import {
   cloudUploadOutline,
@@ -46,7 +56,6 @@ import {
 } from 'ionicons/icons';
 import { DataSaverService } from '@rizzium/shared/services';
 import { AlertController } from '@ionic/angular';
-import { firstValueFrom } from 'rxjs';
 import { Router } from '@angular/router';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
@@ -743,6 +752,7 @@ export class FileUploadComponent {
   private alertController = inject(AlertController);
   private router = inject(Router);
   private platform = inject(Platform);
+  private usageLimitService = inject(UsageLimitService);
 
   @Input() path = 'uploads';
   @Input() accept = '.txt,image/jpeg,image/png,image/webp';
@@ -866,10 +876,6 @@ export class FileUploadComponent {
     }
     console.log('File validation passed');
 
-    this.isUploading = true;
-    this.uploadProgress = 0;
-    this.uploadComplete = false;
-
     try {
       console.log('Getting current user...');
       const user = await this.authService.getCurrentUser();
@@ -878,6 +884,22 @@ export class FileUploadComponent {
         throw new Error('No authenticated user');
       }
       console.log('User authenticated:', user.uid);
+
+      // Check usage limits before proceeding with upload
+      console.log('Checking usage limits...');
+      const canProceed = await this.usageLimitService.checkAndIncrementUsage();
+      console.log('Usage limit check result:', canProceed);
+
+      if (!canProceed) {
+        this.errorMessage = 'Upload failed: Usage limit reached. Please upgrade your plan to continue.';
+        this.validationError.emit(this.errorMessage);
+        return;
+      }
+      console.log('Usage limit check passed');
+
+      this.isUploading = true;
+      this.uploadProgress = 0;
+      this.uploadComplete = false;
 
       const fileExtension = file.name.split('.').pop();
       const uniqueFileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExtension}`;
@@ -909,11 +931,7 @@ export class FileUploadComponent {
           });
         },
         (error) => {
-          console.error('Upload error:', {
-            code: error.code,
-            message: error.message,
-            fullError: error,
-          });
+          console.error('Upload error:', error);
           this.ngZone.run(() => {
             this.errorMessage = 'Upload failed: ' + error.message;
             this.validationError.emit(this.errorMessage);
@@ -926,21 +944,6 @@ export class FileUploadComponent {
             console.log('Upload completed, getting download URL...');
             const url = await getDownloadURL(uploadTask.snapshot.ref);
             console.log('Download URL obtained:', url);
-
-            this.ngZone.run(() => {
-              this.downloadUrl = url;
-              this.urlGenerated.emit(url);
-              this.lastUploadedUrl = url;
-              this.isUploading = false;
-              this.uploadComplete = true;
-              this.uploadProgress = 0;
-
-              // Clear the file input to allow new uploads
-              const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-              if (fileInput) {
-                fileInput.value = '';
-              }
-            });
 
             console.log('Creating analysis document...');
             const analysisRef = collection(this.firestore, `users/${user.uid}/analyses`);
@@ -957,6 +960,21 @@ export class FileUploadComponent {
               },
             });
             console.log('Analysis document created successfully');
+
+            this.ngZone.run(() => {
+              this.downloadUrl = url;
+              this.urlGenerated.emit(url);
+              this.lastUploadedUrl = url;
+              this.isUploading = false;
+              this.uploadComplete = true;
+              this.uploadProgress = 0;
+
+              // Clear the file input to allow new uploads
+              const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+              if (fileInput) {
+                fileInput.value = '';
+              }
+            });
           } catch (error) {
             console.error('Post-upload error:', error);
             this.ngZone.run(() => {
@@ -1057,11 +1075,29 @@ export class FileUploadComponent {
     });
   }
 
-  startUpload(event: Event) {
+  async startUpload(event: Event) {
     event.preventDefault();
     event.stopPropagation();
     if (this.selectedFile && !this.isUploading) {
-      this.uploadFile(this.selectedFile);
+      try {
+        // Check usage limits before starting upload
+        console.log('Checking usage limits before upload...');
+        const canProceed = await this.usageLimitService.checkAndIncrementUsage();
+        console.log('Usage limit check result:', canProceed);
+
+        if (!canProceed) {
+          this.errorMessage = 'Upload failed: Usage limit reached. Please upgrade your plan to continue.';
+          this.validationError.emit(this.errorMessage);
+          return;
+        }
+        console.log('Usage limit check passed, proceeding with upload');
+
+        await this.uploadFile(this.selectedFile);
+      } catch (error) {
+        console.error('Error in startUpload:', error);
+        this.errorMessage = error instanceof Error ? error.message : 'Upload failed';
+        this.validationError.emit(this.errorMessage);
+      }
     }
   }
 
@@ -1071,27 +1107,25 @@ export class FileUploadComponent {
       return;
     }
 
-    // First, let's check authentication explicitly
-    const user = await firstValueFrom(this.authService.user$);
-
-    if (!user) {
-      this.errorMessage = 'Please sign in to upload files';
-      this.validationError.emit(this.errorMessage);
-      return;
-    }
-
-    if (this.isUploading) {
-      return;
-    }
-
-    const validationError = this.validateFile(file);
-    if (validationError) {
-      this.errorMessage = validationError;
-      this.validationError.emit(validationError);
-      return;
-    }
-
     try {
+      const user = await this.authService.getCurrentUser();
+      if (!user) {
+        this.errorMessage = 'Please sign in to upload files';
+        this.validationError.emit(this.errorMessage);
+        return;
+      }
+
+      if (this.isUploading) {
+        return;
+      }
+
+      const validationError = this.validateFile(file);
+      if (validationError) {
+        this.errorMessage = validationError;
+        this.validationError.emit(validationError);
+        return;
+      }
+
       this.isUploading = true;
       this.uploadProgress = 0;
       this.errorMessage = '';
@@ -1100,22 +1134,7 @@ export class FileUploadComponent {
       const sanitizedName = this.sanitizeFileName(file.name);
       const filePath = `users/${user.uid}/finescan/${timestamp}_${sanitizedName}`;
 
-      console.log('Starting upload:', {
-        filePath,
-        fileInfo: {
-          name: file.name,
-          type: file.type,
-          size: file.size,
-        },
-        user: {
-          uid: user.uid,
-        },
-        timestamp,
-      });
-
       const storageRef = ref(this.storage, filePath);
-      console.log('Storage reference created:', storageRef.fullPath);
-
       const metadata = {
         contentType: file.type,
         customMetadata: {
@@ -1125,25 +1144,19 @@ export class FileUploadComponent {
         },
       };
 
-      console.log('Starting upload with metadata:', metadata);
       const uploadTask = uploadBytesResumable(storageRef, file, metadata);
 
       uploadTask.on(
         'state_changed',
         (snapshot) => {
           const progress = snapshot.bytesTransferred / snapshot.totalBytes;
-          console.log(`Upload progress: ${Math.round(progress * 100)}%`);
           this.ngZone.run(() => {
             this.uploadProgress = progress;
             this.progressChange.emit(progress);
           });
         },
         (error) => {
-          console.error('Upload failed:', {
-            errorCode: error.code,
-            errorMessage: error.message,
-            fullError: error,
-          });
+          console.error('Upload failed:', error);
           this.ngZone.run(() => {
             this.errorMessage = 'Upload failed: ' + error.message;
             this.validationError.emit(this.errorMessage);
@@ -1153,9 +1166,20 @@ export class FileUploadComponent {
         },
         async () => {
           try {
-            console.log('Upload completed, getting download URL...');
             const url = await getDownloadURL(uploadTask.snapshot.ref);
-            console.log('Download URL obtained:', url);
+
+            // Create the analysis document
+            const analysisRef = doc(collection(this.firestore, `users/${user.uid}/analyses`));
+            await setDoc(analysisRef, {
+              fileName: file.name,
+              fileUrl: url,
+              filePath: filePath,
+              fileType: file.type,
+              fileSize: file.size,
+              createdAt: Timestamp.now(),
+              status: 'pending',
+              userId: user.uid,
+            });
 
             this.ngZone.run(() => {
               this.downloadUrl = url;
@@ -1166,38 +1190,27 @@ export class FileUploadComponent {
               this.uploadProgress = 0;
             });
 
-            console.log('Creating analysis document...');
-            const analysisRef = collection(this.firestore, `users/${user.uid}/analyses`);
-            await addDoc(analysisRef, {
-              userId: user.uid,
-              fileName: file.name,
-              fileUrl: url,
-              status: 'uploaded',
-              createdAt: Timestamp.now(),
-              metadata: {
-                contentType: file.type,
-                size: file.size,
-                uploadedAt: new Date().toISOString(),
-              },
-            });
-            console.log('Analysis document created successfully');
+            // Clear the file input
+            if (this.fileInput?.nativeElement) {
+              this.fileInput.nativeElement.value = '';
+            }
           } catch (error) {
-            console.error('Post-upload processing failed:', error);
-            this.ngZone.run(() => {
-              this.errorMessage = 'Failed to complete upload process';
-              this.validationError.emit(this.errorMessage);
-              this.isUploading = false;
-              this.uploadComplete = false;
-            });
+            // If anything fails, clean up the uploaded file
+            const fileRef = ref(this.storage, filePath);
+            await deleteObject(fileRef);
+
+            const firestoreError = error as FirestoreError;
+            this.errorMessage = `Upload failed: ${firestoreError.message}`;
+            this.validationError.emit(this.errorMessage);
+            this.isUploading = false;
+            this.uploadComplete = false;
           }
         }
       );
-    } catch (error: unknown) {
-      this.ngZone.run(() => {
-        this.isUploading = false;
-        this.errorMessage = error instanceof Error ? error.message : 'Upload failed. Please try again.';
-        console.error('Upload error:', error);
-      });
+    } catch (error) {
+      console.error('Upload process error:', error);
+      this.errorMessage = error instanceof Error ? error.message : 'Upload failed';
+      this.uploadProgress = 0;
     }
   }
 
@@ -1312,6 +1325,31 @@ export class FileUploadComponent {
   viewDocument() {
     if (this.lastUploadedUrl) {
       window.open(this.lastUploadedUrl, '_blank');
+    }
+  }
+
+  private async ensureUsageDocument(userId: string): Promise<void> {
+    const usageRef = doc(this.firestore, `users/${userId}/usage/current`);
+    const usageDoc = await getDoc(usageRef);
+
+    if (!usageDoc.exists()) {
+      await setDoc(usageRef, {
+        scansUsed: 0,
+        scansLimit: 3,
+        storageUsed: 0,
+        storageLimit: 50 * 1024 * 1024, // 50MB trial storage
+        retentionDays: 7,
+        lastResetDate: Timestamp.now(),
+        lastUpdated: Timestamp.now(),
+        tier: 'free' as const,
+      });
+    } else if (!usageDoc.data()?.['tier'] || !usageDoc.data()?.['scansUsed']) {
+      // Ensure scansUsed exists and initialize if missing
+      await updateDoc(usageRef, {
+        tier: 'free' as const,
+        scansUsed: 0,
+        lastUpdated: Timestamp.now(),
+      });
     }
   }
 }

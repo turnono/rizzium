@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Firestore, doc, getDoc, updateDoc, setDoc, Timestamp } from '@angular/fire/firestore';
+import { Firestore, doc, getDoc, updateDoc, setDoc, Timestamp, increment } from '@angular/fire/firestore';
 import { ModalController } from '@ionic/angular/standalone';
 import { FirebaseAuthService } from './firebase-auth.service';
 import { Router } from '@angular/router';
@@ -76,66 +76,84 @@ export class UsageLimitService {
       throw new Error('User must be authenticated');
     }
 
-    // Ensure usage document exists
-    await this.ensureUsageDocumentExists(user.uid);
+    try {
+      // Ensure usage document exists
+      await this.ensureUsageDocumentExists(user.uid);
 
-    const usageRef = doc(this.firestore, `users/${user.uid}/usage/current`);
-    const usageSnap = await getDoc(usageRef);
-    const usage = usageSnap.data() as UsageData;
+      const usageRef = doc(this.firestore, `users/${user.uid}/usage/current`);
+      const usageSnap = await getDoc(usageRef);
+      const usage = usageSnap.data() as UsageData;
 
-    console.log('Current usage stats:', {
-      scansUsed: usage.scansUsed,
-      scansLimit: usage.scansLimit,
-      lastResetDate: usage.lastResetDate?.toDate(),
-      tier: usage.tier,
-    });
-
-    const lastResetDate = usage.lastResetDate?.toDate() || new Date(0);
-    const now = new Date();
-
-    // Check if we need to reset monthly usage
-    if (this.shouldResetMonthlyUsage(lastResetDate, now)) {
-      console.log('Resetting monthly usage (new month started)');
-      await updateDoc(usageRef, {
-        scansUsed: 0,
-        lastResetDate: Timestamp.now(),
+      console.log('Current usage stats:', {
+        scansUsed: usage.scansUsed,
+        scansLimit: usage.scansLimit,
+        lastResetDate: usage.lastResetDate?.toDate(),
         tier: usage.tier,
       });
+
+      const lastResetDate = usage.lastResetDate?.toDate() || new Date(0);
+      const now = new Date();
+
+      // Check if we need to reset monthly usage
+      if (this.shouldResetMonthlyUsage(lastResetDate, now)) {
+        console.log('Resetting monthly usage (new month started)');
+        await updateDoc(usageRef, {
+          scansUsed: 0,
+          lastResetDate: Timestamp.now(),
+          tier: usage.tier,
+        });
+        return true;
+      }
+
+      // Check if user has hit their limit
+      if (usage.scansUsed >= usage.scansLimit) {
+        console.log('Usage limit reached:', {
+          current: usage.scansUsed,
+          limit: usage.scansLimit,
+          tier: usage.tier,
+        });
+        await this.showUpgradeModal();
+        return false;
+      }
+
+      // Increment usage using Firestore's atomic increment
+      console.log('Attempting to increment usage...', {
+        userId: user.uid,
+        currentScans: usage.scansUsed,
+        path: `users/${user.uid}/usage/current`,
+      });
+
+      try {
+        await updateDoc(usageRef, {
+          scansUsed: increment(1),
+        });
+        console.log('Successfully incremented usage');
+      } catch (error) {
+        console.error('Failed to increment usage:', error);
+        throw error;
+      }
+
+      // Get updated usage to check if it was the last scan
+      const updatedUsageSnap = await getDoc(usageRef);
+      const updatedUsage = updatedUsageSnap.data() as UsageData;
+
+      console.log('Updated usage stats:', {
+        previousScans: usage.scansUsed,
+        newScans: updatedUsage.scansUsed,
+        limit: updatedUsage.scansLimit,
+      });
+
+      // If this was their last free scan, show a warning
+      if (updatedUsage.scansUsed === updatedUsage.scansLimit) {
+        console.log('Last scan used, showing warning');
+        await this.showLastScanWarning();
+      }
+
       return true;
+    } catch (error) {
+      console.error('Error in checkAndIncrementUsage:', error);
+      throw error;
     }
-
-    // Check if user has hit their limit
-    if (usage.scansUsed >= usage.scansLimit) {
-      console.log('Usage limit reached:', {
-        current: usage.scansUsed,
-        limit: usage.scansLimit,
-        tier: usage.tier,
-      });
-      await this.showUpgradeModal();
-      return false;
-    }
-
-    // Increment usage
-    const newUsage = usage.scansUsed + 1;
-    console.log('Incrementing usage:', {
-      from: usage.scansUsed,
-      to: newUsage,
-      limit: usage.scansLimit,
-      tier: usage.tier,
-    });
-
-    await updateDoc(usageRef, {
-      scansUsed: newUsage,
-      tier: usage.tier,
-    });
-
-    // If this was their last free scan, show a warning
-    if (newUsage === usage.scansLimit) {
-      console.log('Last scan used, showing warning');
-      await this.showLastScanWarning();
-    }
-
-    return true;
   }
 
   private shouldResetMonthlyUsage(lastReset: Date, now: Date): boolean {

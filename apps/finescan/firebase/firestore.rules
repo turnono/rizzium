@@ -13,8 +13,9 @@ service cloud.firestore {
 
     function hasRole(role, userId) {
       return isSignedIn() &&
-        exists(/databases/$(database)/documents/users/$(userId)) &&
-        get(/databases/$(database)/documents/users/$(userId)).data.role == role;
+        (exists(/databases/$(database)/documents/users/$(userId)) ?
+          get(/databases/$(database)/documents/users/$(userId)).data.role == role :
+          role == 'user');
     }
 
     function isAdmin(userId) {
@@ -23,7 +24,9 @@ service cloud.firestore {
 
     function hasActiveSubscription(userId) {
       let userDoc = get(/databases/$(database)/documents/users/$(userId));
-      return userDoc.exists && userDoc.data.subscriptionStatus == 'active' && userDoc.data.subscriptionEndDate > request.time;
+      return userDoc.exists ?
+        (userDoc.data.subscriptionStatus == 'active' && userDoc.data.subscriptionEndDate > request.time) :
+        false;
     }
 
     function getUserTier(userId) {
@@ -41,47 +44,35 @@ service cloud.firestore {
       return exists(usagePath) ? get(usagePath).data.storageUsed : 0;
     }
 
-    function isWithinUsageLimit(userId) {
-      let tier = getUserTier(userId);
-      let scans = getScansUsed(userId);
-
-      return tier == 'business' ||
-             (tier == 'free' && scans < 3) ||
-             (tier == 'basic' && scans < 20) ||
-             (tier == 'pro' && scans < 100);
+    function isValidScansIncrement(currentData, newData) {
+      let diff = newData.scansUsed - currentData.scansUsed;
+      // Only allow increment by 1 or reset to 0
+      return diff == 1 || newData.scansUsed == 0;
     }
 
-    function isWithinStorageLimit(userId, additionalBytes) {
-      let tier = getUserTier(userId);
-      let used = getStorageUsed(userId);
-      let newTotal = used + additionalBytes;
-      let storageLimit =
-        tier == 'free' ? 50 * 1024 * 1024 :
-        tier == 'basic' ? 200 * 1024 * 1024 :
-        tier == 'pro' ? 1024 * 1024 * 1024 :
-        tier == 'business' ? null : 0;
-
-      return storageLimit == null || newTotal <= storageLimit;
+    function isMonthlyReset(currentData, newData) {
+      return newData.scansUsed == 0 &&
+             newData.lastResetDate != currentData.lastResetDate &&
+             newData.tier == currentData.tier;
     }
 
-    function willBeWithinLimits(userId) {
-      let tier = getUserTier(userId);
-      let scans = getScansUsed(userId);
-      let newScans = scans + 1;
-
-      return tier == 'business' ||
-             (tier == 'free' && newScans <= 3) ||
-             (tier == 'basic' && newScans <= 20) ||
-             (tier == 'pro' && newScans <= 100);
+    function isValidStorageUpdate(currentData, newData) {
+      return newData.storageUsed >= currentData.storageUsed ||
+             (newData.storageUsed == 0 && isMonthlyReset(currentData, newData));
     }
 
     // Users collection and subcollections
     match /users/{userId} {
-      allow read: if isOwner(userId);
-      allow create: if isSignedIn() && request.auth.uid == userId && (
-        !exists(/databases/$(database)/documents/users/$(userId))
-      );
+      // Allow read of own document
+      allow read: if isSignedIn() && request.auth.uid == userId;
+
+      // Allow creation of initial user document
+      allow create: if isSignedIn() && request.auth.uid == userId;
+
+      // Allow updates to own document
       allow update: if isOwner(userId) || isAdmin(userId);
+
+      // Only admins can delete
       allow delete: if isAdmin(userId);
 
       // User settings
@@ -89,58 +80,54 @@ service cloud.firestore {
         allow read, write: if isOwner(userId);
       }
 
-      // Subscription management
-      match /subscriptions/{subscriptionId} {
-        allow read: if isOwner(userId);
-        allow write: if isAdmin(userId);
-      }
-
-      // Usage tracking
+      // Usage tracking with scan counting
       match /usage/{usageId} {
         allow read: if isOwner(userId);
+
         // Allow creation of initial usage document
         allow create: if isOwner(userId) && (
-          !exists(/databases/$(database)/documents/users/$(userId)/usage/$(usageId)) &&
-          request.resource.data.scansUsed == 0 &&
-          request.resource.data.storageUsed == 0 &&
-          request.resource.data.tier == 'free'
+          (!exists(/databases/$(database)/documents/users/$(userId)/usage/$(usageId)) &&
+           request.resource.data.scansUsed == 0 &&
+           request.resource.data.storageUsed == 0)
         );
-        // Allow updates within limits
-        allow update: if isAdmin(userId) || (
-          isOwner(userId) &&
-          request.resource.data.scansUsed <= (resource.data.scansUsed + 1) &&
-          request.resource.data.storageUsed >= 0 &&
-          request.resource.data.storageUsed <= (
-            getUserTier(userId) == 'free' ? 50 * 1024 * 1024 :
-            getUserTier(userId) == 'basic' ? 200 * 1024 * 1024 :
-            getUserTier(userId) == 'pro' ? 1024 * 1024 * 1024 :
-            getUserTier(userId) == 'business' ? 1024 * 1024 * 1024 * 10 : 0
-          )
+
+        // Allow updates with strict validation
+        allow update: if isOwner(userId) && (
+          // Validate all fields that can be updated
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['scansUsed', 'lastResetDate', 'storageUsed', 'tier']) &&
+
+          // Validate scans increment
+          isValidScansIncrement(resource.data, request.resource.data) &&
+
+          // Validate storage updates
+          isValidStorageUpdate(resource.data, request.resource.data) &&
+
+          // Ensure monthly reset is valid
+          (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['lastResetDate']) ||
+           isMonthlyReset(resource.data, request.resource.data)) &&
+
+          // Ensure tier updates are only done by admin
+          (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['tier']) || isAdmin(userId))
         );
+
         allow delete: if isAdmin(userId);
       }
 
-      // Analyses collection
+      // Analyses collection with usage tracking
       match /analyses/{analysisId} {
         allow read: if isOwner(userId);
-        // Allow creation of new analysis if within usage limits or it's the first analysis
-        allow create: if isOwner(userId) && (
-          !exists(/databases/$(database)/documents/users/$(userId)/usage/current) ||
-          (willBeWithinLimits(userId) && isWithinStorageLimit(userId, request.resource.data.fileSize))
-        );
+        allow create: if isOwner(userId) && getScansUsed(userId) < resource.data.scansLimit;
         allow update: if isOwner(userId);
         allow delete: if isOwner(userId);
       }
     }
 
-    // Products and pricing
+    // Products and pricing - publicly readable
     match /products/{id} {
       allow read: if true;
-
       match /prices/{id} {
         allow read: if true;
       }
-
       match /tax_rates/{id} {
         allow read: if true;
       }
@@ -149,7 +136,6 @@ service cloud.firestore {
     // Stripe customers
     match /stripe_customers/{uid} {
       allow read: if request.auth.uid == uid;
-
       match /checkout_sessions/{id} {
         allow read, write: if request.auth.uid == uid;
       }
