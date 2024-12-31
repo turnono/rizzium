@@ -41,6 +41,7 @@ export class UsageLimitService {
       await updateDoc(usageRef, {
         scansUsed: 0,
         lastResetDate: Timestamp.now(),
+        tier: usage.tier,
       });
       return false;
     }
@@ -62,6 +63,7 @@ export class UsageLimitService {
         storageLimit: 50 * 1024 * 1024, // 50MB trial storage
         retentionDays: 7,
         lastResetDate: Timestamp.now(),
+        tier: 'free',
       };
       await setDoc(usageRef, initialUsage);
     }
@@ -85,6 +87,7 @@ export class UsageLimitService {
       scansUsed: usage.scansUsed,
       scansLimit: usage.scansLimit,
       lastResetDate: usage.lastResetDate?.toDate(),
+      tier: usage.tier,
     });
 
     const lastResetDate = usage.lastResetDate?.toDate() || new Date(0);
@@ -96,6 +99,7 @@ export class UsageLimitService {
       await updateDoc(usageRef, {
         scansUsed: 0,
         lastResetDate: Timestamp.now(),
+        tier: usage.tier,
       });
       return true;
     }
@@ -105,6 +109,7 @@ export class UsageLimitService {
       console.log('Usage limit reached:', {
         current: usage.scansUsed,
         limit: usage.scansLimit,
+        tier: usage.tier,
       });
       await this.showUpgradeModal();
       return false;
@@ -116,10 +121,12 @@ export class UsageLimitService {
       from: usage.scansUsed,
       to: newUsage,
       limit: usage.scansLimit,
+      tier: usage.tier,
     });
 
     await updateDoc(usageRef, {
       scansUsed: newUsage,
+      tier: usage.tier,
     });
 
     // If this was their last free scan, show a warning

@@ -16,12 +16,13 @@ import {
   IonContent,
   IonTitle,
 } from '@ionic/angular/standalone';
-import { Storage, ref, uploadBytesResumable, getDownloadURL } from '@angular/fire/storage';
-import { Firestore, collection, doc, setDoc } from '@angular/fire/firestore';
+import { Storage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from '@angular/fire/storage';
+import { Firestore, collection, doc, setDoc, getDoc, updateDoc } from '@angular/fire/firestore';
 import { FirebaseAuthService, AnalysisService } from '@rizzium/shared/services';
 import { Router } from '@angular/router';
 import { addIcons } from 'ionicons';
 import { cloudUploadOutline, documentOutline, alertCircleOutline } from 'ionicons/icons';
+import { Timestamp } from '@angular/fire/firestore';
 
 @Component({
   selector: 'app-file-upload',
@@ -160,10 +161,46 @@ export class FileUploadComponent {
         return;
       }
 
+      // Check if usage document exists and create if it doesn't
+      const usageRef = doc(this.firestore, `users/${user.uid}/usage/current`);
+      const usageDoc = await getDoc(usageRef);
+
+      if (!usageDoc.exists()) {
+        try {
+          await setDoc(usageRef, {
+            scansUsed: 0,
+            scansLimit: 3,
+            storageUsed: 0,
+            storageLimit: 50 * 1024 * 1024, // 50MB trial storage
+            retentionDays: 7,
+            lastResetDate: Timestamp.now(),
+            tier: 'free' as const,
+          });
+        } catch (error) {
+          console.error('Failed to create usage document:', error);
+          this.error.set('Failed to initialize usage tracking. Please try again.');
+          return;
+        }
+      } else {
+        // If the document exists but doesn't have the tier field, add it
+        const usage = usageDoc.data();
+        if (!usage?.['tier']) {
+          try {
+            await updateDoc(usageRef, {
+              tier: 'free' as const,
+            });
+          } catch (error) {
+            console.error('Failed to update usage document with tier:', error);
+            this.error.set('Failed to update usage tracking. Please try again.');
+            return;
+          }
+        }
+      }
+
       // Check usage limits before proceeding
       const canProceed = await this.analysisService.startAnalysis(user.uid);
       if (!canProceed) {
-        this.error.set('Upload failed: Usage limit reached');
+        this.error.set('Upload failed: Usage limit reached. Please upgrade your plan to continue.');
         return;
       }
 
@@ -172,8 +209,6 @@ export class FileUploadComponent {
         .toLowerCase()
         .replace(/[^a-z0-9.]/g, '')}`;
       const fileRef = ref(this.storage, filePath);
-
-      console.log('Storage reference created');
 
       // Upload the file with metadata
       const uploadTask = uploadBytesResumable(fileRef, file, {
@@ -187,43 +222,58 @@ export class FileUploadComponent {
       uploadTask.on(
         'state_changed',
         (snapshot) => {
-          // Handle progress
           const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
           this.uploadProgress.set(progress);
-          console.log('Upload progress:', progress + '%');
         },
         (error) => {
-          // Handle unsuccessful uploads
           console.error('Upload failed:', error);
-          this.error.set('Upload failed: ' + error.message);
+          this.error.set(
+            error.code === 'storage/unauthorized'
+              ? 'Upload failed: Storage quota exceeded. Please upgrade your plan.'
+              : `Upload failed: ${error.message}`
+          );
           this.uploadProgress.set(0);
         },
         async () => {
-          console.log('Upload completed, getting download URL...');
-          // Handle successful uploads
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          console.log('Download URL obtained:', downloadURL);
+          try {
+            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
 
-          console.log('Creating analysis document...');
-          // Add document reference to user's analyses collection
-          const analysisRef = doc(collection(this.firestore, `users/${user.uid}/analyses`));
-          await setDoc(analysisRef, {
-            fileName: file.name,
-            fileUrl: downloadURL,
-            filePath: filePath,
-            fileType: file.type,
-            fileSize: file.size,
-            createdAt: new Date(),
-            status: 'pending',
-            results: null,
-          });
+            // Add document reference to user's analyses collection
+            const analysisRef = doc(collection(this.firestore, `users/${user.uid}/analyses`));
+            await setDoc(analysisRef, {
+              fileName: file.name,
+              fileUrl: downloadURL,
+              filePath: filePath,
+              fileType: file.type,
+              fileSize: file.size,
+              createdAt: new Date(),
+              status: 'pending',
+              results: null,
+            });
 
-          // Navigate to reports page
-          this.router.navigate(['/reports']);
+            // Navigate to reports page
+            this.router.navigate(['/reports']);
+          } catch (error) {
+            console.error('Post-upload error:', error);
+
+            // If analysis document creation fails, clean up the uploaded file
+            try {
+              await deleteObject(fileRef);
+            } catch (deleteError) {
+              console.error('Failed to clean up uploaded file:', deleteError);
+            }
+
+            if (error.code === 'permission-denied') {
+              this.error.set('Upload failed: Usage limit reached. Please upgrade your plan.');
+            } else {
+              this.error.set(`Upload failed: ${error.message}`);
+            }
+            this.uploadProgress.set(0);
+          }
         }
       );
     } catch (error) {
-      console.error('Post-upload error:', error);
+      console.error('Upload process error:', error);
       this.error.set('Upload failed: ' + (error as Error).message);
       this.uploadProgress.set(0);
     }

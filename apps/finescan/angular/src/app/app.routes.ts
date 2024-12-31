@@ -18,7 +18,7 @@ export const routes: Routes = [
   },
   {
     path: 'file-upload',
-    loadComponent: () => import('./pages/file-upload/file-upload.page').then((m) => m.FileUploadPage),
+    loadComponent: () => import('./pages/file-upload/file-upload.page').then((m) => m.FileUploadPageComponent),
     canActivate: [AuthGuard, UsageLimitGuard],
   },
   {
