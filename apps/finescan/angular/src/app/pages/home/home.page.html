@@ -43,8 +43,13 @@
   }
 
   <!-- Hero Section -->
-  <ion-card class="ion-no-margin ion-margin-top"
-    [style]="{'border-radius': '12px', 'overflow': 'hidden', 'margin-bottom': isMobile ? '8px' : '16px', 'background': 'var(--ion-color-secondary)'}">
+  <ion-card class="ion-no-margin ion-margin-top" [style]="{
+      'border-radius': '12px',
+       'overflow': 'hidden',
+      'margin-bottom': isMobile ? '8px' : '16px',
+      'background': 'var(--ion-color-secondary)',
+      'margin': isMobile ? '16px' : '1% 25%'
+    }">
     <ion-card-content class="ion-text-center" [style]="{'padding': isMobile ? '24px 16px' : '32px 24px'}">
       <h1 style="color: white; font-size: 1.6em; font-weight: 600; margin: 0 0 8px 0;">Document Analysis Made Easy</h1>
       <p style="color: rgba(255,255,255,0.9); font-size: 1em; margin: 0; line-height: 1.4;">
@@ -168,7 +173,7 @@
 
   <!-- Trust Indicators -->
   <ion-card
-    [style]="{'border-radius': '12px', 'background': 'rgba(var(--ion-color-light-rgb), 0.7)', 'margin': '0', 'margin-bottom': isMobile ? '8px' : '24px'}">
+    [style]="{'border-radius': '12px', 'background': 'rgba(var(--ion-color-light-rgb), 0.7)', 'margin': '0', 'margin-bottom': isMobile ? '8px' : '24px', 'margin-left': isMobile ? '16px' : '25%', 'margin-right': isMobile ? '16px' : '25%'  }">
     <ion-card-content [style]="{'padding': isMobile ? '8px' : '24px'}">
       @if (!isMobile) {
       <ion-text color="medium" class="ion-text-center">
