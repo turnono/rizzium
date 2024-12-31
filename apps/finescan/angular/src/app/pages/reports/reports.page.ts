@@ -561,7 +561,7 @@ export class ReportsPageComponent implements OnInit {
       }
 
       // Check usage limits and increment usage
-      const canProceed = await this.analysisService.startAnalysis(analysis.id);
+      const canProceed = await this.analysisService.checkUsageLimits(analysis.userId);
       if (!canProceed) {
         console.log('Analysis blocked: Usage limit reached');
         return;

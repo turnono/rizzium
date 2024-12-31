@@ -115,12 +115,20 @@ export class FirebaseAuthService {
     const usageSnap = await getDoc(usageRef);
 
     if (!usageSnap.exists()) {
-      const usageData = {
-        monthlyScans: 0,
+      await setDoc(usageRef, {
+        scansUsed: 0,
+        scansLimit: 3, // Trial limit
         storageUsed: 0,
+        storageLimit: 50 * 1024 * 1024, // 50MB trial storage
+        retentionDays: 7,
         lastResetDate: Timestamp.now(),
-      };
-      await setDoc(usageRef, usageData);
+        tier: 'free',
+      });
+    } else if (!usageSnap.data()?.['tier']) {
+      // If document exists but doesn't have tier field, update it
+      await updateDoc(usageRef, {
+        tier: 'free',
+      });
     }
   }
 

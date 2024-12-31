@@ -16,8 +16,8 @@ import {
   IonContent,
   IonTitle,
 } from '@ionic/angular/standalone';
-import { Storage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from '@angular/fire/storage';
-import { Firestore, collection, doc, setDoc, getDoc, updateDoc } from '@angular/fire/firestore';
+import { Storage, ref, uploadBytesResumable, getDownloadURL, deleteObject, StorageError } from '@angular/fire/storage';
+import { Firestore, collection, doc, setDoc, getDoc, updateDoc, FirestoreError } from '@angular/fire/firestore';
 import { FirebaseAuthService, AnalysisService } from '@rizzium/shared/services';
 import { Router } from '@angular/router';
 import { addIcons } from 'ionicons';
@@ -150,6 +150,64 @@ export class FileUploadComponent {
     }
   }
 
+  private async ensureUsageDocument(userId: string): Promise<void> {
+    const usageRef = doc(this.firestore, `users/${userId}/usage/current`);
+    const usageDoc = await getDoc(usageRef);
+
+    if (!usageDoc.exists()) {
+      await setDoc(usageRef, {
+        scansUsed: 0,
+        scansLimit: 3,
+        storageUsed: 0,
+        storageLimit: 50 * 1024 * 1024, // 50MB trial storage
+        retentionDays: 7,
+        lastResetDate: Timestamp.now(),
+        tier: 'free' as const,
+      });
+    } else if (!usageDoc.data()?.['tier']) {
+      await updateDoc(usageRef, {
+        tier: 'free' as const,
+      });
+    }
+  }
+
+  private async uploadFileToStorage(file: File, userId: string): Promise<{ downloadURL: string; filePath: string }> {
+    const filePath = `users/${userId}/finescan-uploads/${Date.now()}_${file.name
+      .toLowerCase()
+      .replace(/[^a-z0-9.]/g, '')}`;
+    const fileRef = ref(this.storage, filePath);
+
+    const uploadTask = uploadBytesResumable(fileRef, file, {
+      contentType: file.type,
+      customMetadata: {
+        uploadedBy: userId,
+        originalName: file.name,
+      },
+    });
+
+    return new Promise((resolve, reject) => {
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          this.uploadProgress.set(progress);
+        },
+        (error) => {
+          console.error('Upload failed:', error);
+          reject(error);
+        },
+        async () => {
+          try {
+            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+            resolve({ downloadURL, filePath });
+          } catch (error) {
+            reject(error);
+          }
+        }
+      );
+    });
+  }
+
   async uploadFile() {
     const file = this.selectedFile();
     if (!file) return;
@@ -161,120 +219,99 @@ export class FileUploadComponent {
         return;
       }
 
-      // Check if usage document exists and create if it doesn't
-      const usageRef = doc(this.firestore, `users/${user.uid}/usage/current`);
-      const usageDoc = await getDoc(usageRef);
+      // Step 1: Ensure usage document exists
+      await this.ensureUsageDocument(user.uid);
 
-      if (!usageDoc.exists()) {
-        try {
-          await setDoc(usageRef, {
-            scansUsed: 0,
-            scansLimit: 3,
-            storageUsed: 0,
-            storageLimit: 50 * 1024 * 1024, // 50MB trial storage
-            retentionDays: 7,
-            lastResetDate: Timestamp.now(),
-            tier: 'free' as const,
-          });
-        } catch (error) {
-          console.error('Failed to create usage document:', error);
-          this.error.set('Failed to initialize usage tracking. Please try again.');
-          return;
-        }
-      } else {
-        // If the document exists but doesn't have the tier field, add it
-        const usage = usageDoc.data();
-        if (!usage?.['tier']) {
-          try {
-            await updateDoc(usageRef, {
-              tier: 'free' as const,
-            });
-          } catch (error) {
-            console.error('Failed to update usage document with tier:', error);
-            this.error.set('Failed to update usage tracking. Please try again.');
-            return;
-          }
-        }
-      }
-
-      // Check usage limits before proceeding
-      const canProceed = await this.analysisService.startAnalysis(user.uid);
+      // Step 2: Check if we can proceed with the upload
+      const canProceed = await this.analysisService.checkUsageLimits(user.uid);
       if (!canProceed) {
         this.error.set('Upload failed: Usage limit reached. Please upgrade your plan to continue.');
         return;
       }
 
-      // Create a reference to the file location
-      const filePath = `users/${user.uid}/finescan-uploads/${Date.now()}_${file.name
-        .toLowerCase()
-        .replace(/[^a-z0-9.]/g, '')}`;
-      const fileRef = ref(this.storage, filePath);
+      // Step 3: Upload file to storage
+      let uploadResult;
+      try {
+        uploadResult = await this.uploadFileToStorage(file, user.uid);
+      } catch (error) {
+        const storageError = error as StorageError;
+        this.error.set(
+          storageError.code === 'storage/unauthorized'
+            ? 'Upload failed: Storage quota exceeded. Please upgrade your plan.'
+            : `Upload failed: ${storageError.message}`
+        );
+        this.uploadProgress.set(0);
+        return;
+      }
 
-      // Upload the file with metadata
-      const uploadTask = uploadBytesResumable(fileRef, file, {
-        contentType: file.type,
-        customMetadata: {
-          uploadedBy: user.uid,
-          originalName: file.name,
-        },
-      });
+      // Step 4: First update the usage document
+      try {
+        const usageRef = doc(this.firestore, `users/${user.uid}/usage/current`);
+        const usageDoc = await getDoc(usageRef);
 
-      uploadTask.on(
-        'state_changed',
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          this.uploadProgress.set(progress);
-        },
-        (error) => {
-          console.error('Upload failed:', error);
-          this.error.set(
-            error.code === 'storage/unauthorized'
-              ? 'Upload failed: Storage quota exceeded. Please upgrade your plan.'
-              : `Upload failed: ${error.message}`
-          );
-          this.uploadProgress.set(0);
-        },
-        async () => {
-          try {
-            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+        if (!usageDoc.exists()) {
+          throw new Error('Usage document not found');
+        }
 
-            // Add document reference to user's analyses collection
-            const analysisRef = doc(collection(this.firestore, `users/${user.uid}/analyses`));
-            await setDoc(analysisRef, {
-              fileName: file.name,
-              fileUrl: downloadURL,
-              filePath: filePath,
-              fileType: file.type,
-              fileSize: file.size,
-              createdAt: new Date(),
-              status: 'pending',
-              results: null,
+        const usage = usageDoc.data();
+        const newStorageUsed = usage['storageUsed'] + file.size;
+        const newScansUsed = usage['scansUsed'] + 1;
+
+        if (newStorageUsed > usage['storageLimit'] || newScansUsed > usage['scansLimit']) {
+          // If usage would exceed limits, clean up the uploaded file
+          const fileRef = ref(this.storage, uploadResult.filePath);
+          await deleteObject(fileRef);
+          throw new Error('Usage limit exceeded');
+        }
+
+        await updateDoc(usageRef, {
+          storageUsed: newStorageUsed,
+          scansUsed: newScansUsed,
+        });
+
+        // Step 5: Then create the analysis document
+        const analysisRef = doc(collection(this.firestore, `users/${user.uid}/analyses`));
+        await setDoc(analysisRef, {
+          fileName: file.name,
+          fileUrl: uploadResult.downloadURL,
+          filePath: uploadResult.filePath,
+          fileType: file.type,
+          fileSize: file.size,
+          createdAt: Timestamp.now(),
+          status: 'pending',
+          userId: user.uid,
+        });
+
+        // Success - reset UI and navigate
+        this.selectedFile.set(null);
+        this.uploadProgress.set(0);
+        this.error.set('');
+        await this.router.navigate(['/analysis']);
+      } catch (error) {
+        // If anything fails, clean up the uploaded file
+        const fileRef = ref(this.storage, uploadResult.filePath);
+        await deleteObject(fileRef);
+
+        // If it's a usage update error, we need to revert the usage update
+        if (error instanceof FirestoreError && error.code === 'permission-denied') {
+          const usageRef = doc(this.firestore, `users/${user.uid}/usage/current`);
+          const usageDoc = await getDoc(usageRef);
+          if (usageDoc.exists()) {
+            const usage = usageDoc.data();
+            await updateDoc(usageRef, {
+              storageUsed: usage['storageUsed'] - file.size,
+              scansUsed: usage['scansUsed'] - 1,
             });
-
-            // Navigate to reports page
-            this.router.navigate(['/reports']);
-          } catch (error) {
-            console.error('Post-upload error:', error);
-
-            // If analysis document creation fails, clean up the uploaded file
-            try {
-              await deleteObject(fileRef);
-            } catch (deleteError) {
-              console.error('Failed to clean up uploaded file:', deleteError);
-            }
-
-            if (error.code === 'permission-denied') {
-              this.error.set('Upload failed: Usage limit reached. Please upgrade your plan.');
-            } else {
-              this.error.set(`Upload failed: ${error.message}`);
-            }
-            this.uploadProgress.set(0);
           }
         }
-      );
+
+        const firestoreError = error as FirestoreError;
+        this.error.set(`Upload failed: ${firestoreError.message}`);
+        this.uploadProgress.set(0);
+      }
     } catch (error) {
-      console.error('Upload process error:', error);
-      this.error.set('Upload failed: ' + (error as Error).message);
+      const firestoreError = error as FirestoreError;
+      this.error.set(`Upload failed: ${firestoreError.message}`);
       this.uploadProgress.set(0);
     }
   }
