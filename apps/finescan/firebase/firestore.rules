@@ -22,13 +22,13 @@ service cloud.firestore {
     }
 
     function hasActiveSubscription(userId) {
-      let user = get(/databases/$(database)/documents/users/$(userId)).data;
-      return user.subscriptionStatus == 'active' && user.subscriptionEndDate > request.time;
+      let userDoc = get(/databases/$(database)/documents/users/$(userId));
+      return userDoc.exists && userDoc.data.subscriptionStatus == 'active' && userDoc.data.subscriptionEndDate > request.time;
     }
 
     function getUserTier(userId) {
-      let user = get(/databases/$(database)/documents/users/$(userId)).data;
-      return user.tier;
+      let userDoc = get(/databases/$(database)/documents/users/$(userId));
+      return userDoc.exists ? userDoc.data.tier : 'free';
     }
 
     function getScansUsed(userId) {
@@ -63,38 +63,12 @@ service cloud.firestore {
       return storageLimit == null || used < storageLimit;
     }
 
-    // Stripe customers
-    match /stripe_customers/{uid} {
-      allow read: if request.auth.uid == uid;
-
-      match /checkout_sessions/{id} {
-        allow read, write: if request.auth.uid == uid;
-      }
-      match /subscriptions/{id} {
-        allow read: if request.auth.uid == uid;
-      }
-      match /payments/{id} {
-        allow read: if request.auth.uid == uid;
-      }
-    }
-
-    // Products and pricing
-    match /products/{id} {
-      allow read: if true;
-
-      match /prices/{id} {
-        allow read: if true;
-      }
-
-      match /tax_rates/{id} {
-        allow read: if true;
-      }
-    }
-
     // Users collection and subcollections
     match /users/{userId} {
       allow read: if isOwner(userId);
-      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow create: if isSignedIn() && request.auth.uid == userId && (
+        !exists(/databases/$(database)/documents/users/$(userId))
+      );
       allow update: if isOwner(userId) || isAdmin(userId);
       allow delete: if isAdmin(userId);
 
@@ -112,20 +86,32 @@ service cloud.firestore {
       // Usage tracking
       match /usage/{usageId} {
         allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
+        // Allow creation of initial usage document
+        allow create: if isOwner(userId) && (
+          !exists(/databases/$(database)/documents/users/$(userId)/usage/$(usageId)) &&
+          request.resource.data.scansUsed == 0 &&
+          request.resource.data.storageUsed == 0 &&
+          request.resource.data.tier == 'free'
+        );
+        // Allow updates within limits
         allow update: if isAdmin(userId) || (
           isOwner(userId) &&
-          (
-            !exists(/databases/$(database)/documents/users/$(userId)/usage/$(usageId)) ||
-            (isWithinUsageLimit(userId) && isWithinStorageLimit(userId))
+          request.resource.data.scansUsed <= (resource.data.scansUsed + 1) &&
+          request.resource.data.storageUsed >= 0 &&
+          request.resource.data.storageUsed <= (
+            getUserTier(userId) == 'free' ? 50 * 1024 * 1024 :
+            getUserTier(userId) == 'basic' ? 200 * 1024 * 1024 :
+            getUserTier(userId) == 'pro' ? 1024 * 1024 * 1024 :
+            getUserTier(userId) == 'business' ? 1024 * 1024 * 1024 * 10 : 0
           )
         );
         allow delete: if isAdmin(userId);
       }
 
-      // Nested analyses collection
+      // Analyses collection
       match /analyses/{analysisId} {
         allow read: if isOwner(userId);
+        // Allow creation of new analysis if within usage limits or it's the first analysis
         allow create: if isOwner(userId) && (
           !exists(/databases/$(database)/documents/users/$(userId)/usage/current) ||
           (isWithinUsageLimit(userId) && isWithinStorageLimit(userId))
@@ -135,10 +121,32 @@ service cloud.firestore {
       }
     }
 
-    // Subscription plans
-    match /plans/{planId} {
+    // Products and pricing
+    match /products/{id} {
       allow read: if true;
-      allow write: if isAdmin(request.auth.uid);
+
+      match /prices/{id} {
+        allow read: if true;
+      }
+
+      match /tax_rates/{id} {
+        allow read: if true;
+      }
+    }
+
+    // Stripe customers
+    match /stripe_customers/{uid} {
+      allow read: if request.auth.uid == uid;
+
+      match /checkout_sessions/{id} {
+        allow read, write: if request.auth.uid == uid;
+      }
+      match /subscriptions/{id} {
+        allow read: if request.auth.uid == uid;
+      }
+      match /payments/{id} {
+        allow read: if request.auth.uid == uid;
+      }
     }
   }
 }

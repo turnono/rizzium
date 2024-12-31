@@ -78,6 +78,7 @@ export class FirebaseAuthService {
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
         businesses: {},
+        tier: 'free',
       };
       await setDoc(userRef, userData);
 
@@ -90,6 +91,7 @@ export class FirebaseAuthService {
         storageLimit: 50 * 1024 * 1024, // 50MB trial storage
         retentionDays: 7,
         lastResetDate: Timestamp.now(), // To track monthly reset
+        tier: 'free',
       });
     } catch (error) {
       console.error('Error initializing user:', error);
