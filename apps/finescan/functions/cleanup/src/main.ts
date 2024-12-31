@@ -1,13 +1,15 @@
-import * as functions from 'firebase-functions';
-import * as admin from 'firebase-admin';
+import { onSchedule } from 'firebase-functions/v2/scheduler';
+import { initializeApp } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
+import { getStorage } from 'firebase-admin/storage';
 
 // Initialize Firebase Admin
-admin.initializeApp();
+initializeApp();
 
 // Run cleanup every Sunday at 2 AM
-export const cleanupOldDocuments = functions.pubsub.schedule('0 2 * * 0').onRun(async () => {
-  const firestore = admin.firestore();
-  const storage = admin.storage();
+export const cleanupOldDocuments = onSchedule('0 2 * * 0', async () => {
+  const firestore = getFirestore();
+  const storage = getStorage();
   const bucket = storage.bucket();
 
   try {
