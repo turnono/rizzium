@@ -51,16 +51,28 @@ service cloud.firestore {
              (tier == 'pro' && scans < 100);
     }
 
-    function isWithinStorageLimit(userId) {
+    function isWithinStorageLimit(userId, additionalBytes) {
       let tier = getUserTier(userId);
       let used = getStorageUsed(userId);
+      let newTotal = used + additionalBytes;
       let storageLimit =
         tier == 'free' ? 50 * 1024 * 1024 :
         tier == 'basic' ? 200 * 1024 * 1024 :
         tier == 'pro' ? 1024 * 1024 * 1024 :
         tier == 'business' ? null : 0;
 
-      return storageLimit == null || used < storageLimit;
+      return storageLimit == null || newTotal <= storageLimit;
+    }
+
+    function willBeWithinLimits(userId) {
+      let tier = getUserTier(userId);
+      let scans = getScansUsed(userId);
+      let newScans = scans + 1;
+
+      return tier == 'business' ||
+             (tier == 'free' && newScans <= 3) ||
+             (tier == 'basic' && newScans <= 20) ||
+             (tier == 'pro' && newScans <= 100);
     }
 
     // Users collection and subcollections
@@ -114,7 +126,7 @@ service cloud.firestore {
         // Allow creation of new analysis if within usage limits or it's the first analysis
         allow create: if isOwner(userId) && (
           !exists(/databases/$(database)/documents/users/$(userId)/usage/current) ||
-          (isWithinUsageLimit(userId) && isWithinStorageLimit(userId))
+          (willBeWithinLimits(userId) && isWithinStorageLimit(userId, request.resource.data.fileSize))
         );
         allow update: if isOwner(userId);
         allow delete: if isOwner(userId);

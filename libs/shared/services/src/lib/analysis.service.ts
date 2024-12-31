@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Firestore, collection, query, orderBy, onSnapshot, doc, deleteDoc } from '@angular/fire/firestore';
+import { Firestore, collection, query, orderBy, onSnapshot, doc, getDoc, deleteDoc } from '@angular/fire/firestore';
 import { Observable, from, switchMap } from 'rxjs';
 import { Analysis } from '@rizzium/shared/interfaces';
 import { FirebaseAuthService } from './firebase-auth.service';
@@ -47,8 +47,16 @@ export class AnalysisService {
     );
   }
 
-  async startAnalysis(analysisId: string): Promise<boolean> {
-    return this.usageLimitService.checkAndIncrementUsage();
+  async checkUsageLimits(userId: string): Promise<boolean> {
+    const usageRef = doc(this.firestore, `users/${userId}/usage/current`);
+    const usageDoc = await getDoc(usageRef);
+
+    if (!usageDoc.exists()) {
+      return false;
+    }
+
+    const usage = usageDoc.data();
+    return usage['scansUsed'] < usage['scansLimit'] && usage['storageUsed'] < usage['storageLimit'];
   }
 
   async deleteAnalysis(analysisId: string): Promise<void> {
