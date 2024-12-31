@@ -1,174 +1,162 @@
-import { Component, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, Router } from '@angular/router';
-import { AlertController, IonicModule } from '@ionic/angular';
-import { FirebaseAuthService } from '@rizzium/shared/services';
+import { IonicModule } from '@ionic/angular';
+import { RouterLink } from '@angular/router';
+import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { map } from 'rxjs/operators';
-import { Subscription, fromEvent, merge } from 'rxjs';
-import { firstValueFrom } from 'rxjs';
+import { FirebaseAuthService } from '@rizzium/shared/services';
+import { Router } from '@angular/router';
 import { addIcons } from 'ionicons';
 import {
-  documentTextOutline,
-  listOutline,
-  settingsOutline,
-  homeOutline,
-  logInOutline,
-  logOutOutline,
-  cloudUploadOutline,
-  warningOutline,
-  shieldCheckmarkOutline,
-  analyticsOutline,
-  personCircleOutline,
-  homeSharp,
-  shieldCheckmarkSharp,
-  warningSharp,
-  analyticsSharp,
-  settingsSharp,
-  personCircleSharp,
-  cloudUploadSharp,
-  documentTextSharp,
-  cloudOfflineOutline,
-  flashOutline,
-  phonePortraitOutline,
-  shieldCheckmark,
-  flash,
-  phonePortrait,
+  cloudOffline,
   logIn,
-  personOutline,
-  cameraOutline,
-  documentOutline,
+  personCircle,
+  shieldCheckmark,
+  analytics,
+  phonePortrait,
+  cloudUpload,
+  documentText,
+  flash,
+  rocket,
+  pricetag,
+  lockClosed,
+  server,
+  warning,
+  cloudDone,
+  settingsOutline,
+  logOutOutline,
 } from 'ionicons/icons';
-import { FooterComponent } from '@rizzium/shared/ui/organisms';
+import { PopoverController } from '@ionic/angular/standalone';
+
+@Component({
+  selector: 'app-user-menu',
+  template: `
+    <ion-list lines="none" class="ion-no-padding">
+      <ion-item button (click)="navigate('/settings')" detail="false" class="menu-item">
+        <ion-icon name="settings-outline" slot="start" color="medium"></ion-icon>
+        <ion-label>Settings</ion-label>
+      </ion-item>
+      <ion-item button (click)="logout()" detail="false" class="menu-item">
+        <ion-icon name="log-out-outline" slot="start" color="danger"></ion-icon>
+        <ion-label color="danger">Sign Out</ion-label>
+      </ion-item>
+    </ion-list>
+  `,
+  styles: [
+    `
+      :host {
+        display: block;
+        width: 200px;
+        padding: 8px 0;
+      }
+      .menu-item {
+        --padding-start: 16px;
+        --padding-end: 16px;
+        --padding-top: 10px;
+        --padding-bottom: 10px;
+        --background-hover: var(--ion-color-light);
+        --ripple-color: var(--ion-color-primary);
+        font-size: 14px;
+        border-radius: 4px;
+        margin: 0 4px;
+      }
+      ion-icon {
+        font-size: 18px;
+        margin-right: 8px;
+      }
+    `,
+  ],
+  standalone: true,
+  imports: [IonicModule],
+})
+export class UserMenuComponent {
+  private router = inject(Router);
+  private popoverCtrl = inject(PopoverController);
+  private authService = inject(FirebaseAuthService);
+
+  async navigate(path: string) {
+    await this.popoverCtrl.dismiss();
+    this.router.navigate([path]);
+  }
+
+  async logout() {
+    await this.popoverCtrl.dismiss();
+    await this.authService.signOut();
+    this.router.navigate(['/login']);
+  }
+}
 
 @Component({
   selector: 'app-home',
-  standalone: true,
-  imports: [CommonModule, IonicModule, RouterLink, FooterComponent],
   templateUrl: './home.page.html',
   styleUrls: ['./home.page.scss'],
+  standalone: true,
+  imports: [CommonModule, IonicModule, RouterLink],
 })
-export class HomePageComponent implements OnDestroy {
+export class HomePageComponent implements OnInit {
   private authService = inject(FirebaseAuthService);
   private router = inject(Router);
-  private alertController = inject(AlertController);
+  private breakpointObserver = inject(BreakpointObserver);
+  private popoverCtrl = inject(PopoverController);
 
   isLoggedIn$ = this.authService.user$.pipe(map((user) => !!user));
   displayName$ = this.authService.user$.pipe(map((user) => user?.displayName || 'User'));
+  photoURL$ = this.authService.user$.pipe(map((user) => user?.photoURL));
   isOnline = navigator.onLine;
-  private networkSubscription: Subscription;
+  isMobile = true; // Default to mobile view
 
   constructor() {
-    // Register all icons
     addIcons({
-      documentTextOutline,
-      listOutline,
-      settingsOutline,
-      homeOutline,
-      logInOutline,
-      logOutOutline,
-      cloudUploadOutline,
-      warningOutline,
-      shieldCheckmarkOutline,
-      analyticsOutline,
-      personCircleOutline,
-      homeSharp,
-      shieldCheckmarkSharp,
-      warningSharp,
-      analyticsSharp,
-      settingsSharp,
-      personCircleSharp,
-      cloudUploadSharp,
-      documentTextSharp,
-      cloudOfflineOutline,
-      flashOutline,
-      phonePortraitOutline,
+      cloudOffline,
+      logIn,
+      personCircle,
       shieldCheckmark,
+      analytics,
+      phonePortrait,
+      cloudUpload,
+      documentText,
       flash,
-      'phone-portrait': phonePortrait,
-      'log-in': logIn,
-      person: personOutline,
-      camera: cameraOutline,
-      'document-outline': documentOutline,
-      document: documentOutline,
+      rocket,
+      pricetag,
+      lockClosed,
+      server,
+      warning,
+      cloudDone,
+      settingsOutline,
+      logOutOutline,
     });
 
-    // Network subscription
-    this.networkSubscription = merge(
-      fromEvent(window, 'online').pipe(map(() => true)),
-      fromEvent(window, 'offline').pipe(map(() => false))
-    ).subscribe((status) => {
-      this.isOnline = status;
-    });
+    window.addEventListener('online', () => (this.isOnline = true));
+    window.addEventListener('offline', () => (this.isOnline = false));
   }
 
-  ngOnDestroy() {
-    this.networkSubscription?.unsubscribe();
-  }
-
-  async showUserMenu() {
-    const displayName = await firstValueFrom(this.displayName$);
-    const alert = await this.alertController.create({
-      header: 'Account',
-      message: `Signed in as ${displayName}`,
-      buttons: [
-        {
-          text: 'Settings',
-          handler: () => {
-            this.router.navigate(['/settings']);
-          },
-        },
-        {
-          text: 'Sign Out',
-          role: 'destructive',
-          handler: () => {
-            this.confirmLogout();
-          },
-        },
-        {
-          text: 'Cancel',
-          role: 'cancel',
-        },
-      ],
-      cssClass: 'user-menu',
-    });
-
-    await alert.present();
+  ngOnInit() {
+    // Subscribe to breakpoint changes
+    this.breakpointObserver
+      .observe([Breakpoints.HandsetPortrait])
+      .pipe(map((result) => result.matches))
+      .subscribe((isMobile) => {
+        this.isMobile = isMobile;
+      });
   }
 
   navigateToLogin() {
     this.router.navigate(['/login']);
   }
 
-  async confirmLogout() {
-    const alert = await this.alertController.create({
-      header: 'Confirm Logout',
-      message: 'Are you sure you want to logout?',
-      cssClass: 'alert-logout',
-      buttons: [
-        {
-          text: 'Cancel',
-          role: 'cancel',
-          cssClass: 'alert-button-cancel',
-        },
-        {
-          text: 'Logout',
-          cssClass: 'alert-button-confirm',
-          handler: () => {
-            this.logout();
-          },
-        },
-      ],
+  async showUserMenu(event: Event) {
+    const popover = await this.popoverCtrl.create({
+      component: UserMenuComponent,
+      event,
+      alignment: 'end',
+      side: 'bottom',
+      size: 'auto',
+      dismissOnSelect: true,
+      translucent: false,
+      cssClass: 'user-menu-popover',
+      arrow: false,
     });
 
-    await alert.present();
-  }
-
-  async logout() {
-    try {
-      await this.authService.signOut();
-      this.router.navigate(['/login']);
-    } catch (error) {
-      console.error('Error during logout:', error);
-    }
+    await popover.present();
   }
 }

@@ -1,7 +1,11 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 
-export const cleanupOldDocuments = functions.pubsub.schedule('every 24 hours').onRun(async (context) => {
+// Initialize Firebase Admin
+admin.initializeApp();
+
+// Run cleanup every Sunday at 2 AM
+export const cleanupOldDocuments = functions.pubsub.schedule('0 2 * * 0').onRun(async () => {
   const firestore = admin.firestore();
   const storage = admin.storage();
   const bucket = storage.bucket();
@@ -45,7 +49,7 @@ export const cleanupOldDocuments = functions.pubsub.schedule('every 24 hours').o
             // Try both new and legacy paths
             try {
               await bucket.file(`users/${userId}/finescan/${fileName}`).delete();
-            } catch (error) {
+            } catch {
               // If new path fails, try legacy path
               await bucket.file(`users/${userId}/finescan-uploads/${fileName}`).delete();
             }
