@@ -1,4 +1,4 @@
-import { onSchedule } from 'firebase-functions/v2/scheduler';
+import * as functions from 'firebase-functions';
 import { initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
@@ -7,7 +7,7 @@ import { getStorage } from 'firebase-admin/storage';
 initializeApp();
 
 // Run cleanup every Sunday at 2 AM
-export const cleanupOldDocuments = onSchedule('0 2 * * 0', async () => {
+export const cleanupOldDocuments = functions.pubsub.schedule('0 2 * * 0').onRun(async () => {
   const firestore = getFirestore();
   const storage = getStorage();
   const bucket = storage.bucket();
