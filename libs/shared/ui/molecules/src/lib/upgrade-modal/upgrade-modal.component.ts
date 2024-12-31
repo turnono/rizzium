@@ -86,12 +86,12 @@ import { rocketOutline, closeOutline } from 'ionicons/icons';
   `,
   styles: [
     `
-      ion-card-title {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 1.5rem;
-      }
+      // ion-card-title {
+      //   display: flex;
+      //   align-items: center;
+      //   gap: 8px;
+      //   font-size: 1.5rem;
+      // }
 
       .button-container {
         margin-top: 2rem;
