@@ -2,6 +2,7 @@ import { User } from '@angular/fire/auth';
 import { Timestamp } from '@angular/fire/firestore';
 
 export type UserRole = 'owner' | 'manager' | 'cashier' | 'customer' | 'anon';
+export type UserTier = 'free' | 'basic' | 'pro' | 'business';
 
 export interface AppUserData {
   uid: string;
@@ -10,6 +11,7 @@ export interface AppUserData {
   photoURL: string | null;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+  tier: UserTier;
   businesses?: {
     [businessId: string]: UserRole;
   };

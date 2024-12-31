@@ -13,35 +13,34 @@ service firebase.storage {
 
     function isValidContentType() {
       return request.resource.contentType.matches('image/.*') ||
-             request.resource.contentType == 'text/plain';
+             request.resource.contentType.matches('application/pdf') ||
+             request.resource.contentType.matches('application/msword') ||
+             request.resource.contentType.matches('application/vnd.openxmlformats-officedocument.wordprocessingml.document') ||
+             request.resource.contentType.matches('application/vnd.ms-word');
     }
 
     function isValidFileSize() {
       return request.resource.size <= 10 * 1024 * 1024; // 10MB max
     }
 
-    // User uploads path - new structure
-    match /users/{userId}/finescan/{fileName} {
-      allow read: if isOwner(userId);
-      allow create: if isOwner(userId)
-        && isValidContentType()
-        && isValidFileSize();
-      allow delete: if isOwner(userId);
+    function hasValidMetadata() {
+      return request.resource.metadata != null &&
+             request.resource.metadata.uploadedBy == request.auth.uid;
     }
 
-    // Legacy path support - for cleanup function compatibility
+    // User uploads path
     match /users/{userId}/finescan-uploads/{fileName} {
       allow read: if isOwner(userId);
       allow create: if isOwner(userId)
         && isValidContentType()
-        && isValidFileSize();
+        && isValidFileSize()
+        && hasValidMetadata();
       allow delete: if isOwner(userId);
     }
 
     // Temporary analysis path (for OpenAI processing)
     match /temp-analysis/{fileName} {
-      allow read: if request.auth.token.firebase.sign_in_provider == 'google.com'
-        && request.auth.token.firebase.sign_in_claims.cloudFunction == true;
+      allow read: if request.auth != null;
       allow write: if false; // Only allow writes through Cloud Functions
     }
 

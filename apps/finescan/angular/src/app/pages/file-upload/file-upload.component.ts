@@ -10,8 +10,8 @@ import {
   IonText,
 } from '@ionic/angular/standalone';
 import { Storage, ref, uploadBytesResumable, getDownloadURL } from '@angular/fire/storage';
-import { Firestore, addDoc, collection } from '@angular/fire/firestore';
-import { FirebaseAuthService } from '@rizzium/shared/services';
+import { Firestore, collection, doc, setDoc } from '@angular/fire/firestore';
+import { FirebaseAuthService, AnalysisService } from '@rizzium/shared/services';
 import { Router } from '@angular/router';
 
 @Component({
@@ -24,7 +24,7 @@ import { Router } from '@angular/router';
         <ion-card-title>Upload Document</ion-card-title>
       </ion-card-header>
       <ion-card-content>
-        <input type="file" (change)="onFileSelected($event)" accept=".pdf,.doc,.docx" />
+        <input type="file" (change)="onFileSelected($event)" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" />
         <ion-button (click)="uploadFile()" [disabled]="!selectedFile()">Upload</ion-button>
       </ion-card-content>
     </ion-card>
@@ -34,6 +34,7 @@ export class FileUploadComponent {
   private storage = inject(Storage);
   private firestore = inject(Firestore);
   private authService = inject(FirebaseAuthService);
+  private analysisService = inject(AnalysisService);
   private router = inject(Router);
 
   selectedFile = signal<File | null>(null);
@@ -56,36 +57,59 @@ export class FileUploadComponent {
         return;
       }
 
+      // Check usage limits before proceeding
+      const canProceed = await this.analysisService.startAnalysis(user.uid);
+      if (!canProceed) {
+        console.error('Upload failed: Usage limit reached');
+        return;
+      }
+
       // Create a reference to the file location
-      const filePath = `uploads/${user.uid}/${Date.now()}_${file.name}`;
+      const filePath = `users/${user.uid}/finescan-uploads/${Date.now()}_${file.name
+        .toLowerCase()
+        .replace(/[^a-z0-9.]/g, '')}`;
       const fileRef = ref(this.storage, filePath);
 
-      // Upload the file
-      const uploadTask = uploadBytesResumable(fileRef, file);
+      console.log('Storage reference created');
+
+      // Upload the file with metadata
+      const uploadTask = uploadBytesResumable(fileRef, file, {
+        contentType: file.type,
+        customMetadata: {
+          uploadedBy: user.uid,
+          originalName: file.name,
+        },
+      });
 
       uploadTask.on(
         'state_changed',
         (snapshot) => {
           // Handle progress
           const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          console.log('Upload is ' + progress + '% done');
+          console.log('Upload progress:', progress + '%');
         },
         (error) => {
           // Handle unsuccessful uploads
           console.error('Upload failed:', error);
         },
         async () => {
+          console.log('Upload completed, getting download URL...');
           // Handle successful uploads
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          console.log('File available at', downloadURL);
+          console.log('Download URL obtained:', downloadURL);
 
-          // Add document reference to Firestore
-          await addDoc(collection(this.firestore, 'documents'), {
-            userId: user.uid,
+          console.log('Creating analysis document...');
+          // Add document reference to user's analyses collection
+          const analysisRef = doc(collection(this.firestore, `users/${user.uid}/analyses`));
+          await setDoc(analysisRef, {
             fileName: file.name,
             fileUrl: downloadURL,
-            uploadDate: new Date(),
+            filePath: filePath,
+            fileType: file.type,
+            fileSize: file.size,
+            createdAt: new Date(),
             status: 'pending',
+            results: null,
           });
 
           // Navigate to reports page
@@ -93,7 +117,7 @@ export class FileUploadComponent {
         }
       );
     } catch (error) {
-      console.error('Error during upload:', error);
+      console.error('Post-upload error:', error);
     }
   }
 }
