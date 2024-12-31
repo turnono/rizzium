@@ -115,3 +115,22 @@ ion-button {
 }
 
 // Add any additional global styles here
+
+.user-menu-popover {
+  --width: auto;
+  --min-width: 200px;
+  --max-width: 300px;
+  --height: auto;
+  --background: var(--ion-background-color);
+  --box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+
+  &::part(content) {
+    border-radius: 8px;
+    margin: 4px;
+  }
+
+  ion-list {
+    margin: 0;
+    padding: 0;
+  }
+}
