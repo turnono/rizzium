@@ -73,9 +73,9 @@ import { AlertController } from '@ionic/angular';
     <ion-content class="ion-padding">
       <ion-card>
         <ion-card-header>
-          <ion-card-title color="clear" class="ion-text-center">Upload Document</ion-card-title>
+          <ion-card-title color="clear" class="ion-text-center">Secure Document Upload</ion-card-title>
           <ion-card-subtitle color="clear" class="ion-text-center">
-            Take a photo or select an image of your document
+            Upload or capture a high-quality image of your document
           </ion-card-subtitle>
         </ion-card-header>
 
@@ -94,7 +94,7 @@ import { AlertController } from '@ionic/angular';
             <ion-icon name="information-circle-outline"></ion-icon>
             <p>
               Supported formats: JPG, PNG, WEBP<br />
-              For best results, ensure the document is well-lit and clearly visible
+              For optimal analysis, ensure good lighting and clear document visibility
             </p>
           </div>
         </ion-card-content>
@@ -114,6 +114,8 @@ import { AlertController } from '@ionic/angular';
 
       .upload-container {
         padding: 1rem;
+        position: relative;
+        z-index: 1;
 
         &.uploading {
           pointer-events: none;
@@ -250,6 +252,8 @@ import { AlertController } from '@ionic/angular';
         display: flex;
         align-items: flex-start;
         gap: 12px;
+        position: relative;
+        z-index: 0;
 
         display: flex;
         flex-wrap: nowrap;
@@ -271,7 +275,7 @@ import { AlertController } from '@ionic/angular';
     `,
   ],
 })
-export class FileUploadPage {
+export class FileUploadPageComponent {
   @ViewChild('fileUploadComponent') fileUploadComponent!: FileUploadComponent;
 
   lastUploadedUrl: string | null = null;
