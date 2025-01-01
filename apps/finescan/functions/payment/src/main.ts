@@ -7,12 +7,16 @@
  * See a full list of supported triggers at https://firebase.google.com/docs/functions
  */
 
-import { onCall, onRequest, HttpsError } from 'firebase-functions/v2/https';
+import { onCall, onRequest, HttpsError } from 'firebase-functions/v1/https';
 import * as logger from 'firebase-functions/logger';
 import axios, { AxiosError } from 'axios';
 import * as crypto from 'crypto';
 import { getFirestore } from 'firebase-admin/firestore';
 import * as functions from 'firebase-functions';
+import { initializeApp } from 'firebase-admin/app';
+
+// Initialize Firebase Admin
+initializeApp();
 
 interface PaystackMetadata {
   [key: string]: string | number | boolean;
@@ -94,54 +98,121 @@ export const verifyPaystackPayment = onCall(async (request) => {
       throw new HttpsError('invalid-argument', 'Payment reference is required');
     }
 
-    // Get the secret key from environment variables
-    const secretKey = functions.config().paystack.secret_key;
-    if (!secretKey) {
-      logger.error('Paystack secret key not configured');
-      throw new HttpsError('failed-precondition', 'Payment verification is not configured properly');
-    }
+    const db = getFirestore();
+    const eventRef = db.collection('payment_events').doc();
 
-    // Verify the payment
     try {
-      const response = await axios.get<PaystackVerifyResponse>(
-        `https://api.paystack.co/transaction/verify/${reference}`,
-        {
-          headers: {
-            Authorization: `Bearer ${secretKey}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (response.data.status && response.data.data.status === 'success') {
-        return {
-          status: 'success' as const,
-          amount: response.data.data.amount,
-          customer: response.data.data.customer,
-          reference: response.data.data.reference,
-          metadata: response.data.data.metadata,
-        };
-      } else {
-        logger.warn('Payment verification failed', {
+      // Get the secret key from environment variables
+      const secretKey = functions.config().paystack.secret_key;
+      if (!secretKey) {
+        logger.error('Paystack secret key not configured');
+        await eventRef.set({
+          userId: request.auth.uid,
+          type: 'payment_verification',
+          status: 'error',
+          error: 'Payment verification not configured properly',
+          timestamp: new Date(),
           reference,
-          status: response.data.data.status,
-          message: response.data.data.gateway_response,
         });
-        throw new HttpsError(
-          'failed-precondition',
-          'Payment verification failed: ' + response.data.data.gateway_response
+        throw new HttpsError('failed-precondition', 'Payment verification is not configured properly');
+      }
+
+      // Verify the payment
+      try {
+        const response = await axios.get<PaystackVerifyResponse>(
+          `https://api.paystack.co/transaction/verify/${reference}`,
+          {
+            headers: {
+              Authorization: `Bearer ${secretKey}`,
+              'Content-Type': 'application/json',
+            },
+          }
         );
+
+        if (response.data.status && response.data.data.status === 'success') {
+          // Record successful verification
+          await eventRef.set({
+            userId: request.auth.uid,
+            type: 'payment_verification',
+            status: 'success',
+            timestamp: new Date(),
+            reference,
+            amount: response.data.data.amount,
+            customerEmail: response.data.data.customer.email,
+          });
+
+          return {
+            status: 'success' as const,
+            amount: response.data.data.amount,
+            customer: response.data.data.customer,
+            reference: response.data.data.reference,
+            metadata: response.data.data.metadata,
+          };
+        } else {
+          logger.warn('Payment verification failed', {
+            reference,
+            status: response.data.data.status,
+            message: response.data.data.gateway_response,
+          });
+
+          // Record failed verification
+          await eventRef.set({
+            userId: request.auth.uid,
+            type: 'payment_verification',
+            status: 'failed',
+            error: response.data.data.gateway_response,
+            timestamp: new Date(),
+            reference,
+          });
+
+          throw new HttpsError(
+            'failed-precondition',
+            'Payment verification failed: ' + response.data.data.gateway_response
+          );
+        }
+      } catch (error) {
+        if (error instanceof AxiosError) {
+          logger.error('Paystack API error:', {
+            status: error.response?.status,
+            data: error.response?.data,
+            reference,
+          });
+
+          // Record API error
+          await eventRef.set({
+            userId: request.auth.uid,
+            type: 'payment_verification',
+            status: 'error',
+            error: 'Failed to verify payment with Paystack',
+            details: {
+              status: error.response?.status,
+              data: error.response?.data,
+            },
+            timestamp: new Date(),
+            reference,
+          });
+
+          throw new HttpsError('internal', 'Failed to verify payment with Paystack');
+        }
+        throw error;
       }
     } catch (error) {
-      if (error instanceof AxiosError) {
-        logger.error('Paystack API error:', {
-          status: error.response?.status,
-          data: error.response?.data,
-          reference,
-        });
-        throw new HttpsError('internal', 'Failed to verify payment with Paystack');
+      if (error instanceof HttpsError) {
+        throw error;
       }
-      throw error;
+      logger.error('Unexpected error during payment verification:', error);
+
+      // Record unexpected error
+      await eventRef.set({
+        userId: request.auth.uid,
+        type: 'payment_verification',
+        status: 'error',
+        error: 'Unexpected error during payment verification',
+        timestamp: new Date(),
+        reference,
+      });
+
+      throw new HttpsError('internal', 'An unexpected error occurred during payment verification');
     }
   } catch (error) {
     if (error instanceof HttpsError) {

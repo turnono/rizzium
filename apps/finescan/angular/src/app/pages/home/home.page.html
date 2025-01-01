@@ -158,11 +158,11 @@
       <ion-icon slot="start" name="rocket" [style]="{'font-size': isMobile ? '20px' : '24px'}"></ion-icon>
       Get Started - It's Free
     </ion-button>
-    <div [style]="{'margin-top': isMobile ? '8px' : '16px'}">
+    <div [style]="{'margin-top': isMobile ? '8px' : '16px'}" *ngIf="isLoggedIn$ | async">
       <ion-button [size]="isMobile ? 'default' : 'large'" fill="outline" [routerLink]="['/pricing']"
         [style]="{'--border-radius': isMobile ? '8px' : '12px'}">
         <ion-icon slot="start" name="pricetag"></ion-icon>
-        @if (isMobile && (isLoggedIn$ | async)) {
+        @if (isMobile) {
         View Plans
         } @else {
         View Pricing Plans
