@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AnalysisService, FirebaseAuthService, UsageLimitService } from '@rizzium/shared/services';
 import { Analysis, AnalysisStatus, CloudFunctionResponse } from '@rizzium/shared/interfaces';
 import { AnalysisResultsComponent } from '@rizzium/shared/ui/molecules';
@@ -153,6 +153,12 @@ import { firstValueFrom } from 'rxjs';
               <ion-button routerLink="/file-upload">Upload Document</ion-button>
             </div>
             } @else {
+            <div class="list-hint">
+              <ion-item lines="none" color="light">
+                <ion-icon name="information-circle" slot="start"></ion-icon>
+                <ion-label>Click on any document to view details or start analysis</ion-label>
+              </ion-item>
+            </div>
             <ion-list>
               @for (analysis of analyses; track analysis.id) {
               <ion-item
@@ -424,6 +430,24 @@ import { firstValueFrom } from 'rxjs';
       ::ng-deep .alert-button {
         color: var(--ion-color-primary) !important;
       }
+
+      .list-hint {
+        margin-bottom: 1rem;
+
+        ion-item {
+          --background: var(--ion-color-light);
+          border-radius: 8px;
+
+          ion-icon {
+            color: var(--ion-color-primary);
+          }
+
+          ion-label {
+            font-size: 0.9rem;
+            color: var(--ion-color-medium);
+          }
+        }
+      }
     `,
   ],
 })
@@ -442,6 +466,7 @@ export class ReportsPageComponent implements OnInit {
   showFilters = false;
   statusFilter = 'all';
   searchTerm = '';
+  router = inject(Router);
 
   constructor(private toastCtrl: ToastController) {
     addIcons({
@@ -570,6 +595,15 @@ export class ReportsPageComponent implements OnInit {
           message: 'You have reached your monthly scan limit. Upgrade to continue.',
           duration: 3000,
           color: 'danger',
+          buttons: [
+            {
+              text: 'Upgrade',
+              role: 'confirm',
+              handler: () => {
+                this.router.navigate(['/pricing']);
+              },
+            },
+          ],
         });
         await toast.present();
         return;
