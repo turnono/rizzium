@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Firestore, doc, getDoc, updateDoc, setDoc, Timestamp, increment } from '@angular/fire/firestore';
+import { Firestore, doc, getDoc, updateDoc, setDoc, Timestamp } from '@angular/fire/firestore';
 import { ModalController } from '@ionic/angular/standalone';
 import { FirebaseAuthService } from './firebase-auth.service';
 import { Router } from '@angular/router';
@@ -98,9 +98,9 @@ export class UsageLimitService {
       if (this.shouldResetMonthlyUsage(lastResetDate, now)) {
         console.log('Resetting monthly usage (new month started)');
         await updateDoc(usageRef, {
+          ...usage,
           scansUsed: 0,
           lastResetDate: Timestamp.now(),
-          tier: usage.tier,
         });
         return true;
       }
@@ -116,7 +116,7 @@ export class UsageLimitService {
         return false;
       }
 
-      // Increment usage using Firestore's atomic increment
+      // Increment usage while preserving all fields
       console.log('Attempting to increment usage...', {
         userId: user.uid,
         currentScans: usage.scansUsed,
@@ -125,7 +125,9 @@ export class UsageLimitService {
 
       try {
         await updateDoc(usageRef, {
-          scansUsed: increment(1),
+          ...usage,
+          scansUsed: usage.scansUsed + 1,
+          lastResetDate: usage.lastResetDate,
         });
         console.log('Successfully incremented usage');
       } catch (error) {

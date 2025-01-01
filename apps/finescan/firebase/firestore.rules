@@ -80,6 +80,12 @@ service cloud.firestore {
         allow read, write: if isOwner(userId);
       }
 
+      // Subscriptions collection
+      match /subscriptions/{subscriptionId} {
+        allow read: if isOwner(userId);
+        allow write: if isAdmin(userId) || (isOwner(userId) && subscriptionId == 'current');
+      }
+
       // Usage tracking with scan counting
       match /usage/{usageId} {
         allow read: if isOwner(userId);
@@ -93,21 +99,18 @@ service cloud.firestore {
 
         // Allow updates with strict validation
         allow update: if isOwner(userId) && (
-          // Validate all fields that can be updated
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['scansUsed', 'lastResetDate', 'storageUsed', 'tier']) &&
+          // Ensure all required fields are present
+          request.resource.data.keys().hasAll(['scansUsed', 'scansLimit', 'storageUsed', 'storageLimit', 'retentionDays', 'lastResetDate', 'tier']) &&
 
           // Validate scans increment
-          isValidScansIncrement(resource.data, request.resource.data) &&
+          (request.resource.data.scansUsed == resource.data.scansUsed + 1 ||
+           request.resource.data.scansUsed == 0) &&
 
           // Validate storage updates
-          isValidStorageUpdate(resource.data, request.resource.data) &&
+          request.resource.data.storageUsed >= 0 &&
 
-          // Ensure monthly reset is valid
-          (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['lastResetDate']) ||
-           isMonthlyReset(resource.data, request.resource.data)) &&
-
-          // Ensure tier updates are only done by admin
-          (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['tier']) || isAdmin(userId))
+          // Allow tier updates only by admin
+          (request.resource.data.tier == resource.data.tier || isAdmin(userId))
         );
 
         allow delete: if isAdmin(userId);
@@ -116,7 +119,9 @@ service cloud.firestore {
       // Analyses collection with usage tracking
       match /analyses/{analysisId} {
         allow read: if isOwner(userId);
-        allow create: if isOwner(userId) && getScansUsed(userId) < resource.data.scansLimit;
+        allow create: if isOwner(userId) &&
+          request.resource.data.userId == request.auth.uid &&
+          request.resource.data.status == 'pending';
         allow update: if isOwner(userId);
         allow delete: if isOwner(userId);
       }
