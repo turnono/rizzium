@@ -1,5 +1,6 @@
 import { Component, ElementRef, EventEmitter, Input, Output, ViewChild, inject, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DOCUMENT } from '@angular/common';
 import {
   IonButton,
   IonIcon,
@@ -53,6 +54,7 @@ import {
   checkmarkCircle,
   imageOutline,
   documentTextOutline,
+  document,
 } from 'ionicons/icons';
 import { DataSaverService } from '@rizzium/shared/services';
 import { AlertController } from '@ionic/angular';
@@ -113,7 +115,7 @@ const ALLOWED_TYPES = ['text/plain', 'image/jpeg', 'image/png', 'image/webp'];
       >
         @if (!selectedFile && !isUploading && !errorMessage && !uploadComplete) {
         <div class="upload-content" role="status">
-          <ion-icon name="cloud-upload" size="large" class="upload-icon" aria-hidden="true"></ion-icon>
+          <ion-icon name="cloud-upload-outline" size="large" class="upload-icon" aria-hidden="true"></ion-icon>
           <h2 class="visually-accessible" color="clear">Upload Document</h2>
           @if (isMobile) {
           <p>Tap here to upload a text file or image</p>
@@ -122,11 +124,11 @@ const ALLOWED_TYPES = ['text/plain', 'image/jpeg', 'image/png', 'image/webp'];
           }
           <div class="file-types" role="list" aria-label="Accepted file types">
             <ion-chip (click)="triggerFileUpload($event, '.txt')">
-              <ion-icon name="document-text" aria-hidden="true" size="small"></ion-icon>
+              <ion-icon name="document-text-outline" aria-hidden="true" size="small"></ion-icon>
               <ion-label>Text File (.txt)</ion-label>
             </ion-chip>
             <ion-chip (click)="triggerFileUpload($event, 'image/*')">
-              <ion-icon name="image" aria-hidden="true" size="small"></ion-icon>
+              <ion-icon name="image-outline" aria-hidden="true" size="small"></ion-icon>
               <ion-label>Image (JPG, PNG, WEBP)</ion-label>
             </ion-chip>
           </div>
@@ -162,7 +164,7 @@ const ALLOWED_TYPES = ['text/plain', 'image/jpeg', 'image/png', 'image/webp'];
         </div>
         } @if (selectedFile && !isUploading && !errorMessage && !uploadComplete) {
         <div class="upload-content">
-          <ion-icon name="document" class="file-icon"></ion-icon>
+          <ion-icon name="document-outline" class="file-icon"></ion-icon>
           <h3>{{ selectedFile.name }}</h3>
           <p class="file-info">
             <ion-icon name="information-circle"></ion-icon>
@@ -753,6 +755,7 @@ export class FileUploadComponent {
   private router = inject(Router);
   private platform = inject(Platform);
   private usageLimitService = inject(UsageLimitService);
+  private document = inject(DOCUMENT);
 
   @Input() path = 'uploads';
   @Input() accept = '.txt,image/jpeg,image/png,image/webp';
@@ -788,15 +791,16 @@ export class FileUploadComponent {
       alertCircle,
       warning,
       time,
-      'lock-closed': lockClosed,
+      lockClosed,
       server,
-      'shield-checkmark': shieldCheckmark,
-      'arrow-forward': arrowForward,
+      shieldCheckmark,
+      arrowForward,
       checkmark,
-      'analytics-outline': analyticsOutline,
-      'checkmark-circle': checkmarkCircle,
-      image: imageOutline,
-      'document-text': documentTextOutline,
+      analyticsOutline,
+      checkmarkCircle,
+      imageOutline,
+      documentTextOutline,
+      document,
     });
   }
 
@@ -947,12 +951,22 @@ export class FileUploadComponent {
 
             console.log('Creating analysis document...');
             const analysisRef = collection(this.firestore, `users/${user.uid}/analyses`);
+
+            // Get the current usage document to include scansLimit
+            const usageRef = doc(this.firestore, `users/${user.uid}/usage/current`);
+            const usageDoc = await getDoc(usageRef);
+            if (!usageDoc.exists()) {
+              throw new Error('Usage document not found');
+            }
+            const usageData = usageDoc.data();
+
             await addDoc(analysisRef, {
               userId: user.uid,
               fileName: file.name,
               fileUrl: url,
-              status: 'uploaded',
+              status: 'pending',
               createdAt: Timestamp.now(),
+              scansLimit: usageData['scansLimit'],
               metadata: {
                 contentType: file.type,
                 size: file.size,
@@ -968,12 +982,7 @@ export class FileUploadComponent {
               this.isUploading = false;
               this.uploadComplete = true;
               this.uploadProgress = 0;
-
-              // Clear the file input to allow new uploads
-              const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-              if (fileInput) {
-                fileInput.value = '';
-              }
+              this.clearFileInput();
             });
           } catch (error) {
             console.error('Post-upload error:', error);
@@ -995,8 +1004,14 @@ export class FileUploadComponent {
     }
   }
 
+  clearFileInput() {
+    if (this.fileInput?.nativeElement) {
+      this.fileInput.nativeElement.value = '';
+    }
+  }
+
   openFileDialog() {
-    const input = document.createElement('input');
+    const input = this.document.createElement('input') as HTMLInputElement;
     input.type = 'file';
     input.accept = this.accept;
     input.multiple = false;
@@ -1042,7 +1057,7 @@ export class FileUploadComponent {
       reader.onload = (e) => {
         const img = new Image();
         img.onload = () => {
-          const canvas = document.createElement('canvas');
+          const canvas = this.document.createElement('canvas') as HTMLCanvasElement;
           const ctx = canvas.getContext('2d');
           if (!ctx) {
             reject(new Error('Could not get canvas context'));
@@ -1080,6 +1095,11 @@ export class FileUploadComponent {
     event.stopPropagation();
     if (this.selectedFile && !this.isUploading) {
       try {
+        const user = await this.authService.getCurrentUser();
+        if (!user) {
+          throw new Error('No authenticated user');
+        }
+
         // Check usage limits before starting upload
         console.log('Checking usage limits before upload...');
         const canProceed = await this.usageLimitService.checkAndIncrementUsage();
@@ -1188,6 +1208,7 @@ export class FileUploadComponent {
               this.isUploading = false;
               this.uploadComplete = true;
               this.uploadProgress = 0;
+              this.clearFileInput();
             });
 
             // Clear the file input
@@ -1211,6 +1232,7 @@ export class FileUploadComponent {
       console.error('Upload process error:', error);
       this.errorMessage = error instanceof Error ? error.message : 'Upload failed';
       this.uploadProgress = 0;
+      this.isUploading = false;
     }
   }
 

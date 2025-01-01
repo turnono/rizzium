@@ -17,7 +17,7 @@ import { logoFacebook, logoInstagram, logoTiktok, logoLinkedin, cloudOutline } f
         bottom: 0;
         left: 0;
         right: 0;
-        z-index: 10;
+        z-index: 1100;
         background: var(--ion-color-light);
       }
 
