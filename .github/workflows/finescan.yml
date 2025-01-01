@@ -16,11 +16,12 @@ env:
   FIREBASE_PROJECT_ID: ${{ secrets.FINESCAN_FIREBASE_PROJECT_ID }}
   ACTIONS_RUNNER_DEBUG: true # Enable runner diagnostic logging
   ACTIONS_STEP_DEBUG: true # Enable step debug logging
-  PAYSTACK_SECRET_KEY: ${{ secrets.FINESCAN_PAYSTACK_SECRET_KEY }} # Add Paystack secret key to env
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    env:
+      PAYSTACK_SECRET_KEY: ${{ secrets.FINESCAN_PAYSTACK_SECRET_KEY }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -65,10 +66,17 @@ jobs:
           echo "Building all Firebase functions..."
           npx nx run-many --target=build --projects=tag:firebase:dep:${{ env.APP_NAME }}-firebase --verbose
 
-      # Create .env file for Firebase Functions
+      # Create .env files for all Firebase Functions
       - name: Setup Environment Variables
         run: |
+          # Create .env for payment function
           echo "PAYSTACK_SECRET_KEY=${{ secrets.FINESCAN_PAYSTACK_SECRET_KEY }}" > apps/finescan/functions/payment/.env
+          echo "PAYSTACK_SECRET_KEY=${{ secrets.FINESCAN_PAYSTACK_SECRET_KEY }}" > apps/finescan/functions/payment/.runtimeconfig.json
+
+          # Verify env files were created
+          ls -la apps/finescan/functions/payment/
+          cat apps/finescan/functions/payment/.env
+          cat apps/finescan/functions/payment/.runtimeconfig.json
 
       # Authenticate with service account
       - name: Authenticate to Google Cloud
@@ -90,8 +98,12 @@ jobs:
           # Set up environment variables for functions
           firebase functions:config:set paystack.secret_key="${{ secrets.FINESCAN_PAYSTACK_SECRET_KEY }}"
 
+          # Create a local .runtimeconfig.json for deployment
+          firebase functions:config:get > .runtimeconfig.json
+          cp .runtimeconfig.json apps/finescan/functions/payment/
+
           # Run deployment with maximum verbosity and debug flags
-          FIREBASE_DEBUG=true DEBUG="@firebase/*" npx nx deploy ${{ env.APP_NAME }}-firebase --verbose
+          FIREBASE_DEBUG=true DEBUG="@firebase/*" PAYSTACK_SECRET_KEY="${{ secrets.FINESCAN_PAYSTACK_SECRET_KEY }}" npx nx deploy ${{ env.APP_NAME }}-firebase --verbose
 
           # If deployment fails, check Firebase debug log
           if [ $? -ne 0 ]; then
@@ -101,3 +113,4 @@ jobs:
           fi
         env:
           DEBUG: '*'
+          PAYSTACK_SECRET_KEY: ${{ secrets.FINESCAN_PAYSTACK_SECRET_KEY }}
