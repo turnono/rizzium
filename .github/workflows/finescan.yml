@@ -16,6 +16,7 @@ env:
   FIREBASE_PROJECT_ID: ${{ secrets.FINESCAN_FIREBASE_PROJECT_ID }}
   ACTIONS_RUNNER_DEBUG: true # Enable runner diagnostic logging
   ACTIONS_STEP_DEBUG: true # Enable step debug logging
+  PAYSTACK_SECRET_KEY: ${{ secrets.FINESCAN_PAYSTACK_SECRET_KEY }} # Add Paystack secret key to env
 
 jobs:
   build-and-deploy:
@@ -63,6 +64,11 @@ jobs:
 
           echo "Building all Firebase functions..."
           npx nx run-many --target=build --projects=tag:firebase:dep:${{ env.APP_NAME }}-firebase --verbose
+
+      # Create .env file for Firebase Functions
+      - name: Setup Environment Variables
+        run: |
+          echo "PAYSTACK_SECRET_KEY=${{ secrets.FINESCAN_PAYSTACK_SECRET_KEY }}" > apps/finescan/functions/payment/.env
 
       # Authenticate with service account
       - name: Authenticate to Google Cloud
