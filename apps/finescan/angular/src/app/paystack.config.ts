@@ -1,3 +1,3 @@
 export const paystackConfig = {
-  publicKey: 'pk_live_e0eb5a8576806d8ea96ee119cd0a5d26e0923c75',
+  publicKey: 'pk_test_27e87bb582c2acd56d095d506c552311ad9575d3',
 };

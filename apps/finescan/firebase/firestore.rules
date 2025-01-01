@@ -210,5 +210,11 @@ service cloud.firestore {
       allow update: if false;
       allow delete: if false;
     }
+
+    // Analytics collection rules
+    match /analytics/{type}/events/{eventId} {
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow read: if isAdmin(request.auth.uid);
+    }
   }
 }
