@@ -116,8 +116,8 @@ export class UpgradeModalComponent {
   @Input() title = this.isWarning ? 'Last Free Scan Used' : 'Upgrade Required';
   @Input() subtitle = this.isWarning ? 'Consider upgrading soon' : 'Upgrade to continue analyzing documents';
   @Input() message = this.isWarning
-    ? 'You have used your last free scan for this month. Upgrade now to continue analyzing documents.'
-    : "You've used all 3 free analyses for this month. Upgrade to one of our paid plans to:";
+    ? 'You have used your last free scan for this month. Upgrade to Pro for only R150/month to get 200 scans.'
+    : "You've used all 3 free analyses for this month. Upgrade to Pro for only R150/month to get:";
 
   private modalCtrl = inject(ModalController);
 

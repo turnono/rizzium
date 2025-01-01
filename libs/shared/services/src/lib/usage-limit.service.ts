@@ -109,10 +109,10 @@ export class UsageLimitService {
       // Initialize usage document for existing user
       const initialUsage: UsageData = {
         scansUsed: 0,
-        scansLimit: 3,
+        scansLimit: 3, // Free tier: 3 scans per month
         storageUsed: 0,
-        storageLimit: 50 * 1024 * 1024, // 50MB trial storage
-        retentionDays: 7,
+        storageLimit: 100 * 1024 * 1024, // 100MB free storage
+        retentionDays: 7, // 7 days retention for free tier
         lastResetDate: Timestamp.now(),
         tier: 'free',
       };

@@ -2,7 +2,7 @@ import { User } from '@angular/fire/auth';
 import { Timestamp } from '@angular/fire/firestore';
 
 export type UserRole = 'owner' | 'manager' | 'cashier' | 'customer' | 'anon';
-export type UserTier = 'free' | 'basic' | 'pro' | 'business';
+export type UserTier = 'free' | 'pro';
 
 export interface AppUserData {
   uid: string;
