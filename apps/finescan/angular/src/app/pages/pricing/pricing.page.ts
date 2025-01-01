@@ -114,6 +114,12 @@ export class PricingPageComponent implements OnInit {
     }
 
     try {
+      const canUpgrade = await this.subscriptionService.canUpgradeToPlan(plan.id);
+      if (!canUpgrade) {
+        console.warn('User cannot upgrade to this plan');
+        return;
+      }
+
       await this.subscriptionService.trackPricingEvent({
         event: 'upgrade_started',
         planId: plan.id,

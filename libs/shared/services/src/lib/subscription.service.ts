@@ -143,15 +143,31 @@ export class SubscriptionService {
       }
 
       const analyticsRef = collection(this.firestore, 'pricing_events');
-      await addDoc(analyticsRef, {
+      const eventData: {
+        userId: string;
+        type: PricingAnalytics['event'];
+        timestamp: Timestamp;
+        planId: string;
+        planTier: PlanTier;
+        previousTier?: PlanTier;
+        error?: string;
+      } = {
         userId: event.userId,
         type: event.event,
         timestamp: Timestamp.now(),
         planId: event.planId,
         planTier: event.planTier,
-        previousTier: event.previousTier,
-        error: event.error,
-      });
+      };
+
+      if (event.previousTier) {
+        eventData.previousTier = event.previousTier;
+      }
+
+      if (event.error) {
+        eventData.error = event.error;
+      }
+
+      await addDoc(analyticsRef, eventData);
     } catch (error) {
       console.error('Error tracking pricing event:', error);
     }
@@ -169,9 +185,39 @@ export class SubscriptionService {
     }
   }
 
+  async canUpgradeToPlan(planId: string): Promise<boolean> {
+    const user = await this.authService.getCurrentUser();
+    if (!user) return false;
+
+    const plan = SUBSCRIPTION_PLANS.find((p) => p.id === planId);
+    if (!plan) return false;
+
+    // If user is already on pro tier, they can't upgrade
+    if (user.tier === 'pro' && plan.tier === 'pro') {
+      return false;
+    }
+
+    // If user is on free tier, they can upgrade to pro
+    if (user.tier === 'free' && plan.tier === 'pro') {
+      return true;
+    }
+
+    // If user is on pro tier, they can downgrade to free
+    if (user.tier === 'pro' && plan.tier === 'free') {
+      return true;
+    }
+
+    return false;
+  }
+
   async upgradePlan(planId: string): Promise<void> {
     const user = await this.authService.getCurrentUser();
     if (!user) throw new Error('User must be authenticated');
+
+    const canUpgrade = await this.canUpgradeToPlan(planId);
+    if (!canUpgrade) {
+      throw new Error('Cannot upgrade to this plan. You might already be subscribed to this tier.');
+    }
 
     try {
       const plan = SUBSCRIPTION_PLANS.find((p) => p.id === planId);
@@ -191,6 +237,7 @@ export class SubscriptionService {
         const now = Timestamp.now();
         const thirtyDaysFromNow = Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
 
+        // Update subscription
         const subscriptionRef = doc(this.firestore, `users/${user.uid}/subscriptions/current`);
         await setDoc(subscriptionRef, {
           planId: plan.id,
@@ -200,6 +247,26 @@ export class SubscriptionService {
           endDate: thirtyDaysFromNow,
           autoRenew: true,
         } as UserSubscription);
+
+        // Update user document
+        const userRef = doc(this.firestore, `users/${user.uid}`);
+        await updateDoc(userRef, {
+          tier: plan.tier,
+          subscriptionStatus: 'active',
+          subscriptionEndDate: thirtyDaysFromNow,
+        });
+
+        // Update usage limits
+        const usageRef = doc(this.firestore, `users/${user.uid}/usage/current`);
+        await setDoc(usageRef, {
+          scansUsed: 0,
+          scansLimit: plan.tier === 'free' ? 3 : 200,
+          storageUsed: 0,
+          storageLimit: plan.tier === 'free' ? 50 * 1024 * 1024 : 10 * 1024 * 1024 * 1024,
+          retentionDays: plan.tier === 'free' ? 7 : 30,
+          tier: plan.tier,
+          lastResetDate: now,
+        });
 
         // Track successful upgrade
         await this.trackPricingEvent({
@@ -212,7 +279,7 @@ export class SubscriptionService {
         return;
       }
 
-      // Track payment initiation
+      // Track payment initiation for paid plans
       await this.trackPaymentEvent({
         event: 'payment_initiated',
         planId: plan.id,
@@ -254,11 +321,14 @@ export class SubscriptionService {
     if (!user) throw new Error('User must be authenticated');
 
     try {
+      const plan = SUBSCRIPTION_PLANS.find((p) => p.id === paymentData.planId);
+      if (!plan) throw new Error('Invalid plan');
+
       // Track payment completion
       await this.trackPaymentEvent({
         event: 'payment_completed',
         planId: paymentData.planId,
-        planTier: 'pro',
+        planTier: plan.tier,
         userId: paymentData.userId,
         amount: paymentData.amount,
         currency: paymentData.currency,
@@ -269,11 +339,11 @@ export class SubscriptionService {
       const now = Timestamp.now();
       const thirtyDaysFromNow = Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
 
-      // Update user's subscription
+      // Update subscription
       const subscriptionRef = doc(this.firestore, `users/${user.uid}/subscriptions/current`);
       await setDoc(subscriptionRef, {
         planId: paymentData.planId,
-        tier: 'pro',
+        tier: plan.tier,
         status: 'active',
         startDate: now,
         endDate: thirtyDaysFromNow,
@@ -284,20 +354,20 @@ export class SubscriptionService {
       // Update user's tier in user document
       const userRef = doc(this.firestore, `users/${user.uid}`);
       await updateDoc(userRef, {
-        tier: 'pro',
+        tier: plan.tier,
         subscriptionStatus: 'active',
         subscriptionEndDate: thirtyDaysFromNow,
       });
 
-      // Set usage limits for pro tier
+      // Set usage limits for the plan
       const usageRef = doc(this.firestore, `users/${user.uid}/usage/current`);
       await setDoc(usageRef, {
         scansUsed: 0,
-        scansLimit: 200, // Pro tier: 200 scans per month
+        scansLimit: plan.tier === 'free' ? 3 : 200,
         storageUsed: 0,
-        storageLimit: 10 * 1024 * 1024 * 1024, // 10GB storage
-        retentionDays: 30, // 30 days retention
-        tier: 'pro',
+        storageLimit: plan.tier === 'free' ? 50 * 1024 * 1024 : 10 * 1024 * 1024 * 1024,
+        retentionDays: plan.tier === 'free' ? 7 : 30,
+        tier: plan.tier,
         lastResetDate: now,
       });
 
@@ -305,8 +375,9 @@ export class SubscriptionService {
       await this.trackPricingEvent({
         event: 'upgrade_completed',
         planId: paymentData.planId,
-        planTier: 'pro',
+        planTier: plan.tier,
         userId: user.uid,
+        previousTier: user.tier,
       });
 
       // Redirect to home page

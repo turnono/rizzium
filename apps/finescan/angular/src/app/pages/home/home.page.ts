@@ -27,6 +27,7 @@ import {
   logOutOutline,
 } from 'ionicons/icons';
 import { PopoverController } from '@ionic/angular/standalone';
+import { SubscriptionService } from '@rizzium/shared/services';
 
 @Component({
   selector: 'app-user-menu',
@@ -98,7 +99,7 @@ export class HomePageComponent implements OnInit {
   private router = inject(Router);
   private breakpointObserver = inject(BreakpointObserver);
   private popoverCtrl = inject(PopoverController);
-
+  subscriptionService = inject(SubscriptionService);
   isLoggedIn$ = this.authService.user$.pipe(map((user) => !!user));
   displayName$ = this.authService.user$.pipe(map((user) => user?.displayName || 'User'));
   photoURL$ = this.authService.user$.pipe(map((user) => user?.photoURL));

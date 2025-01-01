@@ -63,13 +63,22 @@
           </ion-item>
         </div>
 
-        <ion-button expand="block" (click)="selectPlan(plan)" [strong]="plan.isPopular">
+        <ion-button expand="block" (click)="selectPlan(plan)" [strong]="plan.isPopular"
+          [disabled]="(currentPlan$ | async)?.tier === 'pro' && plan.tier === 'pro'">
           @if (plan.price === 0) {
+          @if ((currentPlan$ | async)?.tier === plan.tier) {
+          Current Plan
+          } @else {
           Get Started
+          }
           } @else if (plan.price === null) {
           Contact Sales
           } @else {
+          @if ((currentPlan$ | async)?.tier === plan.tier) {
+          Current Plan
+          } @else {
           Upgrade Now
+          }
           }
         </ion-button>
       </ion-card-content>
