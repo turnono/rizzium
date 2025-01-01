@@ -1,11 +1,12 @@
 import { Injectable, inject } from '@angular/core';
-import { Firestore, doc, getDoc, setDoc, collection, addDoc, Timestamp } from '@angular/fire/firestore';
+import { Firestore, doc, getDoc, setDoc, collection, addDoc, Timestamp, updateDoc } from '@angular/fire/firestore';
 import { Functions } from '@angular/fire/functions';
 import { Observable, from, of, throwError } from 'rxjs';
 import { map, catchError, switchMap, tap } from 'rxjs/operators';
 import { FirebaseAuthService } from './firebase-auth.service';
 import { PaystackService } from './paystack.service';
 import { SUBSCRIPTION_PLANS, Plan } from './plans.config';
+import { Router } from '@angular/router';
 
 export type PlanTier = 'free' | 'pro';
 
@@ -88,6 +89,7 @@ export class SubscriptionService {
   private functions = inject(Functions);
   private authService = inject(FirebaseAuthService);
   private paystackService = inject(PaystackService);
+  private router = inject(Router);
 
   getAvailablePlans(): Observable<Plan[]> {
     return of(SUBSCRIPTION_PLANS).pipe(
@@ -240,16 +242,57 @@ export class SubscriptionService {
   }
 
   async handlePaymentSuccess(paymentData: PaymentEventData): Promise<void> {
-    await this.trackPaymentEvent({
-      event: 'payment_completed',
-      planId: paymentData.planId,
-      planTier: 'pro',
-      userId: paymentData.userId,
-      amount: paymentData.amount,
-      currency: paymentData.currency,
-      paymentMethod: paymentData.paymentMethod,
-      transactionId: paymentData.transactionId,
-    });
+    const user = await this.authService.getCurrentUser();
+    if (!user) throw new Error('User must be authenticated');
+
+    try {
+      // Track payment completion
+      await this.trackPaymentEvent({
+        event: 'payment_completed',
+        planId: paymentData.planId,
+        planTier: 'pro',
+        userId: paymentData.userId,
+        amount: paymentData.amount,
+        currency: paymentData.currency,
+        paymentMethod: paymentData.paymentMethod,
+        transactionId: paymentData.transactionId,
+      });
+
+      // Update user's subscription
+      const subscriptionRef = doc(this.firestore, `users/${user.uid}/subscriptions/current`);
+      await setDoc(subscriptionRef, {
+        planId: paymentData.planId,
+        tier: 'pro',
+        status: 'active',
+        startDate: new Date(),
+        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+        autoRenew: true,
+        paystackReference: paymentData.transactionId,
+      } as UserSubscription);
+
+      // Update usage limits for pro tier
+      const usageRef = doc(this.firestore, `users/${user.uid}/usage/current`);
+      await updateDoc(usageRef, {
+        scansLimit: 200, // Pro tier: 200 scans per month
+        storageLimit: 10 * 1024 * 1024 * 1024, // 10GB storage
+        retentionDays: 30, // 30 days retention
+        tier: 'pro',
+      });
+
+      // Track successful upgrade
+      await this.trackPricingEvent({
+        event: 'upgrade_completed',
+        planId: paymentData.planId,
+        planTier: 'pro',
+        userId: user.uid,
+      });
+
+      // Redirect to home page
+      await this.router.navigate(['/home']);
+    } catch (error) {
+      console.error('Error handling payment success:', error);
+      throw error;
+    }
   }
 
   async cancelSubscription(userId: string, planId: string): Promise<void> {

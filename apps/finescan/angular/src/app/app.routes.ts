@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { AuthGuard } from '@rizzium/shared/guards';
 import { UsageLimitGuard } from '@rizzium/shared/guards';
-
+import { FreeTierGuard } from '@rizzium/shared/guards';
 export const routes: Routes = [
   {
     path: '',
@@ -34,7 +34,7 @@ export const routes: Routes = [
   {
     path: 'pricing',
     loadComponent: () => import('./pages/pricing/pricing.page').then((m) => m.PricingPageComponent),
-    canActivate: [AuthGuard],
+    canActivate: [AuthGuard, FreeTierGuard],
   },
   {
     path: 'settings',

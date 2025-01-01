@@ -128,6 +128,17 @@ export class UsageLimitService {
     }
 
     try {
+      // Check if user is on pro plan
+      const subscriptionRef = doc(this.firestore, `users/${user.uid}/subscriptions/current`);
+      const subscriptionSnap = await getDoc(subscriptionRef);
+      const subscription = subscriptionSnap.exists()
+        ? (subscriptionSnap.data() as { tier: string; status: string })
+        : null;
+
+      if (subscription?.tier === 'pro' && subscription?.status === 'active') {
+        return true; // Pro users don't need usage checks
+      }
+
       // Ensure usage document exists
       await this.ensureUsageDocumentExists(user.uid);
 
@@ -182,6 +193,17 @@ export class UsageLimitService {
     }
 
     try {
+      // Check if user is on pro plan
+      const subscriptionRef = doc(this.firestore, `users/${user.uid}/subscriptions/current`);
+      const subscriptionSnap = await getDoc(subscriptionRef);
+      const subscription = subscriptionSnap.exists()
+        ? (subscriptionSnap.data() as { tier: string; status: string })
+        : null;
+
+      if (subscription?.tier === 'pro' && subscription?.status === 'active') {
+        return true; // Pro users don't need usage tracking
+      }
+
       const usageRef = doc(this.firestore, `users/${user.uid}/usage/current`);
       const usageSnap = await getDoc(usageRef);
       const usage = usageSnap.data() as UsageData;
