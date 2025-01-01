@@ -2,6 +2,8 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonRouterOutlet, IonApp, IonContent, IonFooter } from '@ionic/angular/standalone';
 import { FooterComponent } from '@rizzium/shared/ui/organisms';
+import { NavigationEnd } from '@angular/router';
+import { Router } from '@angular/router';
 
 @Component({
   standalone: true,
@@ -12,4 +14,13 @@ import { FooterComponent } from '@rizzium/shared/ui/organisms';
 })
 export class AppComponent {
   title = 'FineScan AI';
+  path: string;
+
+  constructor(private router: Router) {
+    this.router.events.subscribe((event) => {
+      if (event instanceof NavigationEnd) {
+        this.path = event.url;
+      }
+    });
+  }
 }

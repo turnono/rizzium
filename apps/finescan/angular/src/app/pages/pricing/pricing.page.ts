@@ -19,6 +19,7 @@ import {
   IonLabel,
   IonBackButton,
   IonButtons,
+  IonText,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -41,6 +42,7 @@ import { Observable, map, switchMap, of } from 'rxjs';
   selector: 'app-pricing',
   standalone: true,
   imports: [
+    IonText,
     CommonModule,
     IonContent,
     IonHeader,
@@ -112,10 +114,25 @@ export class PricingPageComponent implements OnInit {
     }
 
     try {
+      await this.subscriptionService.trackPricingEvent({
+        event: 'upgrade_started',
+        planId: plan.id,
+        planTier: plan.tier,
+        userId: user.uid,
+      });
+
       await this.subscriptionService.upgradePlan(plan.id);
     } catch (error) {
       console.error('Error upgrading plan:', error);
-      // Handle error (show toast or alert)
+      if (user) {
+        await this.subscriptionService.trackPricingEvent({
+          event: 'upgrade_failed',
+          planId: plan.id,
+          planTier: plan.tier,
+          userId: user.uid,
+          error: error.message,
+        });
+      }
     }
   }
 }
