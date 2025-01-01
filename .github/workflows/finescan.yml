@@ -79,6 +79,8 @@ jobs:
           firebase --version
           firebase projects:list
 
+          firebase use ${{ env.FINESCAN_FIREBASE_PROJECT_ID }}
+
           # Set up environment variables for functions
           firebase functions:config:set paystack.secret_key="${{ secrets.FINESCAN_PAYSTACK_SECRET_KEY }}"
 
