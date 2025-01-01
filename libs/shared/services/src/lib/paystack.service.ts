@@ -1,5 +1,14 @@
 import { Injectable, inject } from '@angular/core';
-import { Firestore, doc, setDoc, getDoc, DocumentSnapshot, DocumentData, Timestamp } from '@angular/fire/firestore';
+import {
+  Firestore,
+  doc,
+  setDoc,
+  getDoc,
+  DocumentSnapshot,
+  DocumentData,
+  Timestamp,
+  updateDoc,
+} from '@angular/fire/firestore';
 import { FirebaseAuthService } from './firebase-auth.service';
 import { Functions, httpsCallable } from '@angular/fire/functions';
 import { from, Observable, switchMap, throwError } from 'rxjs';
@@ -7,6 +16,7 @@ import { map, catchError } from 'rxjs/operators';
 import { paystackConfig } from '../../../../../apps/finescan/angular/src/app/paystack.config';
 import PaystackPop from '@paystack/inline-js';
 import { SUBSCRIPTION_PLANS } from './plans.config';
+import { Router } from '@angular/router';
 
 interface PaystackResponse {
   reference: string;
@@ -18,51 +28,25 @@ interface PaystackResponse {
 }
 
 interface PaystackVerifyResponse {
-  status: boolean;
-  message: string;
-  data: {
+  status: 'success' | 'failed';
+  amount: number;
+  customer: {
     id: number;
-    status: string;
-    reference: string;
-    amount: number;
-    gateway_response: string;
-    paid_at: string;
-    created_at: string;
-    channel: string;
-    currency: string;
-    ip_address: string;
-    customer: {
-      id: number;
-      first_name: string | null;
-      last_name: string | null;
-      email: string;
-      customer_code: string;
-      phone: string | null;
-      metadata: Record<string, unknown>;
-      risk_action: string;
-    };
-    authorization: {
-      authorization_code: string;
-      bin: string;
-      last4: string;
-      exp_month: string;
-      exp_year: string;
-      card_type: string;
-      bank: string;
-      country_code: string;
-      brand: string;
-      reusable: boolean;
-    };
-    plan: string | null;
-    split: Record<string, unknown> | null;
-    subaccount: Record<string, unknown> | null;
-    metadata: {
-      custom_fields: Array<{
-        display_name: string;
-        variable_name: string;
-        value: string | number;
-      }>;
-    };
+    first_name: string;
+    last_name: string;
+    email: string;
+    customer_code: string;
+    phone: string;
+    metadata: Record<string, unknown>;
+    risk_action: string;
+  };
+  reference: string;
+  metadata: {
+    custom_fields: Array<{
+      display_name: string;
+      variable_name: string;
+      value: string | number;
+    }>;
   };
 }
 
@@ -80,7 +64,7 @@ export interface PaystackTransaction {
       value: string | number;
     }>;
   };
-  authorization: {
+  authorization?: {
     authorization_code: string;
     bin: string;
     last4: string;
@@ -122,6 +106,7 @@ export class PaystackService {
   private firestore = inject(Firestore);
   private functions = inject(Functions);
   private authService = inject(FirebaseAuthService);
+  private router = inject(Router);
   private config = paystackConfig;
 
   async initializePayment(planId: string, email: string): Promise<void> {
@@ -201,38 +186,72 @@ export class PaystackService {
       );
       const { data } = await verifyPayment({ reference });
 
-      if (data.data.status === 'success') {
-        // Update user's subscription
-        const subscriptionRef = doc(this.firestore, `users/${user.uid}/subscriptions/current`);
+      if (data.status === 'success') {
+        const plan = SUBSCRIPTION_PLANS.find((p) => p.id === planId);
+        if (!plan) throw new Error('Invalid plan');
+
+        // Navigate to home immediately after payment verification
+        this.router.navigate(['/home']);
+
+        // Perform all updates in parallel
         const now = Timestamp.now();
         const thirtyDaysFromNow = Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
-        const subscriptionData = {
-          planId,
-          status: 'active',
-          startDate: now,
-          endDate: thirtyDaysFromNow,
-          autoRenew: true,
-          paystackReference: reference,
-          lastPaymentDate: now,
-          customerEmail: data.data.customer.email,
-          customerMetadata: data.data.customer.metadata,
-          authorization: data.data.authorization,
-        };
 
-        await setDoc(subscriptionRef, subscriptionData);
+        // Check if usage document exists
+        const usageRef = doc(this.firestore, `users/${user.uid}/usage/current`);
+        const usageDoc = await getDoc(usageRef);
 
-        // Record the transaction
-        const transactionRef = doc(this.firestore, `users/${user.uid}/transactions/${reference}`);
-        await setDoc(transactionRef, {
-          reference,
-          status: 'success',
-          amount: data.data.amount / 100, // Convert from kobo back to main currency
-          planId,
-          createdAt: now,
-          customerEmail: data.data.customer.email,
-          metadata: data.data.metadata,
-          authorization: data.data.authorization,
-        } as PaystackTransaction);
+        const updates = [
+          // Update subscription
+          setDoc(doc(this.firestore, `users/${user.uid}/subscriptions/current`), {
+            planId,
+            status: 'active',
+            startDate: now,
+            endDate: thirtyDaysFromNow,
+            autoRenew: true,
+            paystackReference: reference,
+            lastPaymentDate: now,
+            customerEmail: data.customer.email,
+            customerMetadata: data.customer.metadata,
+            metadata: data.metadata,
+          }),
+
+          // Update user document
+          updateDoc(doc(this.firestore, `users/${user.uid}`), {
+            tier: plan.tier,
+            subscriptionStatus: 'active',
+            subscriptionEndDate: thirtyDaysFromNow,
+          }),
+
+          // Create or update usage document
+          setDoc(
+            usageRef,
+            {
+              scansUsed: 0,
+              scansLimit: plan.scanLimit,
+              storageUsed: 0,
+              storageLimit: plan.storageLimit,
+              retentionDays: plan.retentionDays,
+              tier: plan.tier,
+              lastResetDate: now,
+            },
+            { merge: usageDoc.exists() }
+          ),
+
+          // Record transaction
+          setDoc(doc(this.firestore, `users/${user.uid}/transactions/${reference}`), {
+            reference,
+            status: 'success',
+            amount: data.amount / 100,
+            planId,
+            createdAt: now,
+            customerEmail: data.customer.email,
+            metadata: data.metadata,
+            authorization: null,
+          } as PaystackTransaction),
+        ];
+
+        await Promise.all(updates);
       } else {
         throw new Error('Payment verification failed');
       }

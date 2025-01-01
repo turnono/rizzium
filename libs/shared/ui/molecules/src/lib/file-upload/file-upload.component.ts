@@ -1383,7 +1383,7 @@ export class FileUploadComponent {
         if (this.isModal) {
           await this.modalCtrl.dismiss();
         }
-        await this.router.navigate(['/reports']);
+        await this.router.navigate(['/reports'], { replaceUrl: true });
       } catch (error) {
         console.warn('Modal dismiss failed, proceeding with navigation:', error);
         await this.router.navigate(['/reports']);
