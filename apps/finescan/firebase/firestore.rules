@@ -195,7 +195,7 @@ service cloud.firestore {
     match /pricing_events/{eventId} {
       allow read: if isSignedIn();
       allow create: if isSignedIn() &&
-        request.resource.data.keys().hasAll(['userId', 'type', 'timestamp']) &&
+        request.resource.data.keys().hasAll(['userId', 'type', 'timestamp', 'planId', 'planTier']) &&
         request.resource.data.userId == request.auth.uid;
       allow update: if false;
       allow delete: if false;

@@ -142,6 +142,7 @@
         View Reports
         }
       </ion-button>
+      @if ((subscriptionService?.getCurrentSubscription() | async)?.tier !== 'pro') {
       <ion-button [size]="isMobile ? 'default' : 'large'" fill="outline" [routerLink]="['/pricing']"
         [style]="{'--border-radius': isMobile ? '8px' : '12px'}">
         <ion-icon slot="start" name="flash"></ion-icon>
@@ -151,6 +152,7 @@
         Upgrade Plan
         }
       </ion-button>
+      }
     </div>
     } @else {
     <ion-button size="large" (click)="navigateToLogin()"
