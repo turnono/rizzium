@@ -79,6 +79,9 @@ jobs:
           firebase --version
           firebase projects:list
 
+          # Set up environment variables for functions
+          firebase functions:config:set paystack.secret_key="${{ secrets.FINESCAN_PAYSTACK_SECRET_KEY }}" --project ${{ env.FINESCAN_FIREBASE_PROJECT_ID }}
+
           # Run deployment with maximum verbosity and debug flags
           FIREBASE_DEBUG=true DEBUG="@firebase/*" npx nx deploy ${{ env.APP_NAME }}-firebase --verbose
 

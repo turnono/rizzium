@@ -15,7 +15,7 @@ export class FreeTierGuard implements CanActivate {
     return this.subscriptionService.getCurrentSubscription().pipe(
       map((subscription: UserSubscription | null) => {
         console.log({ subscription });
-        if (subscription?.tier === 'pro' && subscription?.status === 'active') {
+        if (subscription?.planId === 'pro-monthly' && subscription?.status === 'active') {
           this.router.navigate(['/home']);
           return false;
         }

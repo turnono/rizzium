@@ -26,12 +26,22 @@ export interface SubscriptionPlan {
 
 export interface UserSubscription {
   planId: string;
-  tier: PlanTier;
   status: 'active' | 'cancelled' | 'expired';
   startDate: Timestamp;
   endDate: Timestamp;
   autoRenew: boolean;
   paystackReference?: string;
+  metadata?: {
+    referrer: string;
+    custom_fields: Array<{
+      display_name: string;
+      variable_name: string;
+      value: string;
+    }>;
+  };
+  customerEmail?: string;
+  lastPaymentDate?: Timestamp;
+  customerMetadata?: unknown;
 }
 
 export interface UsageStats {
@@ -241,79 +251,68 @@ export class SubscriptionService {
         const subscriptionRef = doc(this.firestore, `users/${user.uid}/subscriptions/current`);
         await setDoc(subscriptionRef, {
           planId: plan.id,
-          tier: plan.tier,
           status: 'active',
           startDate: now,
           endDate: thirtyDaysFromNow,
-          autoRenew: true,
-        } as UserSubscription);
-
-        // Update user document
-        const userRef = doc(this.firestore, `users/${user.uid}`);
-        await updateDoc(userRef, {
-          tier: plan.tier,
-          subscriptionStatus: 'active',
-          subscriptionEndDate: thirtyDaysFromNow,
+          autoRenew: false,
         });
 
-        // Update usage limits
+        // Update usage limits for free plan
         const usageRef = doc(this.firestore, `users/${user.uid}/usage/current`);
-        await setDoc(usageRef, {
-          scansUsed: 0,
-          scansLimit: plan.tier === 'free' ? 3 : 200,
-          storageUsed: 0,
-          storageLimit: plan.tier === 'free' ? 50 * 1024 * 1024 : 10 * 1024 * 1024 * 1024,
-          retentionDays: plan.tier === 'free' ? 7 : 30,
-          tier: plan.tier,
-          lastResetDate: now,
-        });
-
-        // Track successful upgrade
-        await this.trackPricingEvent({
-          event: 'upgrade_completed',
-          planId: plan.id,
-          planTier: plan.tier,
-          userId: user.uid,
-          previousTier: user.tier,
-        });
-        return;
+        await setDoc(
+          usageRef,
+          {
+            scansUsed: 0,
+            scansLimit: plan.scanLimit,
+            storageUsed: 0,
+            storageLimit: plan.storageLimit,
+            retentionDays: plan.retentionDays,
+            lastResetDate: now,
+            tier: plan.tier,
+          },
+          { merge: true }
+        );
+      } else {
+        // Handle paid plan
+        await this.paystackService.initializePayment(planId, user.email || '');
       }
 
-      // Track payment initiation for paid plans
-      await this.trackPaymentEvent({
-        event: 'payment_initiated',
+      // Track upgrade completion
+      await this.trackPricingEvent({
+        event: 'upgrade_completed',
         planId: plan.id,
         planTier: plan.tier,
         userId: user.uid,
-        amount: plan.price,
-        currency: 'ZAR',
-      });
-
-      // Initialize Paystack payment
-      await this.paystackService.initializePayment(planId, user.email || '');
-    } catch (error) {
-      // Track failed payment
-      await this.trackPaymentEvent({
-        event: 'payment_failed',
-        planId: planId,
-        planTier: SUBSCRIPTION_PLANS.find((p) => p.id === planId)?.tier || 'pro',
-        userId: user.uid,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-
-      // Track failed upgrade
-      await this.trackPricingEvent({
-        event: 'upgrade_failed',
-        planId: planId,
-        planTier: SUBSCRIPTION_PLANS.find((p) => p.id === planId)?.tier || 'pro',
-        userId: user.uid,
         previousTier: user.tier,
-        error: error instanceof Error ? error.message : 'Unknown error',
       });
-
+    } catch (error) {
       console.error('Error upgrading plan:', error);
       throw error;
     }
+  }
+
+  // Add method to update usage limits after successful payment
+  async updateUsageLimits(planId: string): Promise<void> {
+    const user = await this.authService.getCurrentUser();
+    if (!user) throw new Error('User must be authenticated');
+
+    const plan = SUBSCRIPTION_PLANS.find((p) => p.id === planId);
+    if (!plan) throw new Error('Invalid plan');
+
+    const usageRef = doc(this.firestore, `users/${user.uid}/usage/current`);
+    await setDoc(
+      usageRef,
+      {
+        scansLimit: plan.scanLimit,
+        storageLimit: plan.storageLimit,
+        retentionDays: plan.retentionDays,
+        tier: plan.tier,
+        lastResetDate: Timestamp.now(),
+        scansUsed: 0,
+        storageUsed: 0,
+      },
+      { merge: true }
+    );
   }
 
   async handlePaymentSuccess(paymentData: PaymentEventData): Promise<void> {
@@ -363,10 +362,10 @@ export class SubscriptionService {
       const usageRef = doc(this.firestore, `users/${user.uid}/usage/current`);
       await setDoc(usageRef, {
         scansUsed: 0,
-        scansLimit: plan.tier === 'free' ? 3 : 200,
+        scansLimit: plan.scanLimit,
         storageUsed: 0,
-        storageLimit: plan.tier === 'free' ? 50 * 1024 * 1024 : 10 * 1024 * 1024 * 1024,
-        retentionDays: plan.tier === 'free' ? 7 : 30,
+        storageLimit: plan.storageLimit,
+        retentionDays: plan.retentionDays,
         tier: plan.tier,
         lastResetDate: now,
       });
@@ -380,7 +379,7 @@ export class SubscriptionService {
         previousTier: user.tier,
       });
 
-      // Redirect to home page
+      // Navigate to home page
       await this.router.navigate(['/home']);
     } catch (error) {
       console.error('Error handling payment success:', error);

@@ -36,7 +36,7 @@ import {
 import { SubscriptionService, SubscriptionPlan } from '@rizzium/shared/services';
 import { FirebaseAuthService } from '@rizzium/shared/services';
 import { FooterComponent } from '@rizzium/shared/ui/organisms';
-import { Observable, map, switchMap, of } from 'rxjs';
+import { Observable, map, switchMap, of, tap } from 'rxjs';
 
 @Component({
   selector: 'app-pricing',
@@ -92,6 +92,12 @@ export class PricingPageComponent implements OnInit {
   ngOnInit() {
     this.plans$ = this.subscriptionService.getAvailablePlans();
     this.currentPlan$ = this.subscriptionService.getCurrentSubscription().pipe(
+      tap((subscription) => {
+        // Redirect to home if user has an active subscription and it hasn't expired
+        if (subscription?.status === 'active' && subscription.endDate?.seconds > Date.now() / 1000) {
+          this.router.navigate(['/home']);
+        }
+      }),
       switchMap((subscription) => {
         if (!subscription) return of(null);
         return this.plans$.pipe(map((plans) => plans.find((p) => p.id === subscription.planId) || null));

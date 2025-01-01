@@ -28,6 +28,7 @@ import {
 } from 'ionicons/icons';
 import { PopoverController } from '@ionic/angular/standalone';
 import { SubscriptionService } from '@rizzium/shared/services';
+import { BehaviorSubject, Observable } from 'rxjs';
 
 @Component({
   selector: 'app-user-menu',
@@ -105,6 +106,7 @@ export class HomePageComponent implements OnInit {
   photoURL$ = this.authService.user$.pipe(map((user) => user?.photoURL));
   isOnline = navigator.onLine;
   isMobile = true; // Default to mobile view
+  isPro$: Observable<boolean>;
 
   constructor() {
     addIcons({
@@ -129,6 +131,9 @@ export class HomePageComponent implements OnInit {
 
     window.addEventListener('online', () => (this.isOnline = true));
     window.addEventListener('offline', () => (this.isOnline = false));
+    this.isPro$ = this.subscriptionService
+      .getCurrentSubscription()
+      .pipe(map((subscription) => subscription?.planId === 'pro-monthly'));
   }
 
   ngOnInit() {
