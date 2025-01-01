@@ -17,26 +17,6 @@ export interface Plan {
 
 export const SUBSCRIPTION_PLANS: Plan[] = [
   {
-    id: 'free',
-    name: 'Free',
-    tier: 'free',
-    planCode: 'PLN_free',
-    price: 0,
-    features: [
-      '3 scans per month',
-      '100MB storage',
-      'GPT-3.5 Turbo model',
-      '7 days retention',
-      'Basic document analysis',
-      'Risk assessment',
-    ],
-    scanLimit: 3,
-    storageLimit: 100 * 1024 * 1024, // 100MB in bytes
-    aiModel: 'gpt-3.5-turbo',
-    retentionDays: 7,
-    description: 'Try our document analysis features',
-  },
-  {
     id: 'pro-monthly',
     name: 'Pro',
     tier: 'pro',
@@ -58,5 +38,25 @@ export const SUBSCRIPTION_PLANS: Plan[] = [
     retentionDays: 30,
     description: 'Professional document analysis solution',
     isPopular: true,
+  },
+  {
+    id: 'free',
+    name: 'Free',
+    tier: 'free',
+    planCode: 'PLN_free',
+    price: 0,
+    features: [
+      '3 scans per month',
+      '100MB storage',
+      'GPT-3.5 Turbo model',
+      '7 days retention',
+      'Basic document analysis',
+      'Risk assessment',
+    ],
+    scanLimit: 3,
+    storageLimit: 100 * 1024 * 1024, // 100MB in bytes
+    aiModel: 'gpt-3.5-turbo',
+    retentionDays: 7,
+    description: 'Try our document analysis features',
   },
 ];

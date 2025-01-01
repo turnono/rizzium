@@ -1,6 +1,6 @@
 <ion-app>
   <ion-router-outlet style="z-index: 1000;"></ion-router-outlet>
-  <rizzium-footer [appName]="'finescan'"></rizzium-footer>
+  <rizzium-footer [appName]="'finescan'" *ngIf="!path?.includes('pricing')"></rizzium-footer>
   <ion-content>
     <div class="highlight"></div>
     <div class="neuron"></div>

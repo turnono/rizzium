@@ -1,5 +1,4 @@
 .pricing-header {
-  margin-bottom: 2rem;
   h1 {
     font-size: 2.5rem;
     font-weight: bold;
@@ -15,7 +14,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1rem;
-  padding: 1rem;
+  padding: 0 1rem;
 }
 
 .featured {
@@ -55,12 +54,6 @@ ion-card-header {
 ion-card-title {
   font-size: 1.5rem;
   font-weight: 600;
-}
-
-.plan-limits {
-  margin-top: 1rem;
-  border-top: 1px solid var(--ion-color-light);
-  padding-top: 1rem;
 }
 
 ion-button {

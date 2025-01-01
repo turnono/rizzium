@@ -92,15 +92,19 @@ export class SubscriptionService {
   getAvailablePlans(): Observable<Plan[]> {
     return of(SUBSCRIPTION_PLANS).pipe(
       tap(async () => {
-        const user = await this.authService.getCurrentUser();
-        if (user) {
-          // Track plan view
-          await this.trackPricingEvent({
-            event: 'plan_viewed',
-            planId: 'all',
-            planTier: user.tier,
-            userId: user.uid,
-          });
+        try {
+          const user = await this.authService.getCurrentUser();
+          if (user?.tier) {
+            // Only track if user and tier exist
+            await this.trackPricingEvent({
+              event: 'plan_viewed',
+              planId: 'all',
+              planTier: user.tier,
+              userId: user.uid,
+            });
+          }
+        } catch (error) {
+          console.error('Error tracking plan view:', error);
         }
       })
     );
@@ -118,8 +122,24 @@ export class SubscriptionService {
     );
   }
 
-  private async trackPricingEvent(event: PricingAnalytics): Promise<void> {
+  async trackPricingEvent(event: PricingAnalytics): Promise<void> {
     try {
+      // Ensure planTier is defined by getting it from plans if needed
+      if (!event.planTier && event.planId) {
+        const plans = await this.getAvailablePlans()
+          .pipe(map((plans) => plans.find((p) => p.id === event.planId)))
+          .toPromise();
+        if (plans) {
+          event.planTier = plans.tier;
+        }
+      }
+
+      // Only proceed if we have a valid planTier
+      if (!event.planTier) {
+        console.warn('Skipping pricing event tracking due to missing planTier:', event);
+        return;
+      }
+
       const analyticsRef = collection(this.firestore, 'analytics/pricing/events');
       await addDoc(analyticsRef, {
         ...event,
