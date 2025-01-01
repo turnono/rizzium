@@ -53,6 +53,7 @@ import {
   playOutline,
   refreshOutline,
   trashOutline,
+  documentOutline,
 } from 'ionicons/icons';
 import { Firestore, Timestamp, updateDoc, doc } from '@angular/fire/firestore';
 import { getFunctions, httpsCallable } from '@angular/fire/functions';
@@ -457,6 +458,7 @@ export class ReportsPageComponent implements OnInit {
       playOutline,
       refreshOutline,
       trashOutline,
+      documentOutline,
     });
   }
 
@@ -563,6 +565,13 @@ export class ReportsPageComponent implements OnInit {
       // Check if user has reached their limit before showing confirmation
       const usageStatus = await this.usageLimitService.hasReachedLimit();
       if (usageStatus.hasReached) {
+        // show toast
+        const toast = await this.toastCtrl.create({
+          message: 'You have reached your monthly scan limit. Upgrade to continue.',
+          duration: 3000,
+          color: 'danger',
+        });
+        await toast.present();
         return;
       }
 

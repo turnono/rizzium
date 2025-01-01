@@ -87,6 +87,7 @@ import { AlertController } from '@ionic/angular';
               accept="image/*,.jpg,.jpeg,.png,.webp"
               (progressChange)="onUploadProgress($event)"
               (urlGenerated)="onUrlGenerated($event)"
+              [isModal]="true"
             ></ui-file-upload>
           </div>
 
@@ -335,10 +336,6 @@ export class FileUploadPageComponent {
     if (this.lastUploadedUrl) {
       window.open(this.lastUploadedUrl, '_blank');
     }
-  }
-
-  startAnalysis() {
-    this.router.navigate(['/reports']);
   }
 
   triggerFileUpload() {
