@@ -12,8 +12,8 @@ export class UsageLimitGuard implements CanActivate {
   async canActivate(): Promise<boolean> {
     try {
       const hasReachedLimit = await this.usageLimitService.hasReachedLimit();
-
-      if (hasReachedLimit) {
+      console.log('hasReachedLimit', hasReachedLimit);
+      if (hasReachedLimit.hasReached) {
         await this.router.navigate(['/pricing']);
         return false;
       }

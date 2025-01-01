@@ -1,12 +1,12 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
-import { AnalysisService, FirebaseAuthService } from '@rizzium/shared/services';
-import { Analysis, AnalysisStatus } from '@rizzium/shared/interfaces';
+import { Router, RouterLink } from '@angular/router';
+import { AnalysisService, FirebaseAuthService, UsageLimitService } from '@rizzium/shared/services';
+import { Analysis, AnalysisStatus, CloudFunctionResponse } from '@rizzium/shared/interfaces';
 import { AnalysisResultsComponent } from '@rizzium/shared/ui/molecules';
 import { FooterComponent } from '@rizzium/shared/ui/organisms';
-import { ModalController } from '@ionic/angular/standalone';
+import { ModalController, ToastController } from '@ionic/angular/standalone';
 import { AnalysisModalComponent } from '@rizzium/shared/ui/molecules';
 
 import {
@@ -53,44 +53,11 @@ import {
   playOutline,
   refreshOutline,
   trashOutline,
+  documentOutline,
 } from 'ionicons/icons';
 import { Firestore, Timestamp, updateDoc, doc } from '@angular/fire/firestore';
 import { getFunctions, httpsCallable } from '@angular/fire/functions';
 import { firstValueFrom } from 'rxjs';
-
-// Add interface for the analysis response
-interface AnalysisResponse {
-  data: {
-    text?: string;
-    riskLevel?: 'high' | 'medium' | 'low';
-    summary: {
-      riskLevel: 'high' | 'medium' | 'low';
-      description: string;
-      recommendations: string[];
-    };
-    flags: Array<{
-      start: number;
-      end: number;
-      reason: string;
-      riskLevel: 'high' | 'medium' | 'low';
-    }>;
-  };
-}
-
-interface AnalysisResult {
-  text: string;
-  flags: Array<{
-    start: number;
-    end: number;
-    reason: string;
-    riskLevel: 'high' | 'medium' | 'low';
-  }>;
-  summary: {
-    riskLevel: 'high' | 'medium' | 'low';
-    description: string;
-    recommendations: string[];
-  };
-}
 
 @Component({
   selector: 'app-reports',
@@ -186,6 +153,12 @@ interface AnalysisResult {
               <ion-button routerLink="/file-upload">Upload Document</ion-button>
             </div>
             } @else {
+            <div class="list-hint">
+              <ion-item lines="none" color="light">
+                <ion-icon name="information-circle" slot="start"></ion-icon>
+                <ion-label>Click on any document to view details or start analysis</ion-label>
+              </ion-item>
+            </div>
             <ion-list>
               @for (analysis of analyses; track analysis.id) {
               <ion-item
@@ -427,6 +400,54 @@ interface AnalysisResult {
       .selected {
         --background: var(--ion-color-light-shade);
       }
+
+      ::ng-deep .alert-wrapper {
+        border: 2px solid var(--ion-color-primary);
+        border-radius: 8px;
+      }
+
+      ::ng-deep .alert-wrapper.alert-warning {
+        border-color: var(--ion-color-warning);
+      }
+
+      ::ng-deep .alert-wrapper.alert-danger {
+        border-color: var(--ion-color-danger);
+      }
+
+      ::ng-deep .alert-wrapper.alert-success {
+        border-color: var(--ion-color-success);
+      }
+
+      ::ng-deep .alert-head {
+        border-bottom: 1px solid var(--ion-color-light-shade);
+        padding-bottom: 8px !important;
+      }
+
+      ::ng-deep .alert-message {
+        color: var(--ion-color-dark) !important;
+      }
+
+      ::ng-deep .alert-button {
+        color: var(--ion-color-primary) !important;
+      }
+
+      .list-hint {
+        margin-bottom: 1rem;
+
+        ion-item {
+          --background: var(--ion-color-light);
+          border-radius: 8px;
+
+          ion-icon {
+            color: var(--ion-color-primary);
+          }
+
+          ion-label {
+            font-size: 0.9rem;
+            color: var(--ion-color-medium);
+          }
+        }
+      }
     `,
   ],
 })
@@ -437,6 +458,7 @@ export class ReportsPageComponent implements OnInit {
   private authService = inject(FirebaseAuthService);
   private modalCtrl = inject(ModalController);
   private analysisService = inject(AnalysisService);
+  private usageLimitService = inject(UsageLimitService);
 
   analyses: Analysis[] = [];
   selectedAnalysis: Analysis | null = null;
@@ -444,8 +466,9 @@ export class ReportsPageComponent implements OnInit {
   showFilters = false;
   statusFilter = 'all';
   searchTerm = '';
+  router = inject(Router);
 
-  constructor() {
+  constructor(private toastCtrl: ToastController) {
     addIcons({
       documentTextOutline,
       timeOutline,
@@ -460,6 +483,7 @@ export class ReportsPageComponent implements OnInit {
       playOutline,
       refreshOutline,
       trashOutline,
+      documentOutline,
     });
   }
 
@@ -477,7 +501,7 @@ export class ReportsPageComponent implements OnInit {
   }
 
   async deleteAnalysis(event: Event, analysis: Analysis) {
-    event.stopPropagation(); // Prevent item click when clicking delete button
+    event.stopPropagation();
 
     const alert = await this.alertController.create({
       header: 'Confirm Delete',
@@ -499,12 +523,14 @@ export class ReportsPageComponent implements OnInit {
                 header: 'Error',
                 message: 'Failed to delete the analysis. Please try again.',
                 buttons: ['OK'],
+                cssClass: 'alert-danger',
               });
               await errorAlert.present();
             }
           },
         },
       ],
+      cssClass: 'alert-warning',
     });
 
     await alert.present();
@@ -548,6 +574,7 @@ export class ReportsPageComponent implements OnInit {
             },
           },
         ],
+        cssClass: 'alert-primary',
       });
 
       await alert.present();
@@ -560,53 +587,118 @@ export class ReportsPageComponent implements OnInit {
         throw new Error('No file URL available for analysis');
       }
 
-      // Check usage limits and increment usage
-      const canProceed = await this.analysisService.checkUsageLimits(analysis.userId);
-      if (!canProceed) {
-        console.log('Analysis blocked: Usage limit reached');
+      // Check if user has reached their limit before showing confirmation
+      const usageStatus = await this.usageLimitService.hasReachedLimit();
+      if (usageStatus.hasReached) {
+        // show toast
+        const toast = await this.toastCtrl.create({
+          message: 'You have reached your monthly scan limit. Upgrade to continue.',
+          duration: 3000,
+          color: 'danger',
+          buttons: [
+            {
+              text: 'Upgrade',
+              role: 'confirm',
+              handler: () => {
+                this.router.navigate(['/pricing']);
+              },
+            },
+          ],
+        });
+        await toast.present();
         return;
       }
 
-      // Update status to processing
-      await this.updateAnalysisStatus(analysis.id, 'processing');
+      // Show confirmation dialog with usage information
+      const alert = await this.alertController.create({
+        header: 'Start Analysis',
+        message: `This will use one of your monthly scans (${usageStatus.scansUsed}/${usageStatus.scansLimit} used). Do you want to proceed?`,
+        buttons: [
+          {
+            text: 'Cancel',
+            role: 'cancel',
+          },
+          {
+            text: 'Proceed',
+            role: 'confirm',
+          },
+        ],
+        cssClass: 'alert-warning',
+      });
 
-      const analyzeDocument = httpsCallable<{ imageUrl: string; analysisType: string }, AnalysisResponse>(
-        this.functions,
-        'analyzeDocument'
-      );
+      await alert.present();
+      const { role } = await alert.onDidDismiss();
 
-      // Add error handling and timeout
-      const response = (await Promise.race([
-        analyzeDocument({
-          imageUrl: analysis.fileUrl,
-          analysisType: 'general',
-        }),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Analysis timeout')), 30000)),
-      ])) as AnalysisResponse;
+      if (role === 'confirm') {
+        // Increment scan count only when user confirms analysis
+        const success = await this.usageLimitService.incrementScanCount();
+        if (!success) {
+          return;
+        }
 
-      if (!response.data) {
-        throw new Error('No analysis results received');
+        // Update status to processing
+        await this.updateAnalysisStatus(analysis.id, 'processing');
+
+        // Get the analyze function
+        const analyzeDocument = httpsCallable<{ imageUrl: string }, CloudFunctionResponse>(
+          this.functions,
+          'analyzeDocument'
+        );
+
+        try {
+          // Call the analyze function with the correct parameter name
+          const result = await analyzeDocument({ imageUrl: analysis.fileUrl });
+          console.log('Analysis response:', result);
+
+          // Check the response structure
+          if (!result?.data?.analysis) {
+            console.error('Invalid response structure:', result);
+            throw new Error('No analysis results received');
+          }
+
+          // Transform the response to match our interface
+          const analysisResults: Analysis['results'] = {
+            success: result.data.success,
+            analysis: result.data.analysis,
+          };
+
+          // Update the analysis with results
+          await this.updateAnalysisResults(analysis.id, analysisResults);
+
+          // Update status to completed
+          await this.updateAnalysisStatus(analysis.id, 'completed');
+
+          const toast = await this.toastCtrl.create({
+            message: 'Analysis completed successfully',
+            duration: 2000,
+            color: 'success',
+          });
+          await toast.present();
+        } catch (error) {
+          console.error('Analysis failed:', error);
+          await this.updateAnalysisStatus(analysis.id, 'failed');
+          await this.updateAnalysisError(
+            analysis.id,
+            error instanceof Error ? error.message : 'Unknown error occurred'
+          );
+
+          const toast = await this.toastCtrl.create({
+            message: 'Analysis failed. Please try again.',
+            duration: 3000,
+            color: 'danger',
+          });
+          await toast.present();
+        }
       }
-
-      // Update the analysis with results
-      await this.updateAnalysisResults(analysis.id, response.data);
     } catch (error) {
       console.error('Error starting analysis:', error);
-
-      // Show error alert to user
       const alert = await this.alertController.create({
-        header: 'Analysis Failed',
-        message: 'There was an error analyzing your document. Please try again later.',
+        header: 'Error',
+        message: 'Failed to start analysis. Please try again.',
         buttons: ['OK'],
+        cssClass: 'alert-danger',
       });
       await alert.present();
-
-      // Revert status to pending if analysis fails
-      await this.updateAnalysisStatus(analysis.id, 'failed');
-
-      // Add error details to analysis document
-      const errorDetails = error instanceof Error ? error.message : 'Unknown error';
-      await this.updateAnalysisError(analysis.id, errorDetails);
     }
   }
 
@@ -621,16 +713,15 @@ export class ReportsPageComponent implements OnInit {
     });
   }
 
-  private async updateAnalysisResults(analysisId: string, results: AnalysisResponse['data']) {
+  private async updateAnalysisResults(analysisId: string, results: Analysis['results']) {
     const user = await firstValueFrom(this.authService.user$);
     if (!user) throw new Error('No authenticated user');
 
     const docRef = doc(this.firestore, `users/${user.uid}/analyses/${analysisId}`);
+
     await updateDoc(docRef, {
       status: 'completed',
-      results: {
-        analysis: results,
-      },
+      results,
       completedAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
     });
@@ -687,21 +778,9 @@ export class ReportsPageComponent implements OnInit {
     }
   }
 
-  getAnalysisResults(analysis: Analysis): AnalysisResult | null {
+  getAnalysisResults(analysis: Analysis): Analysis['results'] | null {
     if (!analysis?.results?.analysis) return null;
-
-    return {
-      text: analysis.fileName,
-      flags: (analysis.results.analysis.flags || []).map((flag) => ({
-        ...flag,
-        riskLevel: flag.riskLevel.toLowerCase() as 'high' | 'medium' | 'low',
-      })),
-      summary: {
-        riskLevel: analysis.results.analysis.summary.riskLevel.toLowerCase() as 'high' | 'medium' | 'low',
-        description: analysis.results.analysis.summary.description,
-        recommendations: analysis.results.analysis.summary.recommendations,
-      },
-    };
+    return analysis.results;
   }
 
   applyFilters() {

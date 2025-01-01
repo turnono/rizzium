@@ -15,6 +15,7 @@ import {
   IonAccordion,
   IonList,
   Platform,
+  ModalController,
 } from '@ionic/angular/standalone';
 import { Storage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from '@angular/fire/storage';
 import {
@@ -44,6 +45,7 @@ import {
   helpCircleOutline,
   alertCircle,
   warning,
+  warningOutline,
   time,
   lockClosed,
   server,
@@ -89,6 +91,24 @@ const ALLOWED_TYPES = ['text/plain', 'image/jpeg', 'image/png', 'image/webp'];
       role="region"
       aria-label="File upload section"
     >
+      <!-- Usage Status Display -->
+      @if (usageInfo$ | async; as usageInfo) {
+      <div class="usage-status" [class.limit-reached]="usageInfo.scansUsed >= usageInfo.scansLimit">
+        <ion-icon
+          [name]="usageInfo.scansUsed >= usageInfo.scansLimit ? 'warning-outline' : 'analytics-outline'"
+          [color]="usageInfo.scansUsed >= usageInfo.scansLimit ? 'danger' : 'primary'"
+        >
+        </ion-icon>
+        <span>
+          {{ usageInfo.scansUsed }} of {{ usageInfo.scansLimit }} scans used @if (usageInfo.scansUsed >=
+          usageInfo.scansLimit) {
+          <span class="limit-message">Analysis limit reached</span>
+          }
+        </span>
+        <ion-button fill="clear" size="small" (click)="router.navigate(['/pricing'])"> Upgrade Plan </ion-button>
+      </div>
+      }
+
       <input
         #fileInput
         type="file"
@@ -741,6 +761,30 @@ const ALLOWED_TYPES = ['text/plain', 'image/jpeg', 'image/png', 'image/webp'];
           }
         }
       }
+
+      .usage-status {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        margin-bottom: 1rem;
+        border-radius: 0.5rem;
+        background: var(--ion-color-light);
+
+        &.limit-reached {
+          background: var(--ion-color-danger-tint);
+        }
+
+        ion-icon {
+          font-size: 1.5rem;
+        }
+
+        .limit-message {
+          color: var(--ion-color-danger);
+          font-weight: 500;
+          margin-left: 0.5rem;
+        }
+      }
     `,
   ],
 })
@@ -752,16 +796,20 @@ export class FileUploadComponent {
   private authService = inject(FirebaseAuthService);
   private dataSaverService = inject(DataSaverService);
   private alertController = inject(AlertController);
-  private router = inject(Router);
+  public router = inject(Router);
   private platform = inject(Platform);
   private usageLimitService = inject(UsageLimitService);
   private document = inject(DOCUMENT);
+  private modalCtrl = inject(ModalController);
 
   @Input() path = 'uploads';
   @Input() accept = '.txt,image/jpeg,image/png,image/webp';
   @Output() urlGenerated = new EventEmitter<string>();
   @Output() validationError = new EventEmitter<string>();
   @Output() progressChange = new EventEmitter<number>();
+  @Output() fileUploaded = new EventEmitter<string>();
+  @Output() analysisStarted = new EventEmitter<string>();
+  @Input() isModal = false;
 
   isDragging = false;
   isUploading = false;
@@ -772,6 +820,8 @@ export class FileUploadComponent {
   selectedFile: File | null = null;
   needsHelp = false;
   lastUploadedUrl: string | null = null;
+  usageInfo: { hasReached: boolean; scansUsed: number; scansLimit: number; tier: string } | null = null;
+  usageInfo$ = this.usageLimitService.usage$;
 
   readonly MAX_FILE_SIZE = MAX_FILE_SIZE;
 
@@ -790,6 +840,7 @@ export class FileUploadComponent {
       helpCircleOutline,
       alertCircle,
       warning,
+      warningOutline,
       time,
       lockClosed,
       server,
@@ -802,6 +853,16 @@ export class FileUploadComponent {
       documentTextOutline,
       document,
     });
+    // Load usage info when component initializes
+    this.loadUsageInfo();
+  }
+
+  private async loadUsageInfo() {
+    try {
+      this.usageInfo = await this.usageLimitService.hasReachedLimit();
+    } catch (error) {
+      console.error('Error loading usage info:', error);
+    }
   }
 
   get isMobile(): boolean {
@@ -1312,10 +1373,35 @@ export class FileUploadComponent {
     }
   }
 
-  startAnalysis() {
-    if (this.downloadUrl) {
-      this.router.navigate(['/reports']);
+  async startAnalysis() {
+    try {
+      // Emit the analysis started event with the file URL
+      this.analysisStarted.emit(this.lastUploadedUrl);
+
+      // Navigate to reports page
+      try {
+        if (this.isModal) {
+          await this.modalCtrl.dismiss();
+        }
+        await this.router.navigate(['/reports']);
+      } catch (error) {
+        console.warn('Modal dismiss failed, proceeding with navigation:', error);
+        await this.router.navigate(['/reports']);
+      }
+    } catch (error) {
+      console.error('Error starting analysis:', error);
+      const alert = await this.alertController.create({
+        header: 'Error',
+        message: 'Failed to start analysis. Please try again.',
+        buttons: ['OK'],
+      });
+      await alert.present();
     }
+  }
+
+  private async startActualAnalysis() {
+    // just go to the reports page
+    this.router.navigate(['/reports']);
   }
 
   async showPrivacyDetails() {

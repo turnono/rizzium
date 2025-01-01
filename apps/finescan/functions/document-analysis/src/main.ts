@@ -12,6 +12,7 @@ import { initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import OpenAI from 'openai';
 import fetch from 'node-fetch';
+import { CloudFunctionResponse } from '@rizzium/shared/interfaces';
 
 // Initialize Firebase Admin
 initializeApp();
@@ -284,10 +285,31 @@ export const analyzeDocument = functions.https.onCall(async (data: AnalysisReque
     // Sanitize the response to ensure no sensitive data is included
     const sanitizedAnalysis = sanitizeAnalysisResponse(analysis);
 
+    // Transform the response to match CloudFunctionResponse interface
+    const response: CloudFunctionResponse = {
+      success: true,
+      analysis: {
+        riskLevel: sanitizedAnalysis.riskLevel,
+        summary: {
+          riskLevel: sanitizedAnalysis.summary.riskLevel,
+          description: sanitizedAnalysis.summary.description,
+          recommendations: sanitizedAnalysis.summary.recommendations,
+          containsSensitiveInfo: sanitizedAnalysis.summary.containsSensitiveInfo || false,
+        },
+        flags: sanitizedAnalysis.flags.map((flag) => ({
+          start: flag.start,
+          end: flag.end,
+          reason: flag.reason,
+          riskLevel: flag.riskLevel,
+        })),
+        text: sanitizedAnalysis.text || null,
+      },
+    };
+
     // Update analysis document in Firestore
     await updateAnalysisDocument(context.auth.uid, data.imageUrl, sanitizedAnalysis);
 
-    return { success: true, analysis: sanitizedAnalysis };
+    return response;
   } catch (error) {
     console.error('Analysis error:', error);
 
@@ -390,10 +412,10 @@ export const testOpenAIConnection = functions.https.onCall(async (data, context)
 
 // Also update the return type for better type safety
 interface AnalysisResult {
-  riskLevel: 'HIGH' | 'MEDIUM' | 'LOW';
-  text?: string;
+  riskLevel: string;
+  text?: string | null;
   summary: {
-    riskLevel: 'HIGH' | 'MEDIUM' | 'LOW';
+    riskLevel: string;
     description: string;
     recommendations: string[];
     containsSensitiveInfo?: boolean;
@@ -402,7 +424,7 @@ interface AnalysisResult {
     start: number;
     end: number;
     reason: string;
-    riskLevel: 'HIGH' | 'MEDIUM' | 'LOW';
+    riskLevel: string;
   }>;
 }
 
