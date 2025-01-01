@@ -69,15 +69,12 @@ jobs:
       # Create .env files for all Firebase Functions
       - name: Setup Environment Variables
         run: |
-          # Create .env for payment function with proper JSON structure
-          echo '{
-            "paystack": {
-              "secret_key": "${{ secrets.FINESCAN_PAYSTACK_SECRET_KEY }}"
-            }
-          }' > apps/finescan/functions/payment/.runtimeconfig.json
-
-          # Create .env file for local development
+          # Create .env file for payment function
           echo "PAYSTACK_SECRET_KEY=${{ secrets.FINESCAN_PAYSTACK_SECRET_KEY }}" > apps/finescan/functions/payment/.env
+
+          # Copy .env file to the dist directory where the function will be deployed from
+          mkdir -p dist/apps/finescan/functions/payment
+          cp apps/finescan/functions/payment/.env dist/apps/finescan/functions/payment/.env
 
       # Authenticate with service account
       - name: Authenticate to Google Cloud
@@ -92,9 +89,6 @@ jobs:
           firebase --version
           firebase projects:list
           firebase use ${{ env.FIREBASE_PROJECT_ID }}
-
-          # Set up environment variables for functions using lowercase keys
-          firebase functions:config:set paystack.secret_key="${{ secrets.FINESCAN_PAYSTACK_SECRET_KEY }}"
 
           # Run deployment with maximum verbosity and debug flags
           FIREBASE_DEBUG=true DEBUG="@firebase/*" npx nx deploy ${{ env.APP_NAME }}-firebase --verbose
