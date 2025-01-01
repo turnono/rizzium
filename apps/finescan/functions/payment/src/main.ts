@@ -12,6 +12,7 @@ import * as logger from 'firebase-functions/logger';
 import axios, { AxiosError } from 'axios';
 import * as crypto from 'crypto';
 import { getFirestore } from 'firebase-admin/firestore';
+import * as functions from 'firebase-functions';
 
 interface PaystackMetadata {
   [key: string]: string | number | boolean;
@@ -94,7 +95,7 @@ export const verifyPaystackPayment = onCall(async (request) => {
     }
 
     // Get the secret key from environment variables
-    const secretKey = process.env.PAYSTACK_SECRET_KEY;
+    const secretKey = functions.config().paystack.secret_key;
     if (!secretKey) {
       logger.error('Paystack secret key not configured');
       throw new HttpsError('failed-precondition', 'Payment verification is not configured properly');
@@ -153,7 +154,7 @@ export const verifyPaystackPayment = onCall(async (request) => {
 
 export const paystackWebhook = onRequest(async (request, response) => {
   try {
-    const hash = crypto.createHmac('sha512', process.env.PAYSTACK_SECRET_KEY || '');
+    const hash = crypto.createHmac('sha512', functions.config().paystack.secret_key || '');
     const expectedSignature = hash.update(JSON.stringify(request.body)).digest('hex');
     const paystackSignature = request.headers['x-paystack-signature'];
 

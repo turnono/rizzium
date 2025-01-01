@@ -162,7 +162,7 @@
       <ion-button [size]="isMobile ? 'default' : 'large'" fill="outline" [routerLink]="['/pricing']"
         [style]="{'--border-radius': isMobile ? '8px' : '12px'}">
         <ion-icon slot="start" name="pricetag"></ion-icon>
-        @if (isMobile) {
+        @if (isMobile && (isLoggedIn$ | async)) {
         View Plans
         } @else {
         View Pricing Plans

@@ -296,7 +296,7 @@ export const analyzeDocument = functions.https.onCall(async (data: AnalysisReque
           recommendations: sanitizedAnalysis.summary.recommendations,
           containsSensitiveInfo: sanitizedAnalysis.summary.containsSensitiveInfo || false,
         },
-        flags: sanitizedAnalysis.flags.map((flag) => ({
+        flags: (sanitizedAnalysis.flags || []).map((flag) => ({
           start: flag.start,
           end: flag.end,
           reason: flag.reason,
