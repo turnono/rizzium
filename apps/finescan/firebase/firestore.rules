@@ -151,5 +151,64 @@ service cloud.firestore {
         allow read: if request.auth.uid == uid;
       }
     }
+
+    // Analytics collection
+    match /analytics/{docId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() &&
+        request.resource.data.keys().hasAll(['userId', 'eventType', 'timestamp']) &&
+        request.resource.data.userId == request.auth.uid;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // User analytics subcollection
+    match /users/{userId}/analytics/{docId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+        request.resource.data.keys().hasAll(['eventType', 'timestamp']);
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // Event tracking collection
+    match /events/{eventId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() &&
+        request.resource.data.keys().hasAll(['userId', 'type', 'timestamp']) &&
+        request.resource.data.userId == request.auth.uid;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // Payment events collection
+    match /payment_events/{eventId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() &&
+        request.resource.data.keys().hasAll(['userId', 'type', 'timestamp', 'status']) &&
+        request.resource.data.userId == request.auth.uid;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // Pricing events collection
+    match /pricing_events/{eventId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() &&
+        request.resource.data.keys().hasAll(['userId', 'type', 'timestamp']) &&
+        request.resource.data.userId == request.auth.uid;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // Payment tracking collection
+    match /payment_tracking/{eventId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() &&
+        request.resource.data.keys().hasAll(['userId', 'type', 'timestamp', 'status']) &&
+        request.resource.data.userId == request.auth.uid;
+      allow update: if false;
+      allow delete: if false;
+    }
   }
 }
