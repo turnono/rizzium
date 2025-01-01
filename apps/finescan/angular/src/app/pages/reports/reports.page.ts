@@ -393,6 +393,36 @@ import { firstValueFrom } from 'rxjs';
       .selected {
         --background: var(--ion-color-light-shade);
       }
+
+      ::ng-deep .alert-wrapper {
+        border: 2px solid var(--ion-color-primary);
+        border-radius: 8px;
+      }
+
+      ::ng-deep .alert-wrapper.alert-warning {
+        border-color: var(--ion-color-warning);
+      }
+
+      ::ng-deep .alert-wrapper.alert-danger {
+        border-color: var(--ion-color-danger);
+      }
+
+      ::ng-deep .alert-wrapper.alert-success {
+        border-color: var(--ion-color-success);
+      }
+
+      ::ng-deep .alert-head {
+        border-bottom: 1px solid var(--ion-color-light-shade);
+        padding-bottom: 8px !important;
+      }
+
+      ::ng-deep .alert-message {
+        color: var(--ion-color-dark) !important;
+      }
+
+      ::ng-deep .alert-button {
+        color: var(--ion-color-primary) !important;
+      }
     `,
   ],
 })
@@ -444,7 +474,7 @@ export class ReportsPageComponent implements OnInit {
   }
 
   async deleteAnalysis(event: Event, analysis: Analysis) {
-    event.stopPropagation(); // Prevent item click when clicking delete button
+    event.stopPropagation();
 
     const alert = await this.alertController.create({
       header: 'Confirm Delete',
@@ -466,12 +496,14 @@ export class ReportsPageComponent implements OnInit {
                 header: 'Error',
                 message: 'Failed to delete the analysis. Please try again.',
                 buttons: ['OK'],
+                cssClass: 'alert-danger',
               });
               await errorAlert.present();
             }
           },
         },
       ],
+      cssClass: 'alert-warning',
     });
 
     await alert.present();
@@ -515,6 +547,7 @@ export class ReportsPageComponent implements OnInit {
             },
           },
         ],
+        cssClass: 'alert-primary',
       });
 
       await alert.present();
@@ -547,6 +580,7 @@ export class ReportsPageComponent implements OnInit {
             role: 'confirm',
           },
         ],
+        cssClass: 'alert-warning',
       });
 
       await alert.present();
@@ -619,6 +653,7 @@ export class ReportsPageComponent implements OnInit {
         header: 'Error',
         message: 'Failed to start analysis. Please try again.',
         buttons: ['OK'],
+        cssClass: 'alert-danger',
       });
       await alert.present();
     }
