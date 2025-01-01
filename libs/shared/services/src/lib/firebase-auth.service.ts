@@ -82,15 +82,15 @@ export class FirebaseAuthService {
       };
       await setDoc(userRef, userData);
 
-      // Initialize usage stats for trial
+      // Initialize usage stats for free tier
       const usageRef = doc(this.firestore, `users/${user.uid}/usage/current`);
       await setDoc(usageRef, {
         scansUsed: 0,
-        scansLimit: 3, // Trial limit
+        scansLimit: 3, // Free tier limit
         storageUsed: 0,
-        storageLimit: 50 * 1024 * 1024, // 50MB trial storage
+        storageLimit: 100 * 1024 * 1024, // 100MB free storage
         retentionDays: 7,
-        lastResetDate: Timestamp.now(), // To track monthly reset
+        lastResetDate: Timestamp.now(),
         tier: 'free',
       });
     } catch (error) {
@@ -117,9 +117,9 @@ export class FirebaseAuthService {
     if (!usageSnap.exists()) {
       await setDoc(usageRef, {
         scansUsed: 0,
-        scansLimit: 3, // Trial limit
+        scansLimit: 3, // Free tier limit
         storageUsed: 0,
-        storageLimit: 50 * 1024 * 1024, // 50MB trial storage
+        storageLimit: 100 * 1024 * 1024, // 100MB free storage
         retentionDays: 7,
         lastResetDate: Timestamp.now(),
         tier: 'free',

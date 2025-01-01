@@ -111,12 +111,6 @@ export class PricingPageComponent implements OnInit {
       return;
     }
 
-    if (plan.tier === 'business') {
-      // Redirect to contact sales page for business plan
-      this.router.navigate(['/contact']);
-      return;
-    }
-
     try {
       await this.subscriptionService.upgradePlan(plan.id);
     } catch (error) {
