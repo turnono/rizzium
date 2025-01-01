@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Firestore, doc, setDoc, getDoc, DocumentSnapshot, DocumentData } from '@angular/fire/firestore';
+import { Firestore, doc, setDoc, getDoc, DocumentSnapshot, DocumentData, Timestamp } from '@angular/fire/firestore';
 import { FirebaseAuthService } from './firebase-auth.service';
 import { Functions, httpsCallable } from '@angular/fire/functions';
 import { from, Observable, switchMap, throwError } from 'rxjs';
@@ -68,19 +68,19 @@ interface PaystackVerifyResponse {
 
 export interface PaystackTransaction {
   reference: string;
-  status: 'success' | 'failed' | 'pending';
+  status: string;
   amount: number;
   planId: string;
-  createdAt: Date;
+  createdAt: Timestamp;
   customerEmail: string;
-  metadata?: {
+  metadata: {
     custom_fields: Array<{
       display_name: string;
       variable_name: string;
       value: string | number;
     }>;
   };
-  authorization?: {
+  authorization: {
     authorization_code: string;
     bin: string;
     last4: string;
@@ -99,9 +99,12 @@ interface PaystackOptions {
   email: string;
   amount: number;
   ref: string;
-  currency: string;
-  channels: Array<'card' | 'bank_transfer' | 'ussd' | 'qr' | 'mobile_money'>;
-  metadata: {
+  plan?: string;
+  currency?: string;
+  channels?: Array<'card' | 'bank_transfer' | 'apple_pay' | 'ussd' | 'mobile_money' | 'eft' | 'qr'>;
+  label?: string;
+  description?: string;
+  metadata?: {
     custom_fields: Array<{
       display_name: string;
       variable_name: string;
@@ -143,7 +146,7 @@ export class PaystackService {
         ref: reference,
         plan: plan.planCode, // Use the Paystack plan code
         currency: 'ZAR',
-        channels: ['card', 'bank_transfer'],
+        channels: ['card', 'bank_transfer'] as const,
         label: `Finescan ${plan.name} Plan - ${email}`,
         description: `${plan.name} Plan - ${plan.features.join(', ')}`,
         metadata: {
@@ -183,7 +186,7 @@ export class PaystackService {
       } as PaystackOptions);
     } catch (error) {
       console.error('Error initializing payment:', error);
-      throw new Error('Failed to initialize payment. Please try again.');
+      throw error;
     }
   }
 
@@ -201,14 +204,16 @@ export class PaystackService {
       if (data.data.status === 'success') {
         // Update user's subscription
         const subscriptionRef = doc(this.firestore, `users/${user.uid}/subscriptions/current`);
+        const now = Timestamp.now();
+        const thirtyDaysFromNow = Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
         const subscriptionData = {
           planId,
           status: 'active',
-          startDate: new Date(),
-          endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+          startDate: now,
+          endDate: thirtyDaysFromNow,
           autoRenew: true,
           paystackReference: reference,
-          lastPaymentDate: new Date(),
+          lastPaymentDate: now,
           customerEmail: data.data.customer.email,
           customerMetadata: data.data.customer.metadata,
           authorization: data.data.authorization,
@@ -223,7 +228,7 @@ export class PaystackService {
           status: 'success',
           amount: data.data.amount / 100, // Convert from kobo back to main currency
           planId,
-          createdAt: new Date(),
+          createdAt: now,
           customerEmail: data.data.customer.email,
           metadata: data.data.metadata,
           authorization: data.data.authorization,

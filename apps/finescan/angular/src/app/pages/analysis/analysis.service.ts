@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Firestore, doc, updateDoc } from '@angular/fire/firestore';
+import { Firestore, Timestamp, doc, updateDoc } from '@angular/fire/firestore';
 import { UsageLimitService } from '@rizzium/shared/services';
 
 @Injectable({
@@ -21,7 +21,7 @@ export class AnalysisService {
     const analysisRef = doc(this.firestore, 'analyses', analysisId);
     await updateDoc(analysisRef, {
       status: 'processing',
-      startTime: new Date(),
+      startTime: Timestamp.now(),
     });
     return true;
   }

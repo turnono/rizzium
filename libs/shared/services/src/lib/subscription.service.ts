@@ -28,8 +28,8 @@ export interface UserSubscription {
   planId: string;
   tier: PlanTier;
   status: 'active' | 'cancelled' | 'expired';
-  startDate: Date;
-  endDate: Date;
+  startDate: Timestamp;
+  endDate: Timestamp;
   autoRenew: boolean;
   paystackReference?: string;
 }
@@ -49,7 +49,7 @@ interface PricingAnalytics {
   userId: string;
   previousTier?: PlanTier;
   error?: string;
-  timestamp?: Date;
+  timestamp?: Timestamp;
 }
 
 interface PaymentEventData {
@@ -78,7 +78,7 @@ interface PaymentAnalytics {
   currency?: string;
   paymentMethod?: string;
   transactionId?: string;
-  timestamp?: Date;
+  timestamp?: Timestamp;
 }
 
 @Injectable({
@@ -142,10 +142,15 @@ export class SubscriptionService {
         return;
       }
 
-      const analyticsRef = collection(this.firestore, 'analytics/pricing/events');
+      const analyticsRef = collection(this.firestore, 'pricing_events');
       await addDoc(analyticsRef, {
-        ...event,
+        userId: event.userId,
+        type: event.event,
         timestamp: Timestamp.now(),
+        planId: event.planId,
+        planTier: event.planTier,
+        previousTier: event.previousTier,
+        error: event.error,
       });
     } catch (error) {
       console.error('Error tracking pricing event:', error);
@@ -183,13 +188,16 @@ export class SubscriptionService {
 
       if (plan.price === 0) {
         // Handle free plan
+        const now = Timestamp.now();
+        const thirtyDaysFromNow = Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
+
         const subscriptionRef = doc(this.firestore, `users/${user.uid}/subscriptions/current`);
         await setDoc(subscriptionRef, {
           planId: plan.id,
           tier: plan.tier,
           status: 'active',
-          startDate: new Date(),
-          endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+          startDate: now,
+          endDate: thirtyDaysFromNow,
           autoRenew: true,
         } as UserSubscription);
 
@@ -258,25 +266,39 @@ export class SubscriptionService {
         transactionId: paymentData.transactionId,
       });
 
+      const now = Timestamp.now();
+      const thirtyDaysFromNow = Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
+
       // Update user's subscription
       const subscriptionRef = doc(this.firestore, `users/${user.uid}/subscriptions/current`);
       await setDoc(subscriptionRef, {
         planId: paymentData.planId,
         tier: 'pro',
         status: 'active',
-        startDate: new Date(),
-        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+        startDate: now,
+        endDate: thirtyDaysFromNow,
         autoRenew: true,
         paystackReference: paymentData.transactionId,
       } as UserSubscription);
 
-      // Update usage limits for pro tier
+      // Update user's tier in user document
+      const userRef = doc(this.firestore, `users/${user.uid}`);
+      await updateDoc(userRef, {
+        tier: 'pro',
+        subscriptionStatus: 'active',
+        subscriptionEndDate: thirtyDaysFromNow,
+      });
+
+      // Set usage limits for pro tier
       const usageRef = doc(this.firestore, `users/${user.uid}/usage/current`);
-      await updateDoc(usageRef, {
+      await setDoc(usageRef, {
+        scansUsed: 0,
         scansLimit: 200, // Pro tier: 200 scans per month
+        storageUsed: 0,
         storageLimit: 10 * 1024 * 1024 * 1024, // 10GB storage
         retentionDays: 30, // 30 days retention
         tier: 'pro',
+        lastResetDate: now,
       });
 
       // Track successful upgrade
