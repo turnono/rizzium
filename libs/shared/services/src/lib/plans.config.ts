@@ -20,7 +20,7 @@ export const SUBSCRIPTION_PLANS: Plan[] = [
     id: 'pro-monthly',
     name: 'Pro',
     tier: 'pro',
-    planCode: 'PLN_g21r4qds3l0o79h',
+    planCode: 'PLN_27dwn4l33x4e8on',
     price: 150,
     features: [
       '200 scans per month',

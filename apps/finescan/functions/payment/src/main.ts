@@ -1,19 +1,19 @@
 /**
  * Import function triggers from their respective submodules:
  *
- * import {onCall} from "firebase-functions/v2/https";
- * import {onDocumentWritten} from "firebase-functions/v2/firestore";
- *
  * See a full list of supported triggers at https://firebase.google.com/docs/functions
  */
 
-import { onCall, onRequest, HttpsError } from 'firebase-functions/v1/https';
+import { onCall, onRequest, HttpsError } from 'firebase-functions/v2/https';
 import * as logger from 'firebase-functions/logger';
 import axios, { AxiosError } from 'axios';
 import * as crypto from 'crypto';
 import { getFirestore } from 'firebase-admin/firestore';
-import * as functions from 'firebase-functions';
 import { initializeApp } from 'firebase-admin/app';
+import { defineString } from 'firebase-functions/params';
+
+// Define configuration parameters
+const paystackSecretKey = defineString('PAYSTACK_SECRET_KEY');
 
 // Initialize Firebase Admin
 initializeApp();
@@ -86,184 +86,197 @@ interface PaystackWebhookData {
   };
 }
 
-export const verifyPaystackPayment = onCall(async (request) => {
-  try {
-    // Validate request
-    if (!request.auth) {
-      throw new HttpsError('unauthenticated', 'User must be authenticated to verify payment');
-    }
-
-    const { reference } = request.data;
-    if (!reference) {
-      throw new HttpsError('invalid-argument', 'Payment reference is required');
-    }
-
-    const db = getFirestore();
-    const eventRef = db.collection('payment_events').doc();
-
+export const verifyPaystackPayment = onCall(
+  {
+    timeoutSeconds: 60,
+    memory: '256MiB',
+  },
+  async (request) => {
     try {
-      // Get the secret key from environment variables
-      const secretKey = functions.config().paystack.secret_key;
-      if (!secretKey) {
-        logger.error('Paystack secret key not configured');
-        await eventRef.set({
-          userId: request.auth.uid,
-          type: 'payment_verification',
-          status: 'error',
-          error: 'Payment verification not configured properly',
-          timestamp: new Date(),
-          reference,
-        });
-        throw new HttpsError('failed-precondition', 'Payment verification is not configured properly');
+      // Validate request
+      if (!request.auth) {
+        throw new HttpsError('unauthenticated', 'User must be authenticated to verify payment');
       }
 
-      // Verify the payment
+      const { reference } = request.data;
+      if (!reference) {
+        throw new HttpsError('invalid-argument', 'Payment reference is required');
+      }
+
+      const db = getFirestore();
+      const eventRef = db.collection('payment_events').doc();
+
       try {
-        const response = await axios.get<PaystackVerifyResponse>(
-          `https://api.paystack.co/transaction/verify/${reference}`,
-          {
-            headers: {
-              Authorization: `Bearer ${secretKey}`,
-              'Content-Type': 'application/json',
-            },
-          }
-        );
-
-        if (response.data.status && response.data.data.status === 'success') {
-          // Record successful verification
-          await eventRef.set({
-            userId: request.auth.uid,
-            type: 'payment_verification',
-            status: 'success',
-            timestamp: new Date(),
-            reference,
-            amount: response.data.data.amount,
-            customerEmail: response.data.data.customer.email,
-          });
-
-          return {
-            status: 'success' as const,
-            amount: response.data.data.amount,
-            customer: response.data.data.customer,
-            reference: response.data.data.reference,
-            metadata: response.data.data.metadata,
-          };
-        } else {
-          logger.warn('Payment verification failed', {
-            reference,
-            status: response.data.data.status,
-            message: response.data.data.gateway_response,
-          });
-
-          // Record failed verification
-          await eventRef.set({
-            userId: request.auth.uid,
-            type: 'payment_verification',
-            status: 'failed',
-            error: response.data.data.gateway_response,
-            timestamp: new Date(),
-            reference,
-          });
-
-          throw new HttpsError(
-            'failed-precondition',
-            'Payment verification failed: ' + response.data.data.gateway_response
-          );
-        }
-      } catch (error) {
-        if (error instanceof AxiosError) {
-          logger.error('Paystack API error:', {
-            status: error.response?.status,
-            data: error.response?.data,
-            reference,
-          });
-
-          // Record API error
+        // Get the secret key from environment variables
+        const secretKey = paystackSecretKey.value();
+        if (!secretKey) {
+          logger.error('Paystack secret key not configured');
           await eventRef.set({
             userId: request.auth.uid,
             type: 'payment_verification',
             status: 'error',
-            error: 'Failed to verify payment with Paystack',
-            details: {
-              status: error.response?.status,
-              data: error.response?.data,
-            },
+            error: 'Payment verification not configured properly',
             timestamp: new Date(),
             reference,
           });
-
-          throw new HttpsError('internal', 'Failed to verify payment with Paystack');
+          throw new HttpsError('failed-precondition', 'Payment verification is not configured properly');
         }
-        throw error;
+
+        // Verify the payment
+        try {
+          const response = await axios.get<PaystackVerifyResponse>(
+            `https://api.paystack.co/transaction/verify/${reference}`,
+            {
+              headers: {
+                Authorization: `Bearer ${secretKey}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+
+          if (response.data.status && response.data.data.status === 'success') {
+            // Record successful verification
+            await eventRef.set({
+              userId: request.auth.uid,
+              type: 'payment_verification',
+              status: 'success',
+              timestamp: new Date(),
+              reference,
+              amount: response.data.data.amount,
+              customerEmail: response.data.data.customer.email,
+            });
+
+            return {
+              status: 'success' as const,
+              amount: response.data.data.amount,
+              customer: response.data.data.customer,
+              reference: response.data.data.reference,
+              metadata: response.data.data.metadata,
+            };
+          } else {
+            logger.warn('Payment verification failed', {
+              reference,
+              status: response.data.data.status,
+              message: response.data.data.gateway_response,
+            });
+
+            // Record failed verification
+            await eventRef.set({
+              userId: request.auth.uid,
+              type: 'payment_verification',
+              status: 'failed',
+              error: response.data.data.gateway_response,
+              timestamp: new Date(),
+              reference,
+            });
+
+            throw new HttpsError(
+              'failed-precondition',
+              'Payment verification failed: ' + response.data.data.gateway_response
+            );
+          }
+        } catch (error) {
+          if (error instanceof AxiosError) {
+            logger.error('Paystack API error:', {
+              status: error.response?.status,
+              data: error.response?.data,
+              reference,
+            });
+
+            // Record API error
+            await eventRef.set({
+              userId: request.auth.uid,
+              type: 'payment_verification',
+              status: 'error',
+              error: 'Failed to verify payment with Paystack',
+              details: {
+                status: error.response?.status,
+                data: error.response?.data,
+              },
+              timestamp: new Date(),
+              reference,
+            });
+
+            throw new HttpsError('internal', 'Failed to verify payment with Paystack');
+          }
+          throw error;
+        }
+      } catch (error) {
+        if (error instanceof HttpsError) {
+          throw error;
+        }
+        logger.error('Unexpected error during payment verification:', error);
+
+        // Record unexpected error
+        await eventRef.set({
+          userId: request.auth.uid,
+          type: 'payment_verification',
+          status: 'error',
+          error: 'Unexpected error during payment verification',
+          timestamp: new Date(),
+          reference,
+        });
+
+        throw new HttpsError('internal', 'An unexpected error occurred during payment verification');
       }
     } catch (error) {
       if (error instanceof HttpsError) {
         throw error;
       }
       logger.error('Unexpected error during payment verification:', error);
-
-      // Record unexpected error
-      await eventRef.set({
-        userId: request.auth.uid,
-        type: 'payment_verification',
-        status: 'error',
-        error: 'Unexpected error during payment verification',
-        timestamp: new Date(),
-        reference,
-      });
-
       throw new HttpsError('internal', 'An unexpected error occurred during payment verification');
     }
-  } catch (error) {
-    if (error instanceof HttpsError) {
-      throw error;
-    }
-    logger.error('Unexpected error during payment verification:', error);
-    throw new HttpsError('internal', 'An unexpected error occurred during payment verification');
   }
-});
+);
 
-export const paystackWebhook = onRequest(async (request, response) => {
-  try {
-    const hash = crypto.createHmac('sha512', functions.config().paystack.secret_key || '');
-    const expectedSignature = hash.update(JSON.stringify(request.body)).digest('hex');
-    const paystackSignature = request.headers['x-paystack-signature'];
+export const paystackWebhook = onRequest(
+  {
+    timeoutSeconds: 60,
+    memory: '256MiB',
+    cors: true,
+  },
+  async (request, response) => {
+    try {
+      const hash = crypto.createHmac('sha512', paystackSecretKey.value() || '');
+      const expectedSignature = hash.update(JSON.stringify(request.body)).digest('hex');
+      const paystackSignature = request.headers['x-paystack-signature'];
 
-    if (expectedSignature !== paystackSignature) {
-      logger.error('Invalid Paystack signature');
-      response.status(401).send('Invalid signature');
-      return;
+      if (expectedSignature !== paystackSignature) {
+        logger.error('Invalid Paystack signature');
+        response.status(401).send('Invalid signature');
+        return;
+      }
+
+      const event = request.body;
+      const db = getFirestore();
+
+      switch (event.event) {
+        case 'charge.success':
+          await handleSuccessfulCharge(event.data, db);
+          break;
+        case 'subscription.create':
+          await handleSubscriptionCreate(event.data, db);
+          break;
+        case 'subscription.disable':
+          await handleSubscriptionDisable(event.data, db);
+          break;
+        case 'invoice.create':
+          await handleInvoiceCreate(event.data, db);
+          break;
+        case 'invoice.payment_failed':
+          await handlePaymentFailed(event.data, db);
+          break;
+        default:
+          logger.info(`Unhandled Paystack event: ${event.event}`);
+      }
+
+      response.status(200).send('Webhook processed');
+    } catch (error) {
+      logger.error('Error processing webhook:', error);
+      response.status(500).send('Webhook processing failed');
     }
-
-    const event = request.body;
-    const db = getFirestore();
-
-    switch (event.event) {
-      case 'charge.success':
-        await handleSuccessfulCharge(event.data, db);
-        break;
-      case 'subscription.create':
-        await handleSubscriptionCreate(event.data, db);
-        break;
-      case 'subscription.disable':
-        await handleSubscriptionDisable(event.data, db);
-        break;
-      case 'invoice.create':
-        await handleInvoiceCreate(event.data, db);
-        break;
-      case 'invoice.payment_failed':
-        await handlePaymentFailed(event.data, db);
-        break;
-      default:
-        logger.info(`Unhandled Paystack event: ${event.event}`);
-    }
-
-    response.status(200).send('Webhook processed');
-  } catch (error) {
-    logger.error('Error processing webhook:', error);
-    response.status(500).send('Webhook processing failed');
   }
-});
+);
 
 async function handleSuccessfulCharge(data: PaystackWebhookData['data'], db: FirebaseFirestore.Firestore) {
   const { metadata, customer, reference, amount } = data;
