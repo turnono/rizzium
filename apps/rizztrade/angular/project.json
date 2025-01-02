@@ -8,62 +8,60 @@
   "targets": {
     "build": {
       "executor": "@angular-devkit/build-angular:application",
-      "outputs": [
-        "{options.outputPath}"
-      ],
+      "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/apps/rizztrade/angular",
         "index": "apps/rizztrade/angular/src/index.html",
         "browser": "apps/rizztrade/angular/src/main.ts",
-        "polyfills": [
-          "zone.js"
-        ],
+        "polyfills": ["zone.js"],
         "tsConfig": "apps/rizztrade/angular/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
-    "assets": [
-      "apps/rizztrade/angular/src/favicon.ico",
-      "apps/rizztrade/angular/src/assets",
-      {
-        "glob": "**/*.svg",
-        "input": "node_modules/ionicons/dist/ionicons/svg",
-        "output": "./svg"
-      }
-    ],    "styles": [
-      "apps/rizztrade/angular/src/styles.scss",
-      {
-        "input": "node_modules/@ionic/angular/css/core.css"
-      },
-      {
-        "input": "node_modules/@ionic/angular/css/normalize.css"
-      },
-      {
-        "input": "node_modules/@ionic/angular/css/structure.css"
-      },
-      {
-        "input": "node_modules/@ionic/angular/css/typography.css"
-      },
-      {
-        "input": "node_modules/@ionic/angular/css/display.css"
-      },
-      {
-        "input": "node_modules/@ionic/angular/css/padding.css"
-      },
-      {
-        "input": "node_modules/@ionic/angular/css/float-elements.css"
-      },
-      {
-        "input": "node_modules/@ionic/angular/css/text-alignment.css"
-      },
-      {
-        "input": "node_modules/@ionic/angular/css/text-transformation.css"
-      },
-      {
-        "input": "node_modules/@ionic/angular/css/flex-utils.css"
-      },
-      {
-        "input": "apps/rizztrade/angular/src/theme/variables.css"
-      }
-    ],        "scripts": []
+        "assets": [
+          "apps/rizztrade/angular/src/favicon.ico",
+          "apps/rizztrade/angular/src/assets",
+          {
+            "glob": "**/*.svg",
+            "input": "node_modules/ionicons/dist/ionicons/svg",
+            "output": "./svg"
+          }
+        ],
+        "styles": [
+          "apps/rizztrade/angular/src/styles.scss",
+          {
+            "input": "node_modules/@ionic/angular/css/core.css"
+          },
+          {
+            "input": "node_modules/@ionic/angular/css/normalize.css"
+          },
+          {
+            "input": "node_modules/@ionic/angular/css/structure.css"
+          },
+          {
+            "input": "node_modules/@ionic/angular/css/typography.css"
+          },
+          {
+            "input": "node_modules/@ionic/angular/css/display.css"
+          },
+          {
+            "input": "node_modules/@ionic/angular/css/padding.css"
+          },
+          {
+            "input": "node_modules/@ionic/angular/css/float-elements.css"
+          },
+          {
+            "input": "node_modules/@ionic/angular/css/text-alignment.css"
+          },
+          {
+            "input": "node_modules/@ionic/angular/css/text-transformation.css"
+          },
+          {
+            "input": "node_modules/@ionic/angular/css/flex-utils.css"
+          },
+          {
+            "input": "apps/rizztrade/angular/src/theme/variables.css"
+          }
+        ],
+        "scripts": []
       },
       "configurations": {
         "production": {
@@ -111,16 +109,12 @@
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": [
-          "apps/rizztrade/angular/**/*.ts",
-          "apps/rizztrade/angular/**/*.html"
-        ]
+        "lintFilePatterns": ["apps/rizztrade/angular/**/*.ts", "apps/rizztrade/angular/**/*.html"]
       }
-    },    "test": {
+    },
+    "test": {
       "executor": "@nx/jest:jest",
-      "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}"
-      ],
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
         "jestConfig": "apps/rizztrade/angular/jest.config.ts"
       }
