@@ -1,9 +1,14 @@
 import { Route } from '@angular/router';
-import { NxWelcomeComponent } from './nx-welcome.component';
 
 export const appRoutes: Route[] = [
   {
+    path: 'journal',
+    loadComponent: () =>
+      import('./pages/journal/journal-entry/journal-entry.component').then((m) => m.JournalEntryComponent),
+  },
+  {
     path: '',
-    component: NxWelcomeComponent,
+    redirectTo: 'journal',
+    pathMatch: 'full',
   },
 ];
