@@ -1,0 +1,50 @@
+{
+  "name": "flowyclarity-functions-user",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/flowyclarity/functions/user/src",
+  "projectType": "application",
+  "tags": ["firebase:function", "firebase:name:flowyclarity-functions-user", "firebase:dep:flowyclarity-firebase"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/flowyclarity/functions/user",
+        "main": "apps/flowyclarity/functions/user/src/main.ts",
+        "tsConfig": "apps/flowyclarity/functions/user/tsconfig.app.json",
+        "assets": [
+          "apps/flowyclarity/functions/user/src/assets",
+          {
+            "glob": "**/*",
+            "input": "apps/flowyclarity/firebase/environment",
+            "output": "."
+          }
+        ],
+        "generatePackageJson": true,
+        "platform": "node",
+        "bundle": true,
+        "thirdParty": false,
+        "dependenciesFieldType": "dependencies",
+        "target": "node16",
+        "format": ["esm"],
+        "esbuildOptions": {
+          "logLevel": "info"
+        }
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/flowyclarity/functions/user/jest.config.ts"
+      }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nx run flowyclarity-firebase:deploy --only functions:flowyclarity-functions-user"
+      },
+      "dependsOn": ["build"]
+    }
+  }
+}

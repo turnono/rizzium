@@ -1,0 +1,162 @@
+{
+  "name": "flowyclarity",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "prefix": "app",
+  "sourceRoot": "apps/flowyclarity/angular/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@angular-devkit/build-angular:application",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "dist/apps/flowyclarity/angular",
+        "index": "apps/flowyclarity/angular/src/index.html",
+        "browser": "apps/flowyclarity/angular/src/main.ts",
+        "polyfills": [
+          "zone.js"
+        ],
+        "tsConfig": "apps/flowyclarity/angular/tsconfig.app.json",
+        "inlineStyleLanguage": "scss",
+    "assets": [
+      "apps/flowyclarity/angular/src/favicon.ico",
+      "apps/flowyclarity/angular/src/assets",
+      {
+        "glob": "**/*.svg",
+        "input": "node_modules/ionicons/dist/ionicons/svg",
+        "output": "./svg"
+      }
+    ],    "styles": [
+      "apps/flowyclarity/angular/src/styles.scss",
+      {
+        "input": "node_modules/@ionic/angular/css/core.css"
+      },
+      {
+        "input": "node_modules/@ionic/angular/css/normalize.css"
+      },
+      {
+        "input": "node_modules/@ionic/angular/css/structure.css"
+      },
+      {
+        "input": "node_modules/@ionic/angular/css/typography.css"
+      },
+      {
+        "input": "node_modules/@ionic/angular/css/display.css"
+      },
+      {
+        "input": "node_modules/@ionic/angular/css/padding.css"
+      },
+      {
+        "input": "node_modules/@ionic/angular/css/float-elements.css"
+      },
+      {
+        "input": "node_modules/@ionic/angular/css/text-alignment.css"
+      },
+      {
+        "input": "node_modules/@ionic/angular/css/text-transformation.css"
+      },
+      {
+        "input": "node_modules/@ionic/angular/css/flex-utils.css"
+      },
+      {
+        "input": "apps/flowyclarity/angular/src/theme/variables.css"
+      }
+    ],        "scripts": []
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "500kb",
+              "maximumError": "1mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "2kb",
+              "maximumError": "4kb"
+            }
+          ],
+          "outputHashing": "all"
+        },
+        "development": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "executor": "@angular-devkit/build-angular:dev-server",
+      "configurations": {
+        "production": {
+          "buildTarget": "flowyclarity:build:production"
+        },
+        "development": {
+          "buildTarget": "flowyclarity:build:development"
+        }
+      },
+      "defaultConfiguration": "development"
+    },
+    "extract-i18n": {
+      "executor": "@angular-devkit/build-angular:extract-i18n",
+      "options": {
+        "buildTarget": "flowyclarity:build"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "apps/flowyclarity/angular/**/*.ts",
+          "apps/flowyclarity/angular/**/*.html"
+        ]
+      }
+    },    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
+      "options": {
+        "jestConfig": "apps/flowyclarity/angular/jest.config.ts"
+      }
+    },
+    "serve-static": {
+      "executor": "@nx/web:file-server",
+      "options": {
+        "buildTarget": "flowyclarity:build",
+        "port": 4200,
+        "staticFilePath": "dist/apps/flowyclarity/angular",
+        "spa": true
+      }
+    },
+    "ionic-cordova-serve": {
+      "executor": "@ionic/angular-toolkit:cordova-serve",
+      "options": {
+        "cordovaBuildTarget": "flowyclarity:ionic-cordova-build",
+        "devServerTarget": "flowyclarity:serve"
+      },
+      "configurations": {
+        "production": {
+          "cordovaBuildTarget": "flowyclarity:ionic-cordova-build:production",
+          "devServerTarget": "flowyclarity:serve:production"
+        }
+      }
+    },
+    "ionic-cordova-build": {
+      "executor": "@ionic/angular-toolkit:cordova-build",
+      "options": {
+        "browserTarget": "flowyclarity:build"
+      },
+      "configurations": {
+        "production": {
+          "browserTarget": "flowyclarity:build:production"
+        }
+      }
+    }
+  }
+}
