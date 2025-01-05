@@ -17,7 +17,7 @@ import { FormsModule } from '@angular/forms';
             </video>
             <div class="speech-bubble">
               <div class="animated-text">Coming soon!</div>
-              <div class="animated-text delayed">Contact us via +27 658 62 3499</div>
+              <div class="animated-text delayed">Contact us: taajirah0&#64;gmail.com</div>
             </div>
           </div>
         </div>

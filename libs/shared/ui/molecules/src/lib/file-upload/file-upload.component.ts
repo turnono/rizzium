@@ -105,6 +105,7 @@ const ALLOWED_TYPES = ['text/plain', 'image/jpeg', 'image/png', 'image/webp'];
           <span class="limit-message">Analysis limit reached</span>
           }
         </span>
+        <!-- TODO: remove upgrade plan button when is pro -->
         <ion-button fill="clear" size="small" (click)="router.navigate(['/pricing'])"> Upgrade Plan </ion-button>
       </div>
       }
