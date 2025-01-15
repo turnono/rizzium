@@ -57,9 +57,13 @@ echo "Visit: https://console.cloud.google.com/apis/library"
 read -p "Press Enter once you have added all required roles and enabled all APIs..."
 
 # Get the project name from user input and remove hyphens
-echo "Please enter your project name (lowercase, no spaces or hyphens):"
-read APP_NAME
-APP_NAME=$(echo "$APP_NAME" | tr '[:upper:]' '[:lower:]' | tr -d ' -')
+echo "Please enter your project name (lowercase, can include hyphens):"
+read INPUT_NAME
+
+# Convert input to acceptable format and preserve hyphens
+APP_NAME=$(echo "$INPUT_NAME" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
+# Keep hyphens in Angular name as well
+ANGULAR_NAME="$APP_NAME"
 
 if [ -z "$APP_NAME" ]; then
   echo "Failed to get project name from Firebase setup"
@@ -67,9 +71,10 @@ if [ -z "$APP_NAME" ]; then
 fi
 
 echo "Using project name: $APP_NAME"
+echo "Using sanitized name for Angular: $ANGULAR_NAME"
 
 # Generate Angular application inside apps/{app-name}/angular
-nx generate @nx/angular:app "$APP_NAME" \
+nx generate @nx/angular:app "$ANGULAR_NAME" \
   --directory=apps/"$APP_NAME" \
   --projectNameAndRootFormat=as-provided \
   --bundler=esbuild \
@@ -78,14 +83,11 @@ nx generate @nx/angular:app "$APP_NAME" \
   --routing=true \
   --style=scss \
   --no-interactive
-# then move public, src folders and all files, except the firebase and functions folders to apps/{app-name}/angular
-
 
 # Add Firebase to the application
 nx generate @simondotm/nx-firebase:app firebase --directory=apps/"$APP_NAME" --project="$APP_NAME"
 
 # Add Firebase function
-#    Property 'runTime' does not match the schema. '18' should be a 'string'.
 nx generate @simondotm/nx-firebase:function user --app="${APP_NAME}-firebase" --directory=apps/"$APP_NAME"/functions
 
 # Create the angular directory if it doesn't exist
@@ -147,38 +149,35 @@ if [ -f "$JEST_CONFIG" ]; then
 else
   echo "Warning: jest.config.ts not found in the Angular project."
 fi
-
-
-
 # Update project.json paths to include "angular" folder
 PROJECT_JSON="apps/$APP_NAME/angular/project.json"
 if [ -f "$PROJECT_JSON" ]; then
   # Update outputPath
-  sed -i '' 's|"outputPath": "dist/apps/'"$APP_NAME"'"|"outputPath": "dist/apps/'"$APP_NAME"'/angular"|g' "$PROJECT_JSON"
+  sed -i '' 's|"outputPath": "dist/apps/'"$ANGULAR_NAME"'"|"outputPath": "dist/apps/'"$APP_NAME"'/angular"|g' "$PROJECT_JSON"
 
   # Update sourceRoot
-  sed -i '' 's|"sourceRoot": "apps/'"$APP_NAME"'/src"|"sourceRoot": "apps/'"$APP_NAME"'/angular/src"|g' "$PROJECT_JSON"
+  sed -i '' 's|"sourceRoot": "apps/'"$ANGULAR_NAME"'/src"|"sourceRoot": "apps/'"$APP_NAME"'/angular/src"|g' "$PROJECT_JSON"
 
   # Update index path
-  sed -i '' 's|"index": "apps/'"$APP_NAME"'/src/index.html"|"index": "apps/'"$APP_NAME"'/angular/src/index.html"|g' "$PROJECT_JSON"
+  sed -i '' 's|"index": "apps/'"$ANGULAR_NAME"'/src/index.html"|"index": "apps/'"$APP_NAME"'/angular/src/index.html"|g' "$PROJECT_JSON"
 
   # Update browser path
-  sed -i '' 's|"browser": "apps/'"$APP_NAME"'/src/main.ts"|"browser": "apps/'"$APP_NAME"'/angular/src/main.ts"|g' "$PROJECT_JSON"
+  sed -i '' 's|"browser": "apps/'"$ANGULAR_NAME"'/src/main.ts"|"browser": "apps/'"$APP_NAME"'/angular/src/main.ts"|g' "$PROJECT_JSON"
 
   # Update tsConfig path
-  sed -i '' 's|"tsConfig": "apps/'"$APP_NAME"'/tsconfig.app.json"|"tsConfig": "apps/'"$APP_NAME"'/angular/tsconfig.app.json"|g' "$PROJECT_JSON"
+  sed -i '' 's|"tsConfig": "apps/'"$ANGULAR_NAME"'/tsconfig.app.json"|"tsConfig": "apps/'"$APP_NAME"'/angular/tsconfig.app.json"|g' "$PROJECT_JSON"
 
   # Update assets input path
-  sed -i '' 's|"input": "apps/'"$APP_NAME"'/public"|"input": "apps/'"$APP_NAME"'/angular/public"|g' "$PROJECT_JSON"
+  sed -i '' 's|"input": "apps/'"$ANGULAR_NAME"'/public"|"input": "apps/'"$APP_NAME"'/angular/public"|g' "$PROJECT_JSON"
 
   # Update styles path
-  sed -i '' 's|"styles": \["apps/'"$APP_NAME"'/src/styles.scss"\]|"styles": ["apps/'"$APP_NAME"'/angular/src/styles.scss"]|g' "$PROJECT_JSON"
+  sed -i '' 's|"styles": \["apps/'"$ANGULAR_NAME"'/src/styles.scss"\]|"styles": ["apps/'"$APP_NAME"'/angular/src/styles.scss"]|g' "$PROJECT_JSON"
 
   # Update test jestConfig path
-  sed -i '' 's|"jestConfig": "apps/'"$APP_NAME"'/jest.config.ts"|"jestConfig": "apps/'"$APP_NAME"'/angular/jest.config.ts"|g' "$PROJECT_JSON"
+  sed -i '' 's|"jestConfig": "apps/'"$ANGULAR_NAME"'/jest.config.ts"|"jestConfig": "apps/'"$APP_NAME"'/angular/jest.config.ts"|g' "$PROJECT_JSON"
 
   # Update serve-static staticFilePath
-  sed -i '' 's|"staticFilePath": "dist/apps/'"$APP_NAME"'/browser"|"staticFilePath": "dist/apps/'"$APP_NAME"'/angular"|g' "$PROJECT_JSON"
+  sed -i '' 's|"staticFilePath": "dist/apps/'"$ANGULAR_NAME"'/browser"|"staticFilePath": "dist/apps/'"$APP_NAME"'/angular"|g' "$PROJECT_JSON"
 
   echo "Updated project.json paths to include 'angular' folder and corrected paths."
 else
@@ -193,9 +192,6 @@ if [ -f "$ESLINT_CONFIG" ]; then
 else
   echo "Warning: eslint.config.js not found in the functions folder."
 fi
-
-
-
 
 
 echo "Setup and deployment completed successfully."
@@ -707,7 +703,7 @@ echo "Created/updated $FIREBASE_JSON with correct hosting public path and functi
 
 # After Firebase setup and before deployment
 echo "Building Angular application and Firebase functions..."
-nx build "$APP_NAME" --prod
+nx build "$ANGULAR_NAME" --prod
 nx build "${APP_NAME}-firebase"
 nx build "${APP_NAME}-functions-user"
 
@@ -723,8 +719,8 @@ nx deploy "${APP_NAME}-firebase"
 WORKFLOW_DIR=".github/workflows"
 mkdir -p "$WORKFLOW_DIR"
 
-# Convert APP_NAME to uppercase for secrets
-UPPERCASE_APP_NAME=$(echo "$APP_NAME" | tr '[:lower:]' '[:upper:]')
+# Convert APP_NAME to uppercase and replace hyphens with underscores for secrets
+UPPERCASE_APP_NAME=$(echo "$APP_NAME" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
 
 # Create the workflow file for the app
 WORKFLOW_FILE="$WORKFLOW_DIR/${APP_NAME}.yml"
