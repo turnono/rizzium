@@ -1,11 +1,8 @@
 import { SwarmAgentsService } from '../services/swarm-agents.service';
 import { AgentType, AgentCapability } from '../interfaces/agent.interface';
 import { FirebaseProject } from '../interfaces/firebase.interface';
-import * as dotenv from 'dotenv';
 import { execSync } from 'child_process';
 import * as readline from 'readline';
-
-dotenv.config();
 
 export class FirebaseSetupAgent {
   private agentsService: SwarmAgentsService;

@@ -1,0 +1,88 @@
+<mxfile host="65bd71144e">
+    <diagram name="Rizz Social Flow" id="rizz-social-flow">
+        <mxGraphModel dx="904" dy="1612" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+
+                <!-- Landing Page -->
+                <mxCell id="state-landing" value="1: LANDING PAGE&#10;&#10;IN: -&#10;OUT: AgentSelection&#10;Auth Status" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#6610f2;strokeColor=#6f42c1;fontColor=#FFFFFF;align=center;verticalAlign=middle;spacing=8;spacingTop=0;" vertex="1">
+                    <mxGeometry x="430" y="-270" width="160" height="100" as="geometry"/>
+                </mxCell>
+
+                <!-- Research Agent -->
+                <mxCell id="state-research" value="2: RESEARCH AGENT&#10;&#10;IN: Topic, Category&#10;OUT: TikTokTrends&#10;Insights" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#007bff;strokeColor=#00d4ff;fontColor=#FFFFFF;align=center;verticalAlign=middle;spacing=8;spacingTop=0;dashed=1;" vertex="1">
+                    <mxGeometry x="200" y="-100" width="160" height="100" as="geometry"/>
+                </mxCell>
+
+                <!-- Content Ideation -->
+                <mxCell id="state-ideation" value="3: CONTENT IDEATION&#10;&#10;IN: Trends, Topic&#10;OUT: ContentIdeas&#10;Recommendations" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#28a745;strokeColor=#98ff98;fontColor=#FFFFFF;align=center;verticalAlign=middle;spacing=8;spacingTop=0;dashed=1;" vertex="1">
+                    <mxGeometry x="430" y="-100" width="160" height="100" as="geometry"/>
+                </mxCell>
+
+                <!-- Content Refinement -->
+                <mxCell id="state-refinement" value="4: CONTENT REFINEMENT&#10;&#10;IN: ContentIdea&#10;OUT: RefinedContent&#10;Enhancements" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#17a2b8;strokeColor=#90e0ef;fontColor=#FFFFFF;align=center;verticalAlign=middle;spacing=8;spacingTop=0;dashed=1;" vertex="1">
+                    <mxGeometry x="660" y="-100" width="160" height="100" as="geometry"/>
+                </mxCell>
+
+                <!-- Script Generation -->
+                <mxCell id="state-script" value="5: SCRIPT AGENT&#10;&#10;IN: RefinedContent&#10;OUT: Script, Hooks&#10;Production Notes" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#fd7e14;strokeColor=#ffd700;fontColor=#FFFFFF;align=center;verticalAlign=middle;spacing=8;spacingTop=0;dashed=1;" vertex="1">
+                    <mxGeometry x="430" y="50" width="160" height="100" as="geometry"/>
+                </mxCell>
+
+                <!-- Content Optimization -->
+                <mxCell id="state-optimization" value="6: OPTIMIZATION&#10;&#10;IN: Script, Content&#10;OUT: OptimizedContent&#10;Performance Tips" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#20c997;strokeColor=#98ff98;fontColor=#FFFFFF;align=center;verticalAlign=middle;spacing=8;spacingTop=0;dashed=1;" vertex="1">
+                    <mxGeometry x="430" y="200" width="160" height="100" as="geometry"/>
+                </mxCell>
+
+                <!-- Social Media Manager -->
+                <mxCell id="state-social" value="7: SOCIAL MANAGER&#10;&#10;IN: OptimizedContent&#10;OUT: Schedule, Analytics&#10;Performance" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#6c757d;strokeColor=#adb5bd;fontColor=#FFFFFF;align=center;verticalAlign=middle;spacing=8;spacingTop=0;dashed=1;" vertex="1">
+                    <mxGeometry x="430" y="350" width="160" height="100" as="geometry"/>
+                </mxCell>
+
+                <!-- Flow Connections -->
+                <mxCell id="edge-landing-research" value="Research" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0;exitY=0.75;entryX=0.5;entryY=0;curved=1;" edge="1" source="state-landing" target="state-research">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="edge-landing-ideation" value="Ideation" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;curved=1;" edge="1" source="state-landing" target="state-ideation">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="edge-landing-refinement" value="Refinement" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.75;entryX=0.5;entryY=0;curved=1;" edge="1" source="state-landing" target="state-refinement">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="edge-research-ideation" value="→ Trends" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;curved=1;" edge="1" source="state-research" target="state-ideation">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="edge-ideation-refinement" value="→ Ideas" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;curved=1;" edge="1" source="state-ideation" target="state-refinement">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="edge-refinement-script" value="→ Content" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;entryX=1;entryY=0.5;curved=1;" edge="1" source="state-refinement" target="state-script">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="edge-script-optimization" value="→ Script" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;curved=1;" edge="1" source="state-script" target="state-optimization">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="edge-optimization-social" value="→ Content" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;curved=1;" edge="1" source="state-optimization" target="state-social">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+
+                <!-- Notes -->
+                <mxCell id="auth-notice" value="Note: Dashed borders indicate&#10;AuthGuard protected states" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1">
+                    <mxGeometry x="40" y="980" width="160" height="40" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="workflow-note" value="Note: Each agent can be accessed&#10;independently from the landing page" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1">
+                    <mxGeometry x="40" y="1020" width="160" height="40" as="geometry"/>
+                </mxCell>
+
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

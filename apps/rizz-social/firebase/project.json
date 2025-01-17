@@ -6,11 +6,14 @@
   "implicitDependencies": [
     "rizz-social-functions-aggregate-agent-metrics",
     "rizz-social-functions-cleanup-old-activities",
+    "rizz-social-functions-execute-agent-task",
     "rizz-social-functions-generate-content-script",
     "rizz-social-functions-get-agent-insights",
     "rizz-social-functions-get-tiktok-trends",
     "rizz-social-functions-log-agent-activity",
+    "rizz-social-functions-manage-swarm-agents",
     "rizz-social-functions-optimize-content",
+    "rizz-social-functions-perform-research",
     "rizz-social-functions-sync-agent-status",
     "rizz-social-functions-user"
   ],
