@@ -1,6 +1,32 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule } from '@ionic/angular';
+import {
+  IonContent,
+  IonHeader,
+  IonTitle,
+  IonToolbar,
+  IonButtons,
+  IonBackButton,
+  IonGrid,
+  IonCol,
+  IonModal,
+  IonCard,
+  IonList,
+  IonChip,
+  IonIcon,
+  IonLabel,
+  IonNote,
+  IonItem,
+  IonButton,
+  IonCardContent,
+  IonCardTitle,
+  IonCardHeader,
+  IonRow,
+  IonDatetimeButton,
+  IonInput,
+  IonTextarea,
+  IonDatetime,
+} from '@ionic/angular/standalone';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TikTokContentService } from '@rizzium/shared/services';
 import { TikTokContent } from '@rizzium/shared/interfaces';
@@ -10,11 +36,46 @@ import { Observable } from 'rxjs';
 @Component({
   selector: 'app-social-media-manager',
   standalone: true,
-  imports: [CommonModule, IonicModule, FormsModule, ReactiveFormsModule],
+  imports: [
+    CommonModule,
+    IonButtons,
+    IonBackButton,
+    FormsModule,
+    ReactiveFormsModule,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonContent,
+    IonGrid,
+    IonRow,
+    IonCol,
+    IonCard,
+    IonCardHeader,
+    IonCardTitle,
+    IonCardContent,
+    IonList,
+    IonItem,
+    IonLabel,
+    IonNote,
+    IonButton,
+    IonIcon,
+    IonChip,
+    IonButtons,
+    IonBackButton,
+    IonModal,
+    IonDatetimeButton,
+    IonInput,
+    IonTextarea,
+    IonDatetime,
+  ],
   providers: [TikTokContentService],
   template: `
     <ion-header>
       <ion-toolbar>
+        <!-- TODO: Add back button -->
+        <ion-buttons slot="start">
+          <ion-back-button></ion-back-button>
+        </ion-buttons>
         <ion-title>TikTok Content Manager</ion-title>
       </ion-toolbar>
     </ion-header>

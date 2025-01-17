@@ -28,6 +28,12 @@ service cloud.firestore {
       allow write: if isAuthenticated();
     }
 
+    // TikTok Content Collection
+    match /TikTokContent/{contentId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
     // Users Collection
     match /users/{userId} {
       allow read: if isAuthenticated() && isOwner(userId);
