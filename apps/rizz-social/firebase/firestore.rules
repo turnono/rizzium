@@ -1,23 +1,45 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper function to check if it's you
-    function isAdmin() {
-      return request.auth.uid == "x2cCdiUCSyeeOYOTOCXqL7oum8U2";
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
     }
 
     // Agent Activities Collection
     match /AgentActivities/{activityId} {
-      allow read, write: if isAdmin();
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
     }
 
     // Agent Metrics Collection
     match /AgentMetrics/{agentId} {
-      allow read: if isAdmin();
+      allow read: if isAuthenticated();
       allow write: if false;  // Only Cloud Functions can write
     }
 
-    // Default deny
+    // Content Calendar Collection
+    match /content-calendar/{documentId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      allow read: if isAuthenticated() && isOwner(userId);
+      allow write: if isAuthenticated() && isOwner(userId);
+
+      match /usage/{document=**} {
+        allow read: if isAuthenticated() && isOwner(userId);
+        allow write: if false;  // Only Cloud Functions can write
+      }
+    }
+
+    // Default deny for unmatched paths
     match /{document=**} {
       allow read, write: if false;
     }
