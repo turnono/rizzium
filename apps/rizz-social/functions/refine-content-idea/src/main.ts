@@ -1,9 +1,10 @@
 import { onRequest } from 'firebase-functions/v2/https';
 import * as logger from 'firebase-functions/logger';
 import OpenAI from 'openai';
+import * as functions from 'firebase-functions';
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: functions.config().openai.api_key,
 });
 
 interface ContentRefinementRequest {
