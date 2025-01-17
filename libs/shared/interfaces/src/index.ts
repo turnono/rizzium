@@ -7,3 +7,6 @@ export * from './lib/usage-data.interface';
 export * from './lib/content-optimization.interface';
 export * from './lib/tiktok/tiktok-content.interface';
 export * from './lib/agent-dashboard.interface';
+export * from './lib/agent.interface';
+export * from './lib/tavily.interface';
+export * from './lib/task.interface';

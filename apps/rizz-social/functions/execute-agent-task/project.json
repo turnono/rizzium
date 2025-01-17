@@ -1,0 +1,54 @@
+{
+  "name": "rizz-social-functions-execute-agent-task",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/rizz-social/functions/execute-agent-task/src",
+  "projectType": "application",
+  "tags": [
+    "firebase:function",
+    "firebase:name:rizz-social-functions-execute-agent-task",
+    "firebase:dep:rizz-social-firebase"
+  ],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/rizz-social/functions/execute-agent-task",
+        "main": "apps/rizz-social/functions/execute-agent-task/src/main.ts",
+        "tsConfig": "apps/rizz-social/functions/execute-agent-task/tsconfig.app.json",
+        "assets": [
+          "apps/rizz-social/functions/execute-agent-task/src/assets",
+          {
+            "glob": "**/*",
+            "input": "apps/rizz-social/firebase/environment",
+            "output": "."
+          }
+        ],
+        "generatePackageJson": true,
+        "platform": "node",
+        "bundle": true,
+        "thirdParty": false,
+        "dependenciesFieldType": "dependencies",
+        "target": "node16",
+        "format": ["esm"],
+        "esbuildOptions": {
+          "logLevel": "info"
+        }
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/rizz-social/functions/execute-agent-task/jest.config.ts"
+      }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nx run rizz-social-firebase:deploy --only functions:rizz-social-functions-execute-agent-task"
+      },
+      "dependsOn": ["build"]
+    }
+  }
+}

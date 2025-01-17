@@ -30,6 +30,12 @@
       "ignore": ["*.local"]
     },
     {
+      "codebase": "rizz-social-functions-execute-agent-task",
+      "source": "dist/apps/rizz-social/functions/execute-agent-task",
+      "runtime": "nodejs16",
+      "ignore": ["*.local"]
+    },
+    {
       "codebase": "rizz-social-functions-generate-content-script",
       "source": "dist/apps/rizz-social/functions/generate-content-script",
       "runtime": "nodejs16",
@@ -54,8 +60,20 @@
       "ignore": ["*.local"]
     },
     {
+      "codebase": "rizz-social-functions-manage-swarm-agents",
+      "source": "dist/apps/rizz-social/functions/manage-swarm-agents",
+      "runtime": "nodejs16",
+      "ignore": ["*.local"]
+    },
+    {
       "codebase": "rizz-social-functions-optimize-content",
       "source": "dist/apps/rizz-social/functions/optimize-content",
+      "runtime": "nodejs16",
+      "ignore": ["*.local"]
+    },
+    {
+      "codebase": "rizz-social-functions-perform-research",
+      "source": "dist/apps/rizz-social/functions/perform-research",
       "runtime": "nodejs16",
       "ignore": ["*.local"]
     },
