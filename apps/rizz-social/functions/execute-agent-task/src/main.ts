@@ -11,7 +11,7 @@ import { onCall } from 'firebase-functions/v2/https';
 import * as logger from 'firebase-functions/logger';
 import OpenAI from 'openai';
 import { Agent, TaskDefinition, TaskResult } from '@rizzium/shared/interfaces';
-
+import * as functions from 'firebase-functions';
 interface ExecuteTaskRequest {
   agent: Agent;
   task: TaskDefinition;
@@ -20,7 +20,7 @@ interface ExecuteTaskRequest {
 export const executeAgentTask = onCall<ExecuteTaskRequest, Promise<TaskResult>>(async (request) => {
   try {
     const { agent, task } = request.data;
-    const openAiKey = process.env.OPENAI_API_KEY;
+    const openAiKey = functions.config().openai.api_key;
 
     if (!openAiKey) {
       throw new Error('OpenAI API key not found');

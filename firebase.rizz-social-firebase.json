@@ -78,6 +78,12 @@
       "ignore": ["*.local"]
     },
     {
+      "codebase": "rizz-social-functions-refine-content-idea",
+      "source": "dist/apps/rizz-social/functions/refine-content-idea",
+      "runtime": "nodejs16",
+      "ignore": ["*.local"]
+    },
+    {
       "codebase": "rizz-social-functions-sync-agent-status",
       "source": "dist/apps/rizz-social/functions/sync-agent-status",
       "runtime": "nodejs16",
