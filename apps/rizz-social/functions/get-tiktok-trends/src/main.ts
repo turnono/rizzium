@@ -25,9 +25,15 @@ interface TikTokTrend {
   viewCount: number;
   videoCount: number;
   hashtag: string;
-  category: 'dance' | 'music' | 'challenge' | 'comedy' | 'lifestyle' | 'business' | 'education';
+  category: 'dance' | 'music' | 'challenge' | 'comedy' | 'lifestyle' | 'business' | 'education' | 'tech' | 'fashion';
   trending_score: number;
   examples?: string[];
+  insights?: {
+    audience: string;
+    engagement_rate: number;
+    best_posting_times: string[];
+    content_tips: string[];
+  };
 }
 
 // Mock data for now
@@ -46,6 +52,16 @@ const MOCK_TRENDS: TikTokTrend[] = [
       'Behind the scenes of meetings',
       'Revenue milestone celebrations',
     ],
+    insights: {
+      audience: 'Young entrepreneurs, business students, aspiring founders',
+      engagement_rate: 8.5,
+      best_posting_times: ['8:00 AM', '12:00 PM', '6:00 PM'],
+      content_tips: [
+        'Start with a hook showing results',
+        'Include specific numbers and metrics',
+        'End with actionable takeaways',
+      ],
+    },
   },
   {
     id: '2',
@@ -57,6 +73,12 @@ const MOCK_TRENDS: TikTokTrend[] = [
     category: 'business',
     trending_score: 95,
     examples: ['Social media growth hacks', 'Sales techniques', 'Customer service tips'],
+    insights: {
+      audience: 'Small business owners, marketers, sales professionals',
+      engagement_rate: 7.2,
+      best_posting_times: ['9:00 AM', '2:00 PM', '7:00 PM'],
+      content_tips: ['Use text overlays for key points', 'Keep each tip under 15 seconds', 'Include real examples'],
+    },
   },
   {
     id: '3',
@@ -68,6 +90,16 @@ const MOCK_TRENDS: TikTokTrend[] = [
     category: 'business',
     trending_score: 94,
     examples: ['Revenue increases', 'Store renovations', 'Team expansion stories'],
+    insights: {
+      audience: 'Business owners, entrepreneurs, startup founders',
+      engagement_rate: 9.1,
+      best_posting_times: ['10:00 AM', '3:00 PM', '8:00 PM'],
+      content_tips: [
+        'Show clear before/after comparisons',
+        'Share specific strategies used',
+        'Include emotional journey elements',
+      ],
+    },
   },
   {
     id: '4',
@@ -79,6 +111,16 @@ const MOCK_TRENDS: TikTokTrend[] = [
     category: 'education',
     trending_score: 92,
     examples: ['Marketing basics', 'Financial literacy', 'Business strategy'],
+    insights: {
+      audience: 'Students, professionals, lifelong learners',
+      engagement_rate: 6.8,
+      best_posting_times: ['11:00 AM', '4:00 PM', '9:00 PM'],
+      content_tips: [
+        'Use visual aids and graphics',
+        'Break complex topics into steps',
+        'Include real-world applications',
+      ],
+    },
   },
   {
     id: '5',
@@ -90,19 +132,36 @@ const MOCK_TRENDS: TikTokTrend[] = [
     category: 'business',
     trending_score: 93,
     examples: ['Inventory management', 'Customer interactions', 'Problem-solving moments'],
+    insights: {
+      audience: 'Small business owners, entrepreneurs, business students',
+      engagement_rate: 8.3,
+      best_posting_times: ['9:30 AM', '1:30 PM', '6:30 PM'],
+      content_tips: [
+        'Show authentic behind-the-scenes',
+        'Share both successes and challenges',
+        'Include day-in-the-life elements',
+      ],
+    },
   },
 ];
 
 export const getTikTokTrends = onRequest({ cors: true }, async (request, response) => {
   try {
-    const { category, limit = '10' } = request.query;
+    const { category, limit = '10', minEngagementRate, includeInsights = 'true' } = request.query;
     const limitNum = parseInt(limit as string, 10);
+    const minEngagement = minEngagementRate ? parseFloat(minEngagementRate as string) : 0;
+    const shouldIncludeInsights = includeInsights === 'true';
 
     let trends = [...MOCK_TRENDS];
 
     // Filter by category if provided
     if (category) {
       trends = trends.filter((trend) => trend.category === category);
+    }
+
+    // Filter by minimum engagement rate if provided
+    if (minEngagement > 0) {
+      trends = trends.filter((trend) => (trend.insights?.engagement_rate || 0) >= minEngagement);
     }
 
     // Sort by trending score
@@ -113,10 +172,23 @@ export const getTikTokTrends = onRequest({ cors: true }, async (request, respons
       trends = trends.slice(0, limitNum);
     }
 
+    // Remove insights if not requested
+    if (!shouldIncludeInsights) {
+      trends = trends.map(
+        (trend) =>
+          Object.fromEntries(Object.entries(trend).filter(([key]) => key !== 'insights')) as Omit<
+            TikTokTrend,
+            'insights'
+          >
+      );
+    }
+
     logger.info('Trends fetched successfully', {
       trendCount: trends.length,
       category: category || 'all',
       limit: limitNum,
+      minEngagementRate: minEngagement,
+      includeInsights: shouldIncludeInsights,
     });
 
     response.status(200).json({
@@ -127,6 +199,10 @@ export const getTikTokTrends = onRequest({ cors: true }, async (request, respons
         total: trends.length,
         category: category || 'all',
         limit: limitNum,
+        filters: {
+          minEngagementRate: minEngagement,
+          includeInsights: shouldIncludeInsights,
+        },
       },
     });
   } catch (error) {
