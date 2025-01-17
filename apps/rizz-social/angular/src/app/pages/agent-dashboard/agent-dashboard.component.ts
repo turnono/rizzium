@@ -5,6 +5,8 @@ import { RouterModule } from '@angular/router';
 import { AgentDashboardService } from '@rizzium/shared/services';
 import { AgentCard, AgentActivity } from '@rizzium/shared/interfaces';
 import { Observable } from 'rxjs';
+import { addIcons } from 'ionicons';
+import { analytics, documentText, trendingUp, shareSocial } from 'ionicons/icons';
 
 @Component({
   selector: 'app-agent-dashboard',
@@ -98,6 +100,7 @@ export class AgentDashboardComponent {
   agents: (AgentCard & { recentActivities$: Observable<AgentActivity[]> })[];
 
   constructor() {
+    addIcons({ analytics, documentText, trendingUp, shareSocial });
     this.agents = this.agentService.getAllAgents().map((agent) => ({
       ...agent,
       recentActivities$: this.agentService.getRecentActivities(agent.id, 3),
