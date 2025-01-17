@@ -45,8 +45,9 @@ import {
   template: `
     <ion-header>
       <ion-toolbar>
+        <!-- TODO: Add back button -->
         <ion-buttons slot="start">
-          <ion-back-button defaultHref="/"></ion-back-button>
+          <ion-back-button></ion-back-button>
         </ion-buttons>
         <ion-title>Create Content</ion-title>
       </ion-toolbar>

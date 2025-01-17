@@ -19,6 +19,8 @@ import {
   IonList,
   IonItem,
   IonLabel,
+  IonBackButton,
+  IonButtons,
 } from '@ionic/angular/standalone';
 import { copyOutline } from 'ionicons/icons';
 
@@ -50,10 +52,16 @@ interface ContentOptimizationResponse {
     IonList,
     IonItem,
     IonLabel,
+    IonButtons,
+    IonBackButton,
   ],
   template: `
     <ion-header>
       <ion-toolbar>
+        <!-- TODO: Add back button -->
+        <ion-buttons slot="start">
+          <ion-back-button></ion-back-button>
+        </ion-buttons>
         <ion-title>TikTok Content Optimization</ion-title>
       </ion-toolbar>
     </ion-header>

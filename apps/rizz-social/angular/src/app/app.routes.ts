@@ -33,6 +33,11 @@ export const appRoutes: Route[] = [
       import('./pages/agent-dashboard/agent-dashboard.component').then((m) => m.AgentDashboardComponent),
   },
   {
+    path: 'research',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/research/research.component').then((m) => m.ResearchComponent),
+  },
+  {
     path: 'create',
     canActivate: [authGuard],
     loadComponent: () => import('./pages/create/create.page').then((m) => m.CreatePageComponent),
