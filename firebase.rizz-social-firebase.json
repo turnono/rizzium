@@ -30,14 +30,32 @@
       "ignore": ["*.local"]
     },
     {
+      "codebase": "rizz-social-functions-generate-content-script",
+      "source": "dist/apps/rizz-social/functions/generate-content-script",
+      "runtime": "nodejs16",
+      "ignore": ["*.local"]
+    },
+    {
       "codebase": "rizz-social-functions-get-agent-insights",
       "source": "dist/apps/rizz-social/functions/get-agent-insights",
       "runtime": "nodejs16",
       "ignore": ["*.local"]
     },
     {
+      "codebase": "rizz-social-functions-get-tiktok-trends",
+      "source": "dist/apps/rizz-social/functions/get-tiktok-trends",
+      "runtime": "nodejs16",
+      "ignore": ["*.local"]
+    },
+    {
       "codebase": "rizz-social-functions-log-agent-activity",
       "source": "dist/apps/rizz-social/functions/log-agent-activity",
+      "runtime": "nodejs16",
+      "ignore": ["*.local"]
+    },
+    {
+      "codebase": "rizz-social-functions-optimize-content",
+      "source": "dist/apps/rizz-social/functions/optimize-content",
       "runtime": "nodejs16",
       "ignore": ["*.local"]
     },
