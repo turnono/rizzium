@@ -1,0 +1,65 @@
+{
+  "name": "manage-content-calendar",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/rizz-social/functions/manage-content-calendar/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/apps/rizz-social/functions/manage-content-calendar",
+        "format": ["cjs"],
+        "bundle": false,
+        "main": "apps/rizz-social/functions/manage-content-calendar/src/main.ts",
+        "tsConfig": "apps/rizz-social/functions/manage-content-calendar/tsconfig.app.json",
+        "assets": ["apps/rizz-social/functions/manage-content-calendar/src/assets"],
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "sourcemap": true,
+          "outExtension": {
+            ".js": ".js"
+          }
+        }
+      },
+      "configurations": {
+        "development": {},
+        "production": {
+          "esbuildOptions": {
+            "sourcemap": false,
+            "outExtension": {
+              ".js": ".js"
+            }
+          }
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "dependsOn": ["build"],
+      "options": {
+        "buildTarget": "manage-content-calendar:build",
+        "runBuildTargetDependencies": false
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "manage-content-calendar:build:development"
+        },
+        "production": {
+          "buildTarget": "manage-content-calendar:build:production"
+        }
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/rizz-social/functions/manage-content-calendar/jest.config.ts"
+      }
+    }
+  }
+}
