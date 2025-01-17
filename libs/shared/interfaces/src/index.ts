@@ -10,3 +10,4 @@ export * from './lib/agent-dashboard.interface';
 export * from './lib/agent.interface';
 export * from './lib/tavily.interface';
 export * from './lib/task.interface';
+export * from './lib/workflow.interface';
