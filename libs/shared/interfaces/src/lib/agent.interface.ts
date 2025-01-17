@@ -6,9 +6,8 @@ export enum AgentStatus {
 export enum AgentType {
   SPECIALIST = 'specialist',
   GENERALIST = 'generalist',
+  MANAGER = 'manager',
 }
-
-export type AgentCapability = 'research' | 'firebase_project_setup' | 'iam_role_management';
 
 export interface Agent {
   id: string;
@@ -19,3 +18,20 @@ export interface Agent {
   capabilities: AgentCapability[];
   model: string;
 }
+
+export type AgentCapability =
+  | 'firebase_project_setup'
+  | 'iam_role_management'
+  | 'api_enablement'
+  | 'github_secrets_management'
+  | 'workspace_navigation'
+  | 'dependency_management'
+  | 'library_organization'
+  | 'component_placement'
+  | 'code_review'
+  | 'testing'
+  | 'documentation'
+  | 'debugging'
+  | 'optimization'
+  | 'research'
+  | 'coordination';
