@@ -4,3 +4,6 @@ export * from './lib/analysis-response.interface';
 export * from './lib/business.interface';
 export * from './lib/sales-report.interface';
 export * from './lib/usage-data.interface';
+export * from './lib/content-optimization.interface';
+export * from './lib/tiktok/tiktok-content.interface';
+export * from './lib/agent-dashboard.interface';

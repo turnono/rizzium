@@ -3,6 +3,14 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "tags": ["firebase:app", "firebase:name:rizz-social-firebase"],
+  "implicitDependencies": [
+    "rizz-social-functions-aggregate-agent-metrics",
+    "rizz-social-functions-cleanup-old-activities",
+    "rizz-social-functions-get-agent-insights",
+    "rizz-social-functions-log-agent-activity",
+    "rizz-social-functions-sync-agent-status",
+    "rizz-social-functions-user"
+  ],
   "targets": {
     "build": {
       "executor": "nx:run-commands",
@@ -74,6 +82,5 @@
         "command": "nx run rizz-social-firebase:firebase deploy"
       }
     }
-  },
-  "implicitDependencies": ["rizz-social-functions-user"]
+  }
 }

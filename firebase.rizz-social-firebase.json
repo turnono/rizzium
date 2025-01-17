@@ -18,16 +18,40 @@
   },
   "functions": [
     {
+      "codebase": "rizz-social-functions-aggregate-agent-metrics",
+      "source": "dist/apps/rizz-social/functions/aggregate-agent-metrics",
+      "runtime": "nodejs16",
+      "ignore": ["*.local"]
+    },
+    {
+      "codebase": "rizz-social-functions-cleanup-old-activities",
+      "source": "dist/apps/rizz-social/functions/cleanup-old-activities",
+      "runtime": "nodejs16",
+      "ignore": ["*.local"]
+    },
+    {
+      "codebase": "rizz-social-functions-get-agent-insights",
+      "source": "dist/apps/rizz-social/functions/get-agent-insights",
+      "runtime": "nodejs16",
+      "ignore": ["*.local"]
+    },
+    {
+      "codebase": "rizz-social-functions-log-agent-activity",
+      "source": "dist/apps/rizz-social/functions/log-agent-activity",
+      "runtime": "nodejs16",
+      "ignore": ["*.local"]
+    },
+    {
+      "codebase": "rizz-social-functions-sync-agent-status",
+      "source": "dist/apps/rizz-social/functions/sync-agent-status",
+      "runtime": "nodejs16",
+      "ignore": ["*.local"]
+    },
+    {
       "source": "dist/apps/rizz-social/functions/user",
       "codebase": "rizz-social-functions-user",
       "runtime": "nodejs18",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "*.local"
-      ]
+      "ignore": ["node_modules", ".git", "firebase-debug.log", "firebase-debug.*.log", "*.local"]
     }
   ],
   "emulators": {
