@@ -24,12 +24,6 @@
       "ignore": ["*.local"]
     },
     {
-      "codebase": "rizz-social-functions-assemble-final-video",
-      "source": "dist/apps/rizz-social/functions/assemble-final-video",
-      "runtime": "nodejs16",
-      "ignore": ["*.local"]
-    },
-    {
       "codebase": "rizz-social-functions-cleanup-old-activities",
       "source": "dist/apps/rizz-social/functions/cleanup-old-activities",
       "runtime": "nodejs16",

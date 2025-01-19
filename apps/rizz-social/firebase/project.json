@@ -5,7 +5,6 @@
   "tags": ["firebase:app", "firebase:name:rizz-social-firebase"],
   "implicitDependencies": [
     "rizz-social-functions-aggregate-agent-metrics",
-    "rizz-social-functions-assemble-final-video",
     "rizz-social-functions-cleanup-old-activities",
     "rizz-social-functions-execute-agent-task",
     "rizz-social-functions-generate-content-script",
