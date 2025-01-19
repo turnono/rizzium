@@ -11,7 +11,11 @@
   "engines": {
     "node": "16"
   },
-  "dependencies": {},
-  "devDependencies": {},
+  "dependencies": {
+    "fluent-ffmpeg": "^2.1.2"
+  },
+  "devDependencies": {
+    "@types/fluent-ffmpeg": "^2.1.24"
+  },
   "private": true
 }
