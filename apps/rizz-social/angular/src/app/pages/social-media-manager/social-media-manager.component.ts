@@ -1,264 +1,115 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {
-  IonContent,
-  IonHeader,
-  IonTitle,
-  IonToolbar,
-  IonButtons,
-  IonBackButton,
-  IonGrid,
-  IonCol,
-  IonModal,
-  IonCard,
-  IonList,
-  IonChip,
-  IonIcon,
-  IonLabel,
-  IonNote,
-  IonItem,
-  IonButton,
-  IonCardContent,
-  IonCardTitle,
-  IonCardHeader,
-  IonRow,
-  IonDatetimeButton,
-  IonInput,
-  IonTextarea,
-  IonDatetime,
-} from '@ionic/angular/standalone';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { TikTokContentService } from '@rizzium/shared/services';
-import { TikTokContent } from '@rizzium/shared/interfaces';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Observable } from 'rxjs';
+import { FormsModule } from '@angular/forms';
+import { IonicModule } from '@ionic/angular';
+import { SwarmAgentsService } from '@rizzium/shared/swarm-agents';
+import { Agent } from '@rizzium/shared/interfaces';
+import { Observable, firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-social-media-manager',
   standalone: true,
-  imports: [
-    CommonModule,
-    IonButtons,
-    IonBackButton,
-    FormsModule,
-    ReactiveFormsModule,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonContent,
-    IonGrid,
-    IonRow,
-    IonCol,
-    IonCard,
-    IonCardHeader,
-    IonCardTitle,
-    IonCardContent,
-    IonList,
-    IonItem,
-    IonLabel,
-    IonNote,
-    IonButton,
-    IonIcon,
-    IonChip,
-    IonButtons,
-    IonBackButton,
-    IonModal,
-    IonDatetimeButton,
-    IonInput,
-    IonTextarea,
-    IonDatetime,
-  ],
-  providers: [TikTokContentService],
+  imports: [CommonModule, IonicModule, FormsModule],
   template: `
-    <ion-header>
-      <ion-toolbar>
-        <!-- TODO: Add back button -->
-        <ion-buttons slot="start">
-          <ion-back-button></ion-back-button>
-        </ion-buttons>
-        <ion-title>TikTok Content Manager</ion-title>
-      </ion-toolbar>
-    </ion-header>
-
     <ion-content>
       <ion-grid>
         <ion-row>
-          <ion-col size="12" sizeMd="8">
-            <!-- Calendar View -->
+          <ion-col size="12">
             <ion-card>
               <ion-card-header>
-                <ion-card-title>Content Calendar</ion-card-title>
+                <ion-card-title>Create TikTok Video</ion-card-title>
               </ion-card-header>
               <ion-card-content>
-                <ion-list>
-                  @for (content of contents$ | async; track content.id) {
-                  <ion-item>
-                    <ion-label>
-                      <h2>{{ content.title }}</h2>
-                      <p>{{ content.scheduledDate | date }}</p>
-                      <ion-chip *ngFor="let tag of content.tags">{{ tag }}</ion-chip>
-                    </ion-label>
-                    <ion-note slot="end">
-                      <ion-icon name="eye"></ion-icon> {{ content.metrics?.views || 0 }}
-                      <ion-icon name="heart"></ion-icon> {{ content.metrics?.likes || 0 }}
-                    </ion-note>
-                    <ion-buttons slot="end">
-                      <ion-button (click)="editContent(content)">
-                        <ion-icon name="create"></ion-icon>
-                      </ion-button>
-                      <ion-button (click)="deleteContent(content.id)">
-                        <ion-icon name="trash"></ion-icon>
-                      </ion-button>
-                    </ion-buttons>
-                  </ion-item>
-                  }
-                </ion-list>
+                <ion-textarea
+                  [(ngModel)]="scriptInput"
+                  placeholder="Enter your video script here..."
+                  rows="6"
+                  data-cy="script-input"
+                ></ion-textarea>
+                <ion-button
+                  expand="block"
+                  (click)="startVideoCreation()"
+                  [disabled]="!scriptInput || isLoading()"
+                  data-cy="generate-video-btn"
+                >
+                  <ion-spinner *ngIf="isLoading()"></ion-spinner>
+                  <span *ngIf="!isLoading()">Generate Video</span>
+                </ion-button>
+              </ion-card-content>
+            </ion-card>
+
+            <ion-card *ngIf="errorMessage()">
+              <ion-card-content>
+                <ion-text color="danger">{{ errorMessage() }}</ion-text>
               </ion-card-content>
             </ion-card>
           </ion-col>
+        </ion-row>
 
-          <ion-col size="12" sizeMd="4">
-            <!-- Content Form -->
-            <ion-card>
-              <ion-card-header>
-                <ion-card-title>{{ isEditing ? 'Edit Content' : 'Add Content' }}</ion-card-title>
-              </ion-card-header>
-              <ion-card-content>
-                <form [formGroup]="contentForm" (ngSubmit)="onSubmit()">
-                  <ion-item>
-                    <ion-label position="stacked">Title</ion-label>
-                    <ion-input formControlName="title" type="text"></ion-input>
-                  </ion-item>
-
-                  <ion-item>
-                    <ion-label position="stacked">Description</ion-label>
-                    <ion-textarea formControlName="description" rows="3"></ion-textarea>
-                  </ion-item>
-
-                  <ion-item>
-                    <ion-label position="stacked">Scheduled Date</ion-label>
-                    <ion-datetime-button datetime="scheduledDate"></ion-datetime-button>
-                    <ion-modal [keepContentsMounted]="true">
-                      <ng-template>
-                        <ion-datetime
-                          id="scheduledDate"
-                          formControlName="scheduledDate"
-                          presentation="date-time"
-                        ></ion-datetime>
-                      </ng-template>
-                    </ion-modal>
-                  </ion-item>
-
-                  <ion-item>
-                    <ion-label position="stacked">Tags (comma-separated)</ion-label>
-                    <ion-input formControlName="tags" type="text"></ion-input>
-                  </ion-item>
-
-                  <ion-button expand="block" type="submit" [disabled]="!contentForm.valid">
-                    {{ isEditing ? 'Update' : 'Add' }} Content
-                  </ion-button>
-
-                  @if (isEditing) {
-                  <ion-button expand="block" fill="clear" (click)="cancelEdit()"> Cancel </ion-button>
-                  }
-                </form>
-              </ion-card-content>
-            </ion-card>
+        <ion-row>
+          <ion-col size="12">
+            <ion-list>
+              <ion-item *ngFor="let agent of agents$ | async" data-cy="agent-item">
+                <ion-label>
+                  <h2>{{ agent.name }}</h2>
+                  <p>{{ agent.description }}</p>
+                  <ion-progress-bar [value]="agent.progress / 100"></ion-progress-bar>
+                </ion-label>
+                <ion-note slot="end">{{ agent.status }}</ion-note>
+              </ion-item>
+            </ion-list>
           </ion-col>
         </ion-row>
       </ion-grid>
     </ion-content>
   `,
-  styles: [
-    `
-      ion-chip {
-        margin: 4px;
-      }
-      ion-note {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-      ion-icon {
-        margin-right: 4px;
-      }
-    `,
-  ],
 })
 export class SocialMediaManagerComponent {
-  private tikTokService: TikTokContentService = inject(TikTokContentService);
-  private fb = inject(FormBuilder);
+  private swarmAgents = inject(SwarmAgentsService);
 
-  contents$: Observable<TikTokContent[]>;
-  contentForm: FormGroup;
-  isEditing = false;
-  editingId: string | null = null;
+  scriptInput = '';
+  agents$: Observable<Agent[]> = this.swarmAgents.getAgentsByType('script');
+  isLoading = signal(false);
+  errorMessage = signal('');
 
-  constructor() {
-    const today = new Date();
-    const endDate = new Date();
-    endDate.setMonth(today.getMonth() + 1);
+  async startVideoCreation(): Promise<void> {
+    if (!this.scriptInput.trim() || this.isLoading()) return;
 
-    this.contents$ = this.tikTokService.getContentCalendar(today, endDate);
+    this.isLoading.set(true);
+    this.errorMessage.set('');
 
-    this.contentForm = this.fb.group({
-      title: ['', Validators.required],
-      description: ['', Validators.required],
-      scheduledDate: [new Date(), Validators.required],
-      tags: [''],
-    });
-  }
+    try {
+      console.log('Creating script agent...');
+      const scriptAgent = await firstValueFrom(this.swarmAgents.createScriptAgent(this.scriptInput));
+      console.log('Script agent created:', scriptAgent);
 
-  onSubmit() {
-    if (this.contentForm.valid) {
-      const formValue = this.contentForm.value;
-      const content = {
-        ...formValue,
-        tags: formValue.tags
-          .split(',')
-          .map((tag: string) => tag.trim())
-          .filter(Boolean),
-        status: 'scheduled',
-      };
+      // Simulate script segmentation (replace with actual AI processing)
+      const segments = this.scriptInput.split('.').filter((s) => s.trim());
+      console.log('Created segments:', segments);
 
-      if (this.isEditing && this.editingId) {
-        this.tikTokService.updateContent(this.editingId, content).subscribe(() => {
-          this.resetForm();
-        });
-      } else {
-        this.tikTokService.addContent(content).subscribe(() => {
-          this.resetForm();
+      await firstValueFrom(
+        this.swarmAgents.updateAgentStatus<{ segments: string[] }>(scriptAgent.id, 'completed', 100, {
+          success: true,
+          data: { segments },
+        })
+      );
+      console.log('Updated script agent status');
+
+      // Create and process video agents for each segment
+      for (const segment of segments) {
+        const videoAgent = await firstValueFrom(this.swarmAgents.createVideoAgent(segment));
+        console.log('Created video agent:', videoAgent);
+
+        // Start video generation
+        firstValueFrom(this.swarmAgents.generateVideo(videoAgent)).catch((error) => {
+          console.error('Error generating video for segment:', segment, error);
         });
       }
+    } catch (error) {
+      console.error('Error in video creation workflow:', error);
+      this.errorMessage.set(error instanceof Error ? error.message : 'An error occurred');
+    } finally {
+      this.isLoading.set(false);
     }
-  }
-
-  editContent(content: TikTokContent) {
-    this.isEditing = true;
-    this.editingId = content.id;
-    this.contentForm.patchValue({
-      title: content.title,
-      description: content.description,
-      scheduledDate: content.scheduledDate,
-      tags: content.tags.join(', '),
-    });
-  }
-
-  deleteContent(id: string | undefined) {
-    if (id) {
-      this.tikTokService.deleteContent(id).subscribe();
-    }
-  }
-
-  cancelEdit() {
-    this.resetForm();
-  }
-
-  private resetForm() {
-    this.isEditing = false;
-    this.editingId = null;
-    this.contentForm.reset({
-      scheduledDate: new Date(),
-    });
   }
 }

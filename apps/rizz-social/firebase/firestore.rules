@@ -45,6 +45,11 @@ service cloud.firestore {
       }
     }
 
+    // Agents Collection
+    match /agents/{agentId} {
+      allow read, write: if true; // TODO: Add proper authentication
+    }
+
     // Default deny for unmatched paths
     match /{document=**} {
       allow read, write: if false;

@@ -24,6 +24,12 @@
       "ignore": ["*.local"]
     },
     {
+      "codebase": "rizz-social-functions-assemble-final-video",
+      "source": "dist/apps/rizz-social/functions/assemble-final-video",
+      "runtime": "nodejs16",
+      "ignore": ["*.local"]
+    },
+    {
       "codebase": "rizz-social-functions-cleanup-old-activities",
       "source": "dist/apps/rizz-social/functions/cleanup-old-activities",
       "runtime": "nodejs16",
@@ -38,6 +44,12 @@
     {
       "codebase": "rizz-social-functions-generate-content-script",
       "source": "dist/apps/rizz-social/functions/generate-content-script",
+      "runtime": "nodejs16",
+      "ignore": ["*.local"]
+    },
+    {
+      "codebase": "rizz-social-functions-generate-sora-video",
+      "source": "dist/apps/rizz-social/functions/generate-sora-video",
       "runtime": "nodejs16",
       "ignore": ["*.local"]
     },
@@ -60,6 +72,12 @@
       "ignore": ["*.local"]
     },
     {
+      "codebase": "rizz-social-functions-manage-content-calendar",
+      "source": "dist/apps/rizz-social/functions/manage-content-calendar",
+      "runtime": "nodejs16",
+      "ignore": ["*.local"]
+    },
+    {
       "codebase": "rizz-social-functions-manage-swarm-agents",
       "source": "dist/apps/rizz-social/functions/manage-swarm-agents",
       "runtime": "nodejs16",
@@ -78,6 +96,12 @@
       "ignore": ["*.local"]
     },
     {
+      "codebase": "rizz-social-functions-process-video-segment",
+      "source": "dist/apps/rizz-social/functions/process-video-segment",
+      "runtime": "nodejs16",
+      "ignore": ["*.local"]
+    },
+    {
       "codebase": "rizz-social-functions-refine-content-idea",
       "source": "dist/apps/rizz-social/functions/refine-content-idea",
       "runtime": "nodejs16",
@@ -86,6 +110,12 @@
     {
       "codebase": "rizz-social-functions-sync-agent-status",
       "source": "dist/apps/rizz-social/functions/sync-agent-status",
+      "runtime": "nodejs16",
+      "ignore": ["*.local"]
+    },
+    {
+      "codebase": "rizz-social-functions-sync-workflow-state",
+      "source": "dist/apps/rizz-social/functions/sync-workflow-state",
       "runtime": "nodejs16",
       "ignore": ["*.local"]
     },

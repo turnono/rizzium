@@ -14,3 +14,4 @@ export * from './lib/transaction.service';
 export * from './lib/usage-limit.service';
 export * from './lib/tiktok-content.service';
 export * from './lib/agent-dashboard.service';
+export * from './lib/sora.service';

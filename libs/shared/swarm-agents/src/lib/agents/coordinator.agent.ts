@@ -5,6 +5,7 @@ import type { WorkflowState, WorkflowTransition } from '../../../../interfaces/s
 import { Functions, httpsCallable } from '@angular/fire/functions';
 import { Firestore, collection, doc, setDoc, updateDoc, getDoc, onSnapshot } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -105,10 +106,10 @@ export class CoordinatorAgent {
         condition: (context) => Boolean(context['contentIdeas']),
         transform: async (context) => {
           const selectedIdea = (context['selectedIdea'] as string) || (context['contentIdeas'] as string);
-          const result = await this.swarmAgents.submitTask(`Create a detailed TikTok script for: ${selectedIdea}`, [
-            'optimization',
-          ]);
-          return { ...context, script: result.output };
+          const scriptAgent = await firstValueFrom(
+            this.swarmAgents.createScriptAgent(`Create a detailed TikTok script for: ${selectedIdea}`)
+          );
+          return { ...context, script: scriptAgent.input };
         },
       },
       {

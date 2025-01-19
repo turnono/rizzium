@@ -15,7 +15,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@rizzium/shared/guards": ["libs/shared/guards/src/index.ts"],
+      "@rizzium/shared/*": ["libs/shared/*/src/index.ts"],
       "@rizzium/shared/interfaces": ["libs/shared/interfaces/src/index.ts"],
       "@rizzium/shared/services": ["libs/shared/services/src/index.ts"],
       "@rizzium/shared/swarm-agents": ["libs/shared/swarm-agents/src/index.ts"],

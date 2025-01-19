@@ -1,11 +1,11 @@
 {
-  "name": "rizz-social-functions-manage-content-calendar",
+  "name": "rizz-social-functions-process-video-segment",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/rizz-social/functions/manage-content-calendar/src",
+  "sourceRoot": "apps/rizz-social/functions/process-video-segment/src",
   "projectType": "application",
   "tags": [
     "firebase:function",
-    "firebase:name:rizz-social-functions-manage-content-calendar",
+    "firebase:name:rizz-social-functions-process-video-segment",
     "firebase:dep:rizz-social-firebase"
   ],
   "targets": {
@@ -13,11 +13,11 @@
       "executor": "@nx/esbuild:esbuild",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/apps/rizz-social/functions/manage-content-calendar",
-        "main": "apps/rizz-social/functions/manage-content-calendar/src/main.ts",
-        "tsConfig": "apps/rizz-social/functions/manage-content-calendar/tsconfig.app.json",
+        "outputPath": "dist/apps/rizz-social/functions/process-video-segment",
+        "main": "apps/rizz-social/functions/process-video-segment/src/main.ts",
+        "tsConfig": "apps/rizz-social/functions/process-video-segment/tsconfig.app.json",
         "assets": [
-          "apps/rizz-social/functions/manage-content-calendar/src/assets",
+          "apps/rizz-social/functions/process-video-segment/src/assets",
           {
             "glob": "**/*",
             "input": "apps/rizz-social/firebase/environment",
@@ -40,13 +40,13 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
-        "jestConfig": "apps/rizz-social/functions/manage-content-calendar/jest.config.ts"
+        "jestConfig": "apps/rizz-social/functions/process-video-segment/jest.config.ts"
       }
     },
     "deploy": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "nx run rizz-social-firebase:deploy --only functions:rizz-social-functions-manage-content-calendar"
+        "command": "nx run rizz-social-firebase:deploy --only functions:rizz-social-functions-process-video-segment"
       },
       "dependsOn": ["build"]
     }
