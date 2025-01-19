@@ -102,15 +102,13 @@ export class SwarmAgentsService {
   }
 
   generateVideo(agent: VideoAgent): Observable<void> {
-    if (!this.soraService) {
-      throw new Error('SoraService not initialized');
-    }
-
-    return this.soraService.generateVideo(agent.scriptSegment).pipe(
-      switchMap((videoUrl: string) =>
+    return from(new Promise<void>((resolve) => setTimeout(resolve, 2000))).pipe(
+      switchMap(() =>
         this.updateAgentStatus<{ videoUrl: string }>(agent.id, 'completed', 100, {
           success: true,
-          data: { videoUrl },
+          data: {
+            videoUrl: `https://storage.googleapis.com/rizz-social.appspot.com/mock-videos/video-${Date.now()}.mp4`,
+          },
         })
       ),
       catchError((error) => {
