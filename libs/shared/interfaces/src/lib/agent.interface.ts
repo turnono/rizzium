@@ -1,37 +1,46 @@
-export enum AgentStatus {
-  IDLE = 'idle',
-  BUSY = 'busy',
-}
-
-export enum AgentType {
-  SPECIALIST = 'specialist',
-  GENERALIST = 'generalist',
-  MANAGER = 'manager',
+export interface AgentResult<T = unknown> {
+  success: boolean;
+  data?: T;
+  error?: string;
 }
 
 export interface Agent {
   id: string;
   name: string;
-  type: AgentType;
-  status: AgentStatus;
-  instructions: string;
-  capabilities: AgentCapability[];
-  model: string;
+  description: string;
+  status: 'idle' | 'working' | 'completed' | 'error';
+  type: 'script' | 'video' | 'audio' | 'post' | 'task' | 'manager';
+  progress: number;
+  result?: AgentResult;
+  error?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  capabilities?: string[];
+  model?: string;
+  instructions?: string;
 }
 
-export type AgentCapability =
-  | 'firebase_project_setup'
-  | 'iam_role_management'
-  | 'api_enablement'
-  | 'github_secrets_management'
-  | 'workspace_navigation'
-  | 'dependency_management'
-  | 'library_organization'
-  | 'component_placement'
-  | 'code_review'
-  | 'testing'
-  | 'documentation'
-  | 'debugging'
-  | 'optimization'
-  | 'research'
-  | 'coordination';
+export interface ScriptAgent extends Agent {
+  type: 'script';
+  input: string;
+  segments: string[];
+}
+
+export interface VideoAgent extends Agent {
+  type: 'video';
+  scriptSegment: string;
+  videoUrl?: string;
+}
+
+export interface AudioAgent extends Agent {
+  type: 'audio';
+  scriptSegment: string;
+  audioUrl?: string;
+}
+
+export interface PostAgent extends Agent {
+  type: 'post';
+  videoUrl: string;
+  platform: 'tiktok' | 'instagram' | 'youtube';
+  postStatus: 'pending' | 'scheduled' | 'posted' | 'failed';
+}

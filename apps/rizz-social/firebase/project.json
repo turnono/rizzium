@@ -5,17 +5,22 @@
   "tags": ["firebase:app", "firebase:name:rizz-social-firebase"],
   "implicitDependencies": [
     "rizz-social-functions-aggregate-agent-metrics",
+    "rizz-social-functions-assemble-final-video",
     "rizz-social-functions-cleanup-old-activities",
     "rizz-social-functions-execute-agent-task",
     "rizz-social-functions-generate-content-script",
+    "rizz-social-functions-generate-sora-video",
     "rizz-social-functions-get-agent-insights",
     "rizz-social-functions-get-tiktok-trends",
     "rizz-social-functions-log-agent-activity",
+    "rizz-social-functions-manage-content-calendar",
     "rizz-social-functions-manage-swarm-agents",
     "rizz-social-functions-optimize-content",
     "rizz-social-functions-perform-research",
+    "rizz-social-functions-process-video-segment",
     "rizz-social-functions-refine-content-idea",
     "rizz-social-functions-sync-agent-status",
+    "rizz-social-functions-sync-workflow-state",
     "rizz-social-functions-user"
   ],
   "targets": {

@@ -1,108 +1,157 @@
-import { Injectable, signal } from '@angular/core';
-import {
-  Agent,
-  AgentStatus,
-  TaskDefinition,
-  TaskResult,
-  TaskStatus,
-  AgentCapability,
-} from '../interfaces/agent.interface';
-import { TavilySearchParams, TavilySearchResult } from '../interfaces/tavily.interface';
-import { Functions, httpsCallable } from '@angular/fire/functions';
+import { Injectable, inject } from '@angular/core';
+import { Firestore, collection, addDoc, updateDoc, doc, query, where, orderBy, getDocs } from '@angular/fire/firestore';
+import { Agent, ScriptAgent, VideoAgent, AgentResult } from '@rizzium/shared/interfaces';
+import { Observable, from, map, catchError, switchMap } from 'rxjs';
+import { SoraService } from '@rizzium/shared/services';
+
+interface TaskResult {
+  success: boolean;
+  output: string;
+  error?: string;
+}
 
 @Injectable({
   providedIn: 'root',
 })
 export class SwarmAgentsService {
-  private _agents = signal<Agent[]>([]);
-  private _tasks = signal<TaskDefinition[]>([]);
+  private firestore = inject(Firestore);
+  private readonly soraService = inject(SoraService);
+  private readonly COLLECTION = 'agents';
 
-  constructor(private functions: Functions) {}
-
-  get agents() {
-    return this._agents.asReadonly();
-  }
-
-  get tasks() {
-    return this._tasks.asReadonly();
-  }
-
-  addAgent(agentConfig: Partial<Agent>): Agent {
-    const newAgent: Agent = {
-      id: crypto.randomUUID(),
-      name: agentConfig.name || 'Unnamed Agent',
-      type: agentConfig.type!,
-      status: AgentStatus.IDLE,
-      instructions: agentConfig.instructions || '',
-      capabilities: agentConfig.capabilities || [],
-      model: agentConfig.model || 'gpt-3.5-turbo',
+  createScriptAgent(input: string): Observable<ScriptAgent> {
+    const agent: ScriptAgent = {
+      id: '',
+      name: 'Script Segmentation Agent',
+      description: 'Splits script into optimal segments for video generation',
+      status: 'working',
+      type: 'script',
+      progress: 0,
+      input,
+      segments: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
 
-    this._agents.update((agents) => [...agents, newAgent]);
-    return newAgent;
-  }
-
-  async submitTask(taskDescription: string, requiredCapabilities: AgentCapability[]): Promise<TaskResult> {
-    const task: TaskDefinition = {
-      id: crypto.randomUUID(),
-      description: taskDescription,
-      requiredCapabilities,
-      status: TaskStatus.PENDING,
-    };
-
-    this._tasks.update((tasks) => [...tasks, task]);
-
-    const agent = this.findSuitableAgent(requiredCapabilities);
-    if (!agent) {
-      this.updateTaskStatus(task.id, TaskStatus.FAILED);
-      return { success: false, output: 'No suitable agent found for the task' };
-    }
-
-    try {
-      this.updateTaskStatus(task.id, TaskStatus.IN_PROGRESS);
-      this.updateAgentStatus(agent.id, AgentStatus.BUSY);
-
-      // If the task requires research, use the research function
-      if (requiredCapabilities.includes('research')) {
-        const performResearch = httpsCallable<TavilySearchParams, TavilySearchResult>(
-          this.functions,
-          'performResearch'
-        );
-        const researchResult = await performResearch({ query: task.description });
-        task.description = `${task.description}\n\nResearch findings:\n${JSON.stringify(researchResult.data, null, 2)}`;
-      }
-
-      // Execute the task using the execute-agent-task function
-      const executeAgentTask = httpsCallable<{ agent: Agent; task: TaskDefinition }, TaskResult>(
-        this.functions,
-        'executeAgentTask'
-      );
-      const result = await executeAgentTask({ agent, task });
-
-      this.updateTaskStatus(task.id, TaskStatus.COMPLETED, result.data);
-      this.updateAgentStatus(agent.id, AgentStatus.IDLE);
-
-      return result.data;
-    } catch (error) {
-      const result = { success: false, output: '', error: error instanceof Error ? error.message : 'Unknown error' };
-      this.updateTaskStatus(task.id, TaskStatus.FAILED, result);
-      this.updateAgentStatus(agent.id, AgentStatus.IDLE);
-      return result;
-    }
-  }
-
-  private findSuitableAgent(requiredCapabilities: AgentCapability[]) {
-    return this._agents().find(
-      (agent) =>
-        agent.status === AgentStatus.IDLE && requiredCapabilities.every((cap) => agent.capabilities.includes(cap))
+    return from(addDoc(collection(this.firestore, this.COLLECTION), agent)).pipe(
+      map((docRef) => ({ ...agent, id: docRef.id })),
+      catchError((error) => {
+        console.error('Error creating script agent:', error);
+        throw new Error('Failed to create script agent');
+      })
     );
   }
 
-  private updateTaskStatus(taskId: string, status: TaskStatus, result?: TaskResult) {
-    this._tasks.update((tasks) => tasks.map((task) => (task.id === taskId ? { ...task, status, result } : task)));
+  createVideoAgent(scriptSegment: string): Observable<VideoAgent> {
+    const agent: VideoAgent = {
+      id: '',
+      name: 'Video Generation Agent',
+      description: 'Generates video using Sora API',
+      status: 'working',
+      type: 'video',
+      progress: 0,
+      scriptSegment,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    return from(addDoc(collection(this.firestore, this.COLLECTION), agent)).pipe(
+      map((docRef) => ({ ...agent, id: docRef.id })),
+      catchError((error) => {
+        console.error('Error creating video agent:', error);
+        throw new Error('Failed to create video agent');
+      })
+    );
   }
 
-  private updateAgentStatus(agentId: string, status: AgentStatus) {
-    this._agents.update((agents) => agents.map((agent) => (agent.id === agentId ? { ...agent, status } : agent)));
+  updateAgentStatus<T>(
+    agentId: string,
+    status: Agent['status'],
+    progress: number,
+    result?: AgentResult<T>
+  ): Observable<void> {
+    const agentRef = doc(this.firestore, this.COLLECTION, agentId);
+    return from(
+      updateDoc(agentRef, {
+        status,
+        progress,
+        result,
+        updatedAt: new Date(),
+      })
+    ).pipe(
+      catchError((error) => {
+        console.error('Error updating agent status:', error);
+        throw new Error('Failed to update agent status');
+      })
+    );
+  }
+
+  getAgentsByType(type: Agent['type']): Observable<Agent[]> {
+    const agentsQuery = query(
+      collection(this.firestore, this.COLLECTION),
+      where('type', '==', type),
+      orderBy('createdAt', 'desc')
+    );
+
+    return from(getDocs(agentsQuery)).pipe(
+      map((snapshot) => snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id } as Agent))),
+      catchError((error) => {
+        console.error('Error getting agents:', error);
+        throw new Error('Failed to get agents');
+      })
+    );
+  }
+
+  generateVideo(agent: VideoAgent): Observable<void> {
+    if (!this.soraService) {
+      throw new Error('SoraService not initialized');
+    }
+
+    return this.soraService.generateVideo(agent.scriptSegment).pipe(
+      switchMap((videoUrl: string) =>
+        this.updateAgentStatus<{ videoUrl: string }>(agent.id, 'completed', 100, {
+          success: true,
+          data: { videoUrl },
+        })
+      ),
+      catchError((error) => {
+        console.error('Error generating video:', error);
+        return this.updateAgentStatus(agent.id, 'error', 0, {
+          success: false,
+          error: error.message,
+        });
+      })
+    );
+  }
+
+  addAgent(agent: Partial<Agent>): Promise<Agent> {
+    const newAgent: Agent = {
+      id: '',
+      name: agent.name || '',
+      description: agent.description || '',
+      status: 'idle',
+      type: agent.type || 'script',
+      progress: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...agent,
+    };
+
+    return addDoc(collection(this.firestore, this.COLLECTION), newAgent).then((docRef) => ({
+      ...newAgent,
+      id: docRef.id,
+    }));
+  }
+
+  async submitTask(prompt: string, capabilities: string[]): Promise<TaskResult> {
+    await this.addAgent({
+      name: 'Task Agent',
+      description: prompt,
+      type: 'task',
+      capabilities,
+    });
+
+    // Mock task execution for now
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    return { success: true, output: `Processed: ${prompt}` };
   }
 }

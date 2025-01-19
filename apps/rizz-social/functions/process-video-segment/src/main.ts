@@ -1,123 +1,140 @@
-import * as functions from 'firebase-functions';
+import { onRequest } from 'firebase-functions/v2/https';
+import * as logger from 'firebase-functions/logger';
 import * as admin from 'firebase-admin';
-import axios from 'axios';
 
-admin.initializeApp();
-
-const db = admin.firestore();
-const storage = admin.storage();
-const bucket = storage.bucket();
-
-interface VideoSegment {
-  segmentId: string;
-  scriptText: string;
-  status: 'pending' | 'in-progress' | 'completed' | 'error';
-  videoUrl?: string;
-  error?: string;
-  createdAt: Date;
-  updatedAt: Date;
-  scriptId: string;
-  userId: string;
-  segmentIndex: number;
+// Initialize Firebase Admin
+if (!admin.apps.length) {
+  admin.initializeApp();
 }
 
-export const processVideoSegment = functions
-  .runWith({
-    timeoutSeconds: 540,
-    memory: '2GB',
-  })
-  .pubsub.schedule('every 10 minutes')
-  .onRun(async () => {
-    let segmentDoc: FirebaseFirestore.QueryDocumentSnapshot<FirebaseFirestore.DocumentData> | null = null;
+interface ContentScheduleRequest {
+  content: {
+    id: string;
+    title: string;
+    description: string;
+    platform: 'tiktok';
+    scheduledTime: string; // ISO string
+    status: 'draft' | 'scheduled' | 'published' | 'failed';
+    mediaUrls?: string[];
+    tags?: string[];
+  };
+  action: 'schedule' | 'update' | 'delete' | 'get' | 'list';
+}
 
-    try {
-      // Find the next pending segment
-      const segmentQuery = await db
-        .collection('VideoQueue')
-        .where('status', '==', 'pending')
-        .orderBy('createdAt')
-        .limit(1)
-        .get();
+interface ScheduleResponse {
+  success: boolean;
+  data?: Record<string, unknown>;
+  message?: string;
+}
 
-      if (segmentQuery.empty) {
-        console.log('No pending segments found');
-        return null;
-      }
+export const manageContentCalendar = onRequest({ cors: true }, async (request, response) => {
+  try {
+    const { content, action }: ContentScheduleRequest = request.body;
 
-      segmentDoc = segmentQuery.docs[0];
-      const segment = segmentDoc.data() as VideoSegment;
-
-      // Update status to in-progress
-      await segmentDoc.ref.update({
-        status: 'in-progress',
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    if (!action) {
+      response.status(400).json({
+        success: false,
+        message: 'Action is required',
       });
-
-      // Call Sora API (placeholder - replace with actual Sora API endpoint)
-      const soraResponse = await axios.post(
-        'https://api.sora.com/generate',
-        {
-          prompt: segment.scriptText,
-          duration: 10,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${functions.config().sora.apikey}`,
-          },
-        }
-      );
-
-      // Upload video to Firebase Storage
-      const videoFileName = `videos/${segment.scriptId}/${segment.segmentIndex}.mp4`;
-      const videoFile = bucket.file(videoFileName);
-
-      // Download video from Sora and upload to Firebase Storage
-      const videoBuffer = Buffer.from(soraResponse.data.videoData, 'base64');
-      await videoFile.save(videoBuffer, {
-        metadata: {
-          contentType: 'video/mp4',
-        },
-      });
-
-      const videoUrl = await videoFile.getSignedUrl({
-        action: 'read',
-        expires: '03-01-2500', // Long expiration for demo
-      });
-
-      // Update segment status
-      await segmentDoc.ref.update({
-        status: 'completed',
-        videoUrl: videoUrl[0],
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
-
-      // Update FinalVideo document
-      const finalVideoQuery = await db
-        .collection('FinalVideos')
-        .where('scriptId', '==', segment.scriptId)
-        .limit(1)
-        .get();
-
-      if (!finalVideoQuery.empty) {
-        await finalVideoQuery.docs[0].ref.update({
-          completedSegments: admin.firestore.FieldValue.increment(1),
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
-      }
-
-      return null;
-    } catch (error) {
-      console.error('Error processing video segment:', error);
-
-      // Update segment with error status if we have a segment reference
-      if (segmentDoc) {
-        await segmentDoc.ref.update({
-          status: 'error',
-          error: error.message,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
-      }
-
-      return null;
+      return;
     }
-  });
+
+    const db = admin.firestore();
+    const contentRef = db.collection('content-calendar');
+    let doc: admin.firestore.DocumentSnapshot;
+    let snapshot: admin.firestore.QuerySnapshot;
+    let result: ScheduleResponse;
+
+    switch (action) {
+      case 'schedule':
+        if (!content || !content.scheduledTime) {
+          throw new Error('Content and scheduled time are required for scheduling');
+        }
+
+        await contentRef.doc(content.id).set({
+          ...content,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        result = {
+          success: true,
+          message: 'Content scheduled successfully',
+          data: { id: content.id },
+        };
+        break;
+
+      case 'update':
+        if (!content || !content.id) {
+          throw new Error('Content ID is required for updates');
+        }
+
+        await contentRef.doc(content.id).update({
+          ...content,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        result = {
+          success: true,
+          message: 'Content updated successfully',
+        };
+        break;
+
+      case 'delete':
+        if (!content || !content.id) {
+          throw new Error('Content ID is required for deletion');
+        }
+
+        await contentRef.doc(content.id).delete();
+
+        result = {
+          success: true,
+          message: 'Content deleted successfully',
+        };
+        break;
+
+      case 'get':
+        if (!content || !content.id) {
+          throw new Error('Content ID is required');
+        }
+
+        doc = await contentRef.doc(content.id).get();
+
+        result = {
+          success: true,
+          data: doc.exists ? (doc.data() as Record<string, unknown>) : null,
+        };
+        break;
+
+      case 'list':
+        snapshot = await contentRef.orderBy('scheduledTime', 'asc').limit(100).get();
+
+        result = {
+          success: true,
+          data: {
+            items: snapshot.docs.map((doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            })),
+          },
+        };
+        break;
+
+      default:
+        throw new Error('Invalid action');
+    }
+
+    logger.info('Content calendar operation completed', {
+      action,
+      contentId: content?.id,
+    });
+
+    response.status(200).json(result);
+  } catch (error) {
+    logger.error('Error in content calendar management', error);
+    response.status(500).json({
+      success: false,
+      message: error instanceof Error ? error.message : 'Unknown error occurred',
+    });
+  }
+});
