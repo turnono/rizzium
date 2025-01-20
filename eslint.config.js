@@ -1,14 +1,14 @@
-const nx = require('@nx/eslint-plugin');
+const { FlatCompat } = require('@eslint/eslintrc');
+const js = require('@eslint/js');
+const compat = new FlatCompat();
 
 module.exports = [
-  ...nx.configs['flat/base'],
-  ...nx.configs['flat/typescript'],
-  ...nx.configs['flat/javascript'],
-  {
-    ignores: ['**/dist'],
-  },
-  {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+  js.configs.recommended,
+  ...compat.config({
+    root: true,
+    extends: ['plugin:@nx/typescript', 'plugin:@nx/javascript'],
+    ignorePatterns: ['**/dist'],
+    plugins: ['@nx'],
     rules: {
       '@nx/enforce-module-boundaries': [
         'error',
@@ -24,10 +24,11 @@ module.exports = [
         },
       ],
     },
-  },
-  {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
-    // Override or add rules here
-    rules: {},
-  },
+    overrides: [
+      {
+        files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+        rules: {},
+      },
+    ],
+  }),
 ];
