@@ -56,16 +56,16 @@ jobs:
 
       # Build Angular app - NX will handle all dependencies
       - name: Build Angular app
-        run: npx nx reset && npx nx build ${{ env.APP_NAME }} --prod --verbose
+        run: NX_SKIP_NX_CACHE=true NX_CLOUD_DISTRIBUTED_EXECUTION=false npx nx build ${{ env.APP_NAME }} --prod --verbose
 
       # Build Firebase components - NX will handle all dependencies
       - name: Build Firebase
         run: |
           echo "Building firebase project..."
-          npx nx build ${{ env.APP_NAME }}-firebase --verbose
+          NX_SKIP_NX_CACHE=true NX_CLOUD_DISTRIBUTED_EXECUTION=false npx nx build ${{ env.APP_NAME }}-firebase --verbose
 
           echo "Building all Firebase functions..."
-          npx nx run-many --target=build --projects=tag:firebase:dep:${{ env.APP_NAME }}-firebase --verbose
+          NX_SKIP_NX_CACHE=true NX_CLOUD_DISTRIBUTED_EXECUTION=false npx nx run-many --target=build --projects=tag:firebase:dep:${{ env.APP_NAME }}-firebase --verbose
 
       # Authenticate with service account
       - name: Authenticate to Google Cloud
