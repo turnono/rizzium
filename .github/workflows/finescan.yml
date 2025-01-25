@@ -47,9 +47,16 @@ jobs:
 
       - name: Install dependencies
         run: |
+          echo "registry=https://registry.npmjs.org/" > .npmrc
+          echo "legacy-peer-deps=true" >> .npmrc
+          echo "strict-peer-dependencies=false" >> .npmrc
+          echo "@typescript-eslint/eslint-plugin@latest:resolution=force" >> .npmrc
+          echo "@typescript-eslint/parser@latest:resolution=force" >> .npmrc
+          echo "@rollup/rollup-linux-x64-gnu@4.9.5:resolution=force" >> .npmrc
+
           rm -rf node_modules package-lock.json
-          npm install --legacy-peer-deps
-          npm install @rollup/rollup-linux-x64-gnu@4.9.5 --save-dev
+          npm install
+          npm audit fix
 
       - name: Install Firebase CLI
         run: npm install -g firebase-tools@13.16.0

@@ -47,10 +47,18 @@ jobs:
         run: |
           # Remove existing lock file and modules
           rm -rf node_modules package-lock.json
-          # Install dependencies with platform-specific binaries
-          npm install --legacy-peer-deps
+          # Create resolutions for TypeScript ESLint
+          echo '{
+            "resolutions": {
+              "@typescript-eslint/parser": "^7.0.0",
+              "@typescript-eslint/eslint-plugin": "^7.0.0",
+              "typescript-eslint": "^7.0.0"
+            }
+          }' > .npmrc
+          # Install dependencies with legacy peer deps and force resolution
+          npm install --legacy-peer-deps --force
           # Install specific version of Rollup for Linux
-          npm install @rollup/rollup-linux-x64-gnu@4.9.5 --save-dev
+          npm install @rollup/rollup-linux-x64-gnu@4.9.5 --save-dev --force
 
       - name: Install Firebase CLI
         run: npm install -g firebase-tools@13.16.0
