@@ -28,7 +28,12 @@
         "target": "node16",
         "format": ["esm"],
         "esbuildOptions": {
-          "logLevel": "info"
+          "logLevel": "info",
+          "mainFields": ["module", "main"],
+          "platform": "node",
+          "format": "esm",
+          "bundle": true,
+          "external": ["firebase-functions", "firebase-admin"]
         }
       }
     },
