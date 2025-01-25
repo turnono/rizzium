@@ -9,7 +9,7 @@
     "deploy": "nx deploy islamiccourt-functions-user"
   },
   "engines": {
-    "node": "18"
+    "node": ">=18"
   },
   "main": "main.js",
   "dependencies": {
@@ -17,7 +17,11 @@
     "firebase-functions": "^5.0.1"
   },
   "devDependencies": {
-    "typescript": "^4.9.0"
+    "typescript": "~5.4.0"
+  },
+  "resolutions": {
+    "glob": "^9.0.0",
+    "inflight": "^2.0.0"
   },
   "private": true
 }
