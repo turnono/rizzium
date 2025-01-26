@@ -45,9 +45,10 @@ jobs:
 
       - name: Create .npmrc
         run: |
-          echo "resolution[@typescript-eslint/eslint-plugin]=6.0.0" >> .npmrc
-          echo "resolution[@typescript-eslint/parser]=6.0.0" >> .npmrc
-          echo "resolution[@rollup/rollup-linux-x64-gnu]=4.9.5" >> .npmrc
+          echo "legacy-peer-deps=true" >> .npmrc
+          echo "strict-peer-dependencies=false" >> .npmrc
+          echo "resolution[@typescript-eslint/eslint-plugin]=latest" >> .npmrc
+          echo "resolution[@typescript-eslint/parser]=latest" >> .npmrc
 
       - name: Install dependencies
         run: |

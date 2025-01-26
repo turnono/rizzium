@@ -43,6 +43,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ env.APP_NAME }}-
 
+      - name: Create .npmrc
+        run: |
+          echo "legacy-peer-deps=true" >> .npmrc
+          echo "strict-peer-dependencies=false" >> .npmrc
+          echo "resolution[@typescript-eslint/eslint-plugin]=latest" >> .npmrc
+          echo "resolution[@typescript-eslint/parser]=latest" >> .npmrc
+
       - name: Install dependencies
         run: |
           # Remove existing lock file and modules
