@@ -1,12 +1,12 @@
-name: flowyclarity CI/CD
+name: FlowyClarity CI/CD
 
 on:
   pull_request:
     branches:
       - main
     paths:
-      - 'apps/flowyclarity/**' # Only the app
-      - 'libs/shared/**' # Shared libraries used by app
+      - 'apps/flowyclarity/**'
+      - 'libs/shared/**'
       - 'firebase.flowyclarity-firebase.json'
       - '.github/workflows/flowyclarity.yml'
       - 'setup-app.sh'
@@ -14,8 +14,8 @@ on:
 env:
   APP_NAME: flowyclarity
   FIREBASE_PROJECT_ID: ${{ secrets.FLOWYCLARITY_FIREBASE_PROJECT_ID }}
-  ACTIONS_RUNNER_DEBUG: true # Enable runner diagnostic logging
-  ACTIONS_STEP_DEBUG: true # Enable step debug logging
+  ACTIONS_RUNNER_DEBUG: true
+  ACTIONS_STEP_DEBUG: true
 
 jobs:
   build-and-deploy:
@@ -49,11 +49,21 @@ jobs:
           echo "strict-peer-dependencies=false" >> .npmrc
           echo "resolution[@typescript-eslint/eslint-plugin]=latest" >> .npmrc
           echo "resolution[@typescript-eslint/parser]=latest" >> .npmrc
+          echo "resolution[glob]=^9.0.0" >> .npmrc
+          echo "resolution[rimraf]=^5.0.0" >> .npmrc
+          echo "resolution[eslint]=^9.0.0" >> .npmrc
+          echo "resolution[@grpc/grpc-js]=^1.8.22" >> .npmrc
+          echo "resolution[node-fetch]=^2.6.7" >> .npmrc
+          echo "resolution[protobufjs]=^7.2.4" >> .npmrc
+          echo "resolution[tough-cookie]=^4.1.3" >> .npmrc
 
       - name: Install dependencies
         run: |
           rm -rf node_modules package-lock.json
-          npm install --no-save --legacy-peer-deps
+          npm install --no-audit
+          npm install @rollup/rollup-linux-x64-gnu@4.9.5 --save-dev --no-audit
+          npm dedupe
+          npm audit fix --force || true
 
       - name: Install Firebase CLI
         run: npm install -g firebase-tools@13.16.0
