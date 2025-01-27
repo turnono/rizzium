@@ -78,6 +78,8 @@ jobs:
         uses: google-github-actions/auth@v1
         with:
           credentials_json: ${{ secrets.ISLAMICCOURT_GCP_SA_KEY }}
+          export_environment_variables: true
+          create_credentials_file: true
 
       # Deploy
       - name: Deploy to Firebase
@@ -119,4 +121,3 @@ jobs:
           NPM_CONFIG_USE_CI: false
           NPM_CONFIG_PACKAGE_LOCK: false
           NPM_CONFIG_PREFER_OFFLINE: false
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/gcp-key.json
