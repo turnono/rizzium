@@ -66,7 +66,7 @@ jobs:
           echo "Building firebase project..."
           cd apps/islamiccourt/functions/user
           rm -rf node_modules package-lock.json
-          npm install --no-package-lock --legacy-peer-deps
+          npm install --no-package-lock --legacy-peer-deps --force
           cd ../../../../
           NX_SKIP_NX_CACHE=true NX_CLOUD_DISTRIBUTED_EXECUTION=false NX_NO_CLOUD=true NX_DAEMON=false npx nx build ${{ env.APP_NAME }}-firebase --verbose
 
@@ -93,8 +93,17 @@ jobs:
           export NPM_CONFIG_PREFER_OFFLINE=false
           export NPM_CONFIG_PACKAGE_LOCK=false
 
+          # Modify npm config to ensure it uses install
+          npm config set script-shell /bin/bash
+          npm config set ignore-scripts false
+          npm config set package-lock false
+          npm config set audit false
+          npm config set fund false
+          npm config set update-notifier false
+          npm config set legacy-peer-deps true
+
           # Run deployment with maximum verbosity and debug flags
-          FIREBASE_DEBUG=true DEBUG="@firebase/*" npx nx deploy ${{ env.APP_NAME }}-firebase --verbose
+          FIREBASE_DEBUG=true DEBUG="@firebase/*" firebase deploy --only functions:deleteAnonUser --force
 
           # If deployment fails, check Firebase debug log
           if [ $? -ne 0 ]; then
