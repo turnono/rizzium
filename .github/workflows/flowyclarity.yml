@@ -65,6 +65,9 @@ jobs:
           npm dedupe
           npm audit fix --force || true
 
+      - name: Install specific Angular CLI version
+        run: npm install -g @angular/cli@18.2.0
+
       - name: Install Firebase CLI
         run: npm install -g firebase-tools@13.16.0
 
