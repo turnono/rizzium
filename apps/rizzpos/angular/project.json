@@ -7,13 +7,13 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@angular-devkit/build-angular:application",
+      "executor": "@angular-devkit/build-angular:browser",
       "outputs": ["{options.outputPath}"],
       "cache": true,
       "options": {
         "outputPath": "dist/apps/rizzpos/angular",
         "index": "apps/rizzpos/angular/src/index.html",
-        "browser": "apps/rizzpos/angular/src/main.ts",
+        "main": "apps/rizzpos/angular/src/main.ts",
         "polyfills": ["zone.js"],
         "tsConfig": "apps/rizzpos/angular/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
@@ -110,10 +110,7 @@
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": [
-          "apps/rizzpos/angular/**/*.ts",
-          "apps/rizzpos/angular/**/*.html"
-        ]
+        "lintFilePatterns": ["apps/rizzpos/angular/**/*.ts", "apps/rizzpos/angular/**/*.html"]
       }
     },
     "test": {
