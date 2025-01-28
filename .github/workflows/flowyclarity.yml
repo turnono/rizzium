@@ -47,10 +47,6 @@ jobs:
         run: |
           echo "legacy-peer-deps=true" >> .npmrc
           echo "strict-peer-dependencies=false" >> .npmrc
-          echo "resolution[@angular/cli]=18.2.0" >> .npmrc
-          echo "resolution[@angular-devkit/build-angular]=18.2.0" >> .npmrc
-          echo "resolution[@angular-devkit/core]=18.2.0" >> .npmrc
-          echo "resolution[@angular-devkit/schematics]=18.2.0" >> .npmrc
           echo "resolution[@typescript-eslint/eslint-plugin]=latest" >> .npmrc
           echo "resolution[@typescript-eslint/parser]=latest" >> .npmrc
           echo "resolution[glob]=^9.0.0" >> .npmrc
@@ -77,10 +73,10 @@ jobs:
       # Build Angular app - NX will handle all dependencies
       - name: Build Angular app
         run: |
-          # Clean install with forced resolutions
-          rm -rf node_modules package-lock.json
-          npm install --no-audit
-          NX_SKIP_NX_CACHE=true NX_CLOUD_DISTRIBUTED_EXECUTION=false NX_NO_CLOUD=true NX_DAEMON=false NODE_OPTIONS="--max_old_space_size=4096" npx nx build ${{ env.APP_NAME }} --prod --verbose
+          # Use project's Angular CLI directly
+          echo "Using project Angular CLI version:"
+          ./node_modules/.bin/ng version
+          NX_SKIP_NX_CACHE=true NX_CLOUD_DISTRIBUTED_EXECUTION=false NX_NO_CLOUD=true NX_DAEMON=false NODE_OPTIONS="--max_old_space_size=4096" ./node_modules/.bin/ng build flowyclarity --configuration=production --verbose
 
       # Build Firebase components - NX will handle all dependencies
       - name: Build Firebase
