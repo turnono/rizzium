@@ -62,6 +62,7 @@ jobs:
           rm -rf node_modules package-lock.json
           npm install --no-audit
           npm install @rollup/rollup-linux-x64-gnu@4.9.5 --save-dev --no-audit
+          npm install @angular-devkit/build-angular@18.2.12 --save-dev --no-audit
           npm dedupe
           npm audit fix --force || true
 
@@ -73,10 +74,9 @@ jobs:
       # Build Angular app - NX will handle all dependencies
       - name: Build Angular app
         run: |
-          # Use project's Angular CLI directly
-          echo "Using project Angular CLI version:"
-          ./node_modules/.bin/ng version
-          NX_SKIP_NX_CACHE=true NX_CLOUD_DISTRIBUTED_EXECUTION=false NX_NO_CLOUD=true NX_DAEMON=false NODE_OPTIONS="--max_old_space_size=4096" ./node_modules/.bin/ng build flowyclarity --configuration=production --verbose
+          echo "Angular versions:"
+          npm list @angular/core @angular-devkit/build-angular @angular/cli || true
+          NX_SKIP_NX_CACHE=true NX_CLOUD_DISTRIBUTED_EXECUTION=false NX_NO_CLOUD=true NX_DAEMON=false npx nx build ${{ env.APP_NAME }} --configuration=production --verbose
 
       # Build Firebase components - NX will handle all dependencies
       - name: Build Firebase
