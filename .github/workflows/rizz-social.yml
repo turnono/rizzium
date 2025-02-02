@@ -31,6 +31,9 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Clear npm cache
+        run: npm cache clean --force
+
       - name: Cache
         uses: actions/cache@v4.1.2
         with:
@@ -59,10 +62,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          rm -rf node_modules package-lock.json
-          npm install --no-audit
-          npm install @rollup/rollup-linux-x64-gnu@4.9.5 --save-dev --no-audit
-          npm install @angular-devkit/build-angular@18.2.12 --save-dev --no-audit
+          rm -rf node_modules package-lock.json dist .nx/cache
+          npm install --no-audit --legacy-peer-deps
+          npm install @rollup/rollup-linux-x64-gnu@4.9.5 --save-dev --no-audit --legacy-peer-deps
+          npm install @angular/cli@18.2.0 --save-dev --no-audit --legacy-peer-deps
+          npm install @angular-devkit/build-angular@18.2.0 --save-dev --no-audit --legacy-peer-deps
+          npm install @angular/compiler-cli@18.2.0 --save-dev --no-audit --legacy-peer-deps
           npm dedupe
           npm audit fix --force || true
 
