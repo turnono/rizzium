@@ -1,11 +1,15 @@
 import { onRequest } from 'firebase-functions/v2/https';
 import * as logger from 'firebase-functions/logger';
-import * as admin from 'firebase-admin';
+import { getApp, initializeApp } from 'firebase-admin/app';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 
-// Initialize Firebase Admin
-if (!admin.apps.length) {
-  admin.initializeApp();
+try {
+  getApp();
+} catch (e) {
+  initializeApp();
 }
+
+const db = getFirestore();
 
 interface ContentScheduleRequest {
   content: {
@@ -39,10 +43,9 @@ export const manageContentCalendar = onRequest({ cors: true }, async (request, r
       return;
     }
 
-    const db = admin.firestore();
     const contentRef = db.collection('content-calendar');
-    let doc: admin.firestore.DocumentSnapshot;
-    let snapshot: admin.firestore.QuerySnapshot;
+    let doc;
+    let snapshot;
     let result: ScheduleResponse;
 
     switch (action) {
@@ -53,8 +56,8 @@ export const manageContentCalendar = onRequest({ cors: true }, async (request, r
 
         await contentRef.doc(content.id).set({
           ...content,
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          createdAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
         });
 
         result = {
@@ -71,7 +74,7 @@ export const manageContentCalendar = onRequest({ cors: true }, async (request, r
 
         await contentRef.doc(content.id).update({
           ...content,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
         });
 
         result = {
@@ -102,7 +105,7 @@ export const manageContentCalendar = onRequest({ cors: true }, async (request, r
 
         result = {
           success: true,
-          data: doc.exists ? (doc.data() as Record<string, unknown>) : null,
+          data: doc.exists ? doc.data() : null,
         };
         break;
 
