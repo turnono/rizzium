@@ -1,137 +1,99 @@
 import { onRequest } from 'firebase-functions/v2/https';
 import * as logger from 'firebase-functions/logger';
-import * as admin from 'firebase-admin';
+import { getApp, initializeApp } from 'firebase-admin/app';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { getStorage } from 'firebase-admin/storage';
 
-// Initialize Firebase Admin
-if (!admin.apps.length) {
-  admin.initializeApp();
+try {
+  getApp();
+} catch (e) {
+  initializeApp();
 }
 
-interface ContentScheduleRequest {
-  content: {
-    id: string;
-    title: string;
-    description: string;
-    platform: 'tiktok';
-    scheduledTime: string; // ISO string
-    status: 'draft' | 'scheduled' | 'published' | 'failed';
-    mediaUrls?: string[];
-    tags?: string[];
-  };
-  action: 'schedule' | 'update' | 'delete' | 'get' | 'list';
+const db = getFirestore();
+const storage = getStorage();
+
+interface VideoSegmentRequest {
+  videoId: string;
+  segmentId: string;
+  startTime: number;
+  endTime: number;
+  status?: 'pending' | 'processing' | 'completed' | 'failed';
+  metadata?: Record<string, unknown>;
 }
 
-interface ScheduleResponse {
+interface VideoSegmentResponse {
   success: boolean;
   data?: Record<string, unknown>;
   message?: string;
 }
 
-export const manageContentCalendar = onRequest({ cors: true }, async (request, response) => {
+export const processVideoSegment = onRequest({ cors: true }, async (request, response) => {
   try {
-    const { content, action }: ContentScheduleRequest = request.body;
+    const { videoId, segmentId, startTime, endTime, metadata = {} }: VideoSegmentRequest = request.body;
 
-    if (!action) {
+    if (!videoId || !segmentId || startTime === undefined || endTime === undefined) {
       response.status(400).json({
         success: false,
-        message: 'Action is required',
+        message: 'VideoId, segmentId, startTime, and endTime are required',
       });
       return;
     }
 
-    const db = admin.firestore();
-    const contentRef = db.collection('content-calendar');
-    let doc: admin.firestore.DocumentSnapshot;
-    let snapshot: admin.firestore.QuerySnapshot;
-    let result: ScheduleResponse;
+    // Reference to the video segments collection
+    const segmentRef = db.collection('video-segments').doc(segmentId);
 
-    switch (action) {
-      case 'schedule':
-        if (!content || !content.scheduledTime) {
-          throw new Error('Content and scheduled time are required for scheduling');
-        }
-
-        await contentRef.doc(content.id).set({
-          ...content,
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
-
-        result = {
-          success: true,
-          message: 'Content scheduled successfully',
-          data: { id: content.id },
-        };
-        break;
-
-      case 'update':
-        if (!content || !content.id) {
-          throw new Error('Content ID is required for updates');
-        }
-
-        await contentRef.doc(content.id).update({
-          ...content,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
-
-        result = {
-          success: true,
-          message: 'Content updated successfully',
-        };
-        break;
-
-      case 'delete':
-        if (!content || !content.id) {
-          throw new Error('Content ID is required for deletion');
-        }
-
-        await contentRef.doc(content.id).delete();
-
-        result = {
-          success: true,
-          message: 'Content deleted successfully',
-        };
-        break;
-
-      case 'get':
-        if (!content || !content.id) {
-          throw new Error('Content ID is required');
-        }
-
-        doc = await contentRef.doc(content.id).get();
-
-        result = {
-          success: true,
-          data: doc.exists ? (doc.data() as Record<string, unknown>) : null,
-        };
-        break;
-
-      case 'list':
-        snapshot = await contentRef.orderBy('scheduledTime', 'asc').limit(100).get();
-
-        result = {
-          success: true,
-          data: {
-            items: snapshot.docs.map((doc) => ({
-              id: doc.id,
-              ...doc.data(),
-            })),
-          },
-        };
-        break;
-
-      default:
-        throw new Error('Invalid action');
-    }
-
-    logger.info('Content calendar operation completed', {
-      action,
-      contentId: content?.id,
+    // Update segment status to processing
+    await segmentRef.set({
+      videoId,
+      segmentId,
+      startTime,
+      endTime,
+      status: 'processing',
+      metadata,
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     });
 
-    response.status(200).json(result);
+    try {
+      // TODO: Implement actual video processing logic here
+      // This could include:
+      // 1. Downloading the video segment from storage
+      // 2. Processing the segment (transcoding, analysis, etc.)
+      // 3. Uploading the processed segment back to storage
+
+      // For now, we'll just simulate processing success
+      await segmentRef.update({
+        status: 'completed',
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+
+      logger.info('Video segment processed successfully', {
+        videoId,
+        segmentId,
+      });
+
+      response.status(200).json({
+        success: true,
+        message: 'Video segment processed successfully',
+        data: {
+          videoId,
+          segmentId,
+          status: 'completed',
+        },
+      });
+    } catch (processingError) {
+      // Update segment status to failed if processing fails
+      await segmentRef.update({
+        status: 'failed',
+        error: processingError instanceof Error ? processingError.message : 'Unknown processing error',
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+
+      throw processingError;
+    }
   } catch (error) {
-    logger.error('Error in content calendar management', error);
+    logger.error('Error processing video segment', error);
     response.status(500).json({
       success: false,
       message: error instanceof Error ? error.message : 'Unknown error occurred',

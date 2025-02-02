@@ -1,21 +1,21 @@
-name: RizzSocial CI/CD
+name: Rizz Social CI/CD
 
 on:
   pull_request:
     branches:
       - main
     paths:
-      - 'apps/rizz-social/**' # Only the app
-      - 'libs/shared/**' # Shared libraries used by app
+      - 'apps/rizz-social/**'
+      - 'libs/shared/**'
       - 'firebase.rizz-social-firebase.json'
       - '.github/workflows/rizz-social.yml'
       - 'setup-app.sh'
       - 'package.json'
 env:
   APP_NAME: rizz-social
-  FIREBASE_PROJECT_ID: ${{ secrets.RIZZSOCIAL_FIREBASE_PROJECT_ID }}
-  ACTIONS_RUNNER_DEBUG: true # Enable runner diagnostic logging
-  ACTIONS_STEP_DEBUG: true # Enable step debug logging
+  FIREBASE_PROJECT_ID: ${{ secrets.RIZZ_SOCIAL_FIREBASE_PROJECT_ID }}
+  ACTIONS_RUNNER_DEBUG: true
+  ACTIONS_STEP_DEBUG: true
 
 jobs:
   build-and-deploy:
@@ -62,6 +62,7 @@ jobs:
           rm -rf node_modules package-lock.json
           npm install --no-audit
           npm install @rollup/rollup-linux-x64-gnu@4.9.5 --save-dev --no-audit
+          npm install @angular-devkit/build-angular@18.2.12 --save-dev --no-audit
           npm dedupe
           npm audit fix --force || true
 
@@ -72,7 +73,10 @@ jobs:
 
       # Build Angular app - NX will handle all dependencies
       - name: Build Angular app
-        run: NX_SKIP_NX_CACHE=true NX_CLOUD_DISTRIBUTED_EXECUTION=false NX_NO_CLOUD=true NX_DAEMON=false npx nx build ${{ env.APP_NAME }} --prod --verbose
+        run: |
+          echo "Angular versions:"
+          npm list @angular/core @angular-devkit/build-angular @angular/cli || true
+          NX_SKIP_NX_CACHE=true NX_CLOUD_DISTRIBUTED_EXECUTION=false NX_NO_CLOUD=true NX_DAEMON=false npx nx build ${{ env.APP_NAME }} --configuration=production --verbose
 
       # Build Firebase components - NX will handle all dependencies
       - name: Build Firebase
@@ -87,7 +91,7 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1
         with:
-          credentials_json: ${{ secrets.RIZZSOCIAL_GCP_SA_KEY }}
+          credentials_json: ${{ secrets.RIZZ_SOCIAL_GCP_SA_KEY }}
 
       # Deploy
       - name: Deploy to Firebase
