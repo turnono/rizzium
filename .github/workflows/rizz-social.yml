@@ -64,12 +64,6 @@ jobs:
         run: |
           rm -rf node_modules package-lock.json dist .nx/cache
           npm install --no-audit --legacy-peer-deps
-          npm install @rollup/rollup-linux-x64-gnu@4.9.5 --save-dev --no-audit --legacy-peer-deps
-          npm install @angular/core@18.2.0 @angular/common@18.2.0 @angular/platform-browser@18.2.0 @angular/platform-browser-dynamic@18.2.0 --save --no-audit --legacy-peer-deps
-          npm install @angular/cli@18.2.0 @angular-devkit/core@18.2.0 @angular-devkit/schematics@18.2.0 --save-dev --no-audit --legacy-peer-deps
-          npm install @angular-devkit/build-angular@18.2.0 --save-dev --no-audit --legacy-peer-deps
-          npm install @angular/compiler@18.2.0 @angular/compiler-cli@18.2.0 --save-dev --no-audit --legacy-peer-deps
-          npm install @nx/angular@18.0.8 --save-dev --no-audit --legacy-peer-deps
           npm dedupe
           npm audit fix --force || true
 
