@@ -7,12 +7,12 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@angular-devkit/build-angular:application",
+      "executor": "@angular-devkit/build-angular:browser",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/apps/rizz-social/angular",
         "index": "apps/rizz-social/angular/src/index.html",
-        "browser": "apps/rizz-social/angular/src/main.ts",
+        "main": "apps/rizz-social/angular/src/main.ts",
         "polyfills": ["zone.js"],
         "tsConfig": "apps/rizz-social/angular/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
