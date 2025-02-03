@@ -7,13 +7,13 @@
     "build": "nx build rizz-social-functions-aggregate-agent-metrics",
     "deploy": "nx deploy rizz-social-functions-aggregate-agent-metrics"
   },
-  "type": "commonjs",
+  "type": "module",
   "engines": {
     "node": "18"
   },
   "dependencies": {
     "firebase-admin": "^12.0.0",
-    "firebase-functions": "^4.8.0"
+    "firebase-functions": "^5.1.0"
   },
   "private": true
 }
