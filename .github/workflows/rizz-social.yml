@@ -50,9 +50,13 @@ jobs:
         run: |
           echo "legacy-peer-deps=true" >> .npmrc
           echo "strict-peer-dependencies=false" >> .npmrc
-          echo "resolution[@angular-devkit/build-angular]=18.2.0" >> .npmrc
-          echo "resolution[@angular/material]=18.2.0" >> .npmrc
-          echo "resolution[@angular/cdk]=18.2.0" >> .npmrc
+          echo "resolution[@angular-devkit/build-angular]=~18.2.0" >> .npmrc
+          echo "resolution[@angular/core]=~18.2.0" >> .npmrc
+          echo "resolution[@angular/material]=~18.2.0" >> .npmrc
+          echo "resolution[@angular/cdk]=~18.2.0" >> .npmrc
+          echo "resolution[@nx/angular]=18.1.2" >> .npmrc
+          echo "resolution[@nx/workspace]=18.1.2" >> .npmrc
+          echo "resolution[jest-preset-angular]=~14.1.1" >> .npmrc
           echo "resolution[@typescript-eslint/eslint-plugin]=latest" >> .npmrc
           echo "resolution[@typescript-eslint/parser]=latest" >> .npmrc
           echo "resolution[glob]=^9.0.0" >> .npmrc
@@ -113,5 +117,3 @@ jobs:
           fi
         env:
           DEBUG: '*'
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.RIZZ_SOCIAL_GCP_SA_KEY }}
