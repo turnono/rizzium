@@ -18,12 +18,6 @@
   },
   "functions": [
     {
-      "codebase": "rizz-social-functions-aggregate-agent-metrics",
-      "source": "dist/apps/rizz-social/functions/aggregate-agent-metrics",
-      "runtime": "nodejs18",
-      "ignore": ["*.local"]
-    },
-    {
       "codebase": "rizz-social-functions-cleanup-old-activities",
       "source": "dist/apps/rizz-social/functions/cleanup-old-activities",
       "runtime": "nodejs18",
