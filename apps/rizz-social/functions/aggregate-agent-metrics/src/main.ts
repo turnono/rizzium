@@ -8,8 +8,8 @@
  */
 
 import { onSchedule } from 'firebase-functions/v2/scheduler';
-import * as logger from 'firebase-functions/logger';
-import { getFirestore } from 'firebase-admin/firestore';
+import { logger } from 'firebase-functions';
+import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { initializeApp } from 'firebase-admin/app';
 
 // Initialize Firebase Admin
@@ -23,14 +23,14 @@ interface AgentMetrics {
   completedActivities: number;
   pendingActivities: number;
   scheduledActivities: number;
-  lastAggregatedAt: FirebaseFirestore.Timestamp;
+  lastAggregatedAt: Timestamp;
 }
 
 // Run hourly
-export const aggregateAgentMetrics = onSchedule('0 * * * *', async () => {
+export const aggregateAgentMetrics = onSchedule('0 * * * *', async (event) => {
   try {
     const agentTypes = ['script', 'research', 'optimization', 'social'];
-    const now = FirebaseFirestore.Timestamp.now();
+    const now = Timestamp.now();
     const batch = db.batch();
 
     for (const agentId of agentTypes) {
