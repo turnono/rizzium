@@ -102,8 +102,8 @@ jobs:
           firebase --version
           firebase projects:list
 
-          # Run deployment with maximum verbosity and debug flags
-          FIREBASE_DEBUG=true DEBUG="@firebase/*" npx nx deploy ${{ env.APP_NAME }}-firebase --verbose
+          # Run deployment with maximum verbosity, debug flags, and force flag
+          FIREBASE_DEBUG=true DEBUG="@firebase/*" npx nx run rizz-social-firebase:firebase deploy --force
 
           # If deployment fails, check Firebase debug log
           if [ $? -ne 0 ]; then
@@ -113,3 +113,5 @@ jobs:
           fi
         env:
           DEBUG: '*'
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.RIZZ_SOCIAL_GCP_SA_KEY }}
