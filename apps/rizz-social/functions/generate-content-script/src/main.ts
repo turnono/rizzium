@@ -10,12 +10,10 @@
 import { onRequest } from 'firebase-functions/v2/https';
 import * as logger from 'firebase-functions/logger';
 import OpenAI from 'openai';
-import * as functions from 'firebase-functions';
+import { initializeApp } from 'firebase-admin/app';
 
-// Initialize OpenAI with your API key
-const openai = new OpenAI({
-  apiKey: functions.config().openai.api_key,
-});
+// Initialize Firebase Admin
+initializeApp();
 
 interface ScriptRequest {
   topic: string;
@@ -41,6 +39,11 @@ interface ScriptResponse {
 
 export const generateContentScript = onRequest({ cors: true }, async (request, response) => {
   try {
+    // Initialize OpenAI with API key from environment variable
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+
     const scriptRequest: ScriptRequest = request.body;
 
     // Validate required fields
