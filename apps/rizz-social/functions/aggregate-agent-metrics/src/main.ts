@@ -9,11 +9,13 @@
 
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions';
-import { getApp, initializeApp } from 'firebase-admin/app';
+import { applicationDefault, initializeApp } from 'firebase-admin/app';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 
-// Initialize Firebase Admin
-initializeApp();
+// Initialize Firebase Admin with application default credentials
+initializeApp({
+  credential: applicationDefault(),
+});
 
 // Initialize Firestore
 const db = getFirestore();
