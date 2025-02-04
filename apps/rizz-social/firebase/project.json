@@ -89,7 +89,7 @@
       "executor": "nx:run-commands",
       "dependsOn": ["build"],
       "options": {
-        "command": "nx run rizz-social-firebase:firebase deploy"
+        "command": "nx run rizz-social-firebase:firebase deploy --force"
       }
     }
   }
