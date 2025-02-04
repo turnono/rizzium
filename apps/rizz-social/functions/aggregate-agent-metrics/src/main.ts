@@ -8,21 +8,22 @@
  */
 
 import { onSchedule } from 'firebase-functions/v2/scheduler';
-import * as functions from 'firebase-functions';
-import * as admin from 'firebase-admin';
+import { logger } from 'firebase-functions';
+import { getApp, initializeApp } from 'firebase-admin/app';
+import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 
 // Initialize Firebase Admin
-admin.initializeApp();
+initializeApp();
 
 // Initialize Firestore
-const db = admin.firestore();
+const db = getFirestore();
 
 interface AgentMetrics {
   totalActivities: number;
   completedActivities: number;
   pendingActivities: number;
   scheduledActivities: number;
-  lastAggregatedAt: admin.firestore.Timestamp;
+  lastAggregatedAt: Timestamp;
 }
 
 // Run hourly
@@ -35,7 +36,7 @@ export const aggregateAgentMetrics = onSchedule(
   async (event) => {
     try {
       const agentTypes = ['script', 'research', 'optimization', 'social'];
-      const now = admin.firestore.Timestamp.now();
+      const now = Timestamp.now();
       const batch = db.batch();
 
       for (const agentId of agentTypes) {
@@ -72,16 +73,16 @@ export const aggregateAgentMetrics = onSchedule(
         const metricsRef = db.collection('AgentMetrics').doc(agentId);
         batch.set(metricsRef, metrics, { merge: true });
 
-        functions.logger.info(`Metrics aggregated for agent: ${agentId}`, metrics);
+        logger.info(`Metrics aggregated for agent: ${agentId}`, metrics);
       }
 
       await batch.commit();
 
-      functions.logger.info('Metrics aggregation completed successfully', {
+      logger.info('Metrics aggregation completed successfully', {
         timestamp: now.toDate().toISOString(),
       });
     } catch (error) {
-      functions.logger.error('Error aggregating metrics', error);
+      logger.error('Error aggregating metrics', error);
       throw error; // Retrigger the function on failure
     }
   }
