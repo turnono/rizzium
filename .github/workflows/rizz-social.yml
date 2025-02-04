@@ -117,5 +117,3 @@ jobs:
           fi
         env:
           DEBUG: '*'
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.RIZZ_SOCIAL_GCP_SA_KEY }}
