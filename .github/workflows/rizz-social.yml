@@ -50,6 +50,9 @@ jobs:
         run: |
           echo "legacy-peer-deps=true" >> .npmrc
           echo "strict-peer-dependencies=false" >> .npmrc
+          echo "resolution[@angular-devkit/build-angular]=18.2.0" >> .npmrc
+          echo "resolution[@angular/material]=18.2.0" >> .npmrc
+          echo "resolution[@angular/cdk]=18.2.0" >> .npmrc
           echo "resolution[@typescript-eslint/eslint-plugin]=latest" >> .npmrc
           echo "resolution[@typescript-eslint/parser]=latest" >> .npmrc
           echo "resolution[glob]=^9.0.0" >> .npmrc
@@ -61,11 +64,7 @@ jobs:
           echo "resolution[tough-cookie]=^4.1.3" >> .npmrc
 
       - name: Install dependencies
-        run: |
-          rm -rf node_modules package-lock.json dist .nx/cache
-          npm install --no-audit --legacy-peer-deps
-          npm dedupe
-          npm audit fix --force || true
+        run: npm install --force
 
       - name: Install Firebase CLI
         run: npm install -g firebase-tools@13.16.0
