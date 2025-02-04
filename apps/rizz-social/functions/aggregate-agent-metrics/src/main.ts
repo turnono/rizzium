@@ -8,14 +8,13 @@
  */
 
 import { onSchedule } from 'firebase-functions/v2/scheduler';
-import { logger } from 'firebase-functions';
-import { applicationDefault, initializeApp } from 'firebase-admin/app';
-import { getFirestore, Timestamp } from 'firebase-admin/firestore';
+import * as logger from 'firebase-functions/logger';
+import { getFirestore } from 'firebase-admin/firestore';
+import { initializeApp } from 'firebase-admin/app';
+import { Timestamp } from 'firebase-admin/firestore';
 
-// Initialize Firebase Admin with application default credentials
-initializeApp({
-  credential: applicationDefault(),
-});
+// Initialize Firebase Admin
+initializeApp();
 
 // Initialize Firestore
 const db = getFirestore();
