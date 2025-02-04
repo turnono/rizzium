@@ -3,11 +3,6 @@
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/rizz-social/functions/aggregate-agent-metrics/src",
   "projectType": "application",
-  "tags": [
-    "firebase:function",
-    "firebase:name:rizz-social-functions-aggregate-agent-metrics",
-    "firebase:dep:rizz-social-firebase"
-  ],
   "targets": {
     "build": {
       "executor": "@nx/esbuild:esbuild",
@@ -27,10 +22,10 @@
         "generatePackageJson": true,
         "platform": "node",
         "bundle": true,
-        "thirdParty": false,
+        "thirdParty": true,
         "dependenciesFieldType": "dependencies",
-        "target": "node16",
-        "format": ["esm"],
+        "target": "node18",
+        "format": ["cjs"],
         "esbuildOptions": {
           "logLevel": "info"
         }
@@ -50,5 +45,10 @@
       },
       "dependsOn": ["build"]
     }
-  }
+  },
+  "tags": [
+    "firebase:function",
+    "firebase:name:rizz-social-functions-aggregate-agent-metrics",
+    "firebase:dep:rizz-social-firebase"
+  ]
 }

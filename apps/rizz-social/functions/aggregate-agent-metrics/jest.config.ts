@@ -1,3 +1,4 @@
+/* eslint-disable */
 export default {
   displayName: 'rizz-social-functions-aggregate-agent-metrics',
   preset: '../../../../jest.preset.js',
