@@ -28,63 +28,56 @@ interface AgentMetrics {
 }
 
 // Run hourly
-export const aggregateAgentMetrics = onSchedule(
-  {
-    schedule: '0 * * * *',
-    region: 'us-central1',
-    memory: '256MiB',
-  },
-  async (event) => {
-    try {
-      const agentTypes = ['script', 'research', 'optimization', 'social'];
-      const now = Timestamp.now();
-      const batch = db.batch();
+export const aggregateAgentMetrics = onSchedule('0 * * * *', async () => {
+  try {
+    const agentTypes = ['script', 'research', 'optimization', 'social'];
+    const now = Timestamp.now();
+    const batch = db.batch();
 
-      for (const agentId of agentTypes) {
-        // Get activities for this agent
-        const activitiesQuery = db.collection('AgentActivities').where('agentId', '==', agentId);
+    for (const agentId of agentTypes) {
+      // Get activities for this agent
+      const activitiesQuery = db.collection('AgentActivities').where('agentId', '==', agentId);
 
-        const snapshot = await activitiesQuery.get();
+      const snapshot = await activitiesQuery.get();
 
-        // Calculate metrics
-        const metrics: AgentMetrics = {
-          totalActivities: snapshot.size,
-          completedActivities: 0,
-          pendingActivities: 0,
-          scheduledActivities: 0,
-          lastAggregatedAt: now,
-        };
+      // Calculate metrics
+      const metrics: AgentMetrics = {
+        totalActivities: snapshot.size,
+        completedActivities: 0,
+        pendingActivities: 0,
+        scheduledActivities: 0,
+        lastAggregatedAt: now,
+      };
 
-        snapshot.docs.forEach((doc) => {
-          const status = doc.data().status;
-          switch (status) {
-            case 'completed':
-              metrics.completedActivities++;
-              break;
-            case 'pending':
-              metrics.pendingActivities++;
-              break;
-            case 'scheduled':
-              metrics.scheduledActivities++;
-              break;
-          }
-        });
-
-        // Store metrics
-        const metricsRef = db.collection('AgentMetrics').doc(agentId);
-        batch.set(metricsRef, metrics, { merge: true });
-
-        logger.info(`Metrics aggregated for agent: ${agentId}`, metrics);
-      }
-
-      await batch.commit();
-
-      logger.info('Metrics aggregation completed successfully', {
-        timestamp: now.toDate().toISOString(),
+      snapshot.docs.forEach((doc) => {
+        const status = doc.data().status;
+        switch (status) {
+          case 'completed':
+            metrics.completedActivities++;
+            break;
+          case 'pending':
+            metrics.pendingActivities++;
+            break;
+          case 'scheduled':
+            metrics.scheduledActivities++;
+            break;
+        }
       });
-    } catch (error) {
-      logger.error('Error aggregating metrics', error);
-      throw error; // Retrigger the function on failure
+
+      // Store metrics
+      const metricsRef = db.collection('AgentMetrics').doc(agentId);
+      batch.set(metricsRef, metrics, { merge: true });
+
+      logger.info(`Metrics aggregated for agent: ${agentId}`, metrics);
     }
+
+    await batch.commit();
+
+    logger.info('Metrics aggregation completed successfully', {
+      timestamp: now.toDate().toISOString(),
+    });
+  } catch (error) {
+    logger.error('Error aggregating metrics', error);
+    throw error; // Retrigger the function on failure
   }
-);
+});
